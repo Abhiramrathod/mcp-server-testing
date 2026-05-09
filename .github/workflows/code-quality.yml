@@ -1,0 +1,27 @@
+name: Code Quality
+
+on:
+  workflow_call:
+
+jobs:
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Compile
+      run: mvn clean compile -B
+    
+    - name: Check code style
+      run: mvn verify -DskipTests -B
+      continue-on-error: true

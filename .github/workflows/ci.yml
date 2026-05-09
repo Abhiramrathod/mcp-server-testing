@@ -1,0 +1,54 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ master, release ]
+  pull_request:
+    branches: [ master, release ]
+
+jobs:
+  build-jdk17:
+    name: Build JDK 17
+    uses: ./.github/workflows/build.yml
+    with:
+      java-version: '17'
+      upload-artifacts: true
+  
+  build-jdk21:
+    name: Build JDK 21
+    uses: ./.github/workflows/build.yml
+    with:
+      java-version: '21'
+      upload-artifacts: true
+  
+  test-jdk17:
+    name: Test JDK 17
+    uses: ./.github/workflows/test.yml
+    with:
+      java-version: '17'
+  
+  test-jdk21:
+    name: Test JDK 21
+    uses: ./.github/workflows/test.yml
+    with:
+      java-version: '21'
+  
+  code-quality:
+    name: Code Quality
+    uses: ./.github/workflows/code-quality.yml
+  
+  integration-test:
+    name: Integration Test
+    needs: [ build-jdk17, test-jdk17 ]
+    uses: ./.github/workflows/integration-test.yml
+  
+  examples-test:
+    name: Examples Test
+    needs: [ build-jdk17, test-jdk17 ]
+    uses: ./.github/workflows/examples-test.yml
+  
+  publish:
+    name: Publish
+    needs: [ build-jdk17, test-jdk17, code-quality, examples-test ]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/publish.yml
