@@ -34,7 +34,7 @@ jobs:
     
     - name: Generate test report
       if: always()
-      uses: dorny/test-reporter@v1
+      uses: dorny/test-reporter@v3
       with:
         name: All Test Results (JDK ${{ inputs.java-version }})
         path: '**/target/surefire-reports/TEST-*.xml,**/target/failsafe-reports/TEST-*.xml'
