@@ -32,7 +32,7 @@ jobs:
       run: mvn clean package -DskipTests -B
     
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v3
       with:
         name: Release ${{ steps.version.outputs.VERSION }}
         draft: false
