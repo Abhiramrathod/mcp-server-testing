@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ master, release ]
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+  actions: read
+
 jobs:
   build-jdk17:
     name: Build JDK 17
