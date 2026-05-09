@@ -27,15 +27,17 @@ jobs:
       java-version: '21'
       upload-artifacts: true
   
-  test-jdk17:
-    name: Test JDK 17
-    uses: ./.github/workflows/test.yml
+  all-tests-jdk17:
+    name: All Tests JDK 17
+    needs: [ build-jdk17 ]
+    uses: ./.github/workflows/all-tests.yml
     with:
       java-version: '17'
   
-  test-jdk21:
-    name: Test JDK 21
-    uses: ./.github/workflows/test.yml
+  all-tests-jdk21:
+    name: All Tests JDK 21
+    needs: [ build-jdk21 ]
+    uses: ./.github/workflows/all-tests.yml
     with:
       java-version: '21'
   
@@ -43,18 +45,8 @@ jobs:
     name: Code Quality
     uses: ./.github/workflows/code-quality.yml
   
-  integration-test:
-    name: Integration Test
-    needs: [ build-jdk17, test-jdk17 ]
-    uses: ./.github/workflows/integration-test.yml
-  
-  examples-test:
-    name: Examples Test
-    needs: [ build-jdk17, test-jdk17 ]
-    uses: ./.github/workflows/examples-test.yml
-  
   publish:
     name: Publish
-    needs: [ build-jdk17, test-jdk17, code-quality, examples-test ]
+    needs: [ all-tests-jdk17, code-quality ]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     uses: ./.github/workflows/publish.yml

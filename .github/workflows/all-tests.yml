@@ -1,4 +1,4 @@
-name: Test
+name: All Tests
 
 on:
   workflow_call:
@@ -11,10 +11,11 @@ permissions:
   contents: read
   checks: write
   pull-requests: write
+  actions: write
 
 jobs:
-  test:
-    name: Test (JDK ${{ inputs.java-version }})
+  all-tests:
+    name: All Tests (JDK ${{ inputs.java-version }})
     runs-on: ubuntu-latest
     
     steps:
@@ -28,15 +29,15 @@ jobs:
         distribution: 'temurin'
         cache: maven
     
-    - name: Run tests
-      run: mvn test -B
+    - name: Run all tests (unit + integration + examples)
+      run: mvn clean verify -B
     
     - name: Generate test report
       if: always()
       uses: dorny/test-reporter@v1
       with:
-        name: Test Results (JDK ${{ inputs.java-version }})
-        path: '**/target/surefire-reports/TEST-*.xml'
+        name: All Test Results (JDK ${{ inputs.java-version }})
+        path: '**/target/surefire-reports/TEST-*.xml,**/target/failsafe-reports/TEST-*.xml'
         reporter: java-junit
         fail-on-error: false
     
@@ -44,6 +45,8 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-results-jdk-${{ inputs.java-version }}
-        path: '**/target/surefire-reports/'
+        name: all-test-results-jdk-${{ inputs.java-version }}
+        path: |
+          **/target/surefire-reports/
+          **/target/failsafe-reports/
         retention-days: 7
