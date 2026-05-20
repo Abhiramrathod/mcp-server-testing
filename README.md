@@ -195,15 +195,15 @@ mvn clean install
 
 ## CI/CD & Publishing
 
-This project uses GitHub Actions for continuous integration and deployment:
+This project uses GitHub Actions for continuous integration and JitPack for distribution:
 
 - **Automatic versioning**: Semantic versioning with auto-incrementing patch versions (1.0.0 → 1.0.1 → 1.0.2...)
-- **Automatic publishing**: Every push to `master`/`main` publishes to GitHub Packages
-- **Git tagging**: Each version is automatically tagged (e.g., `v1.0.1`)
+- **Automatic tagging**: Every push to `master`/`main` creates a Git tag (e.g., `v1.0.1`)
+- **JitPack distribution**: Users download from JitPack using Git tags (no authentication required)
 
-View published packages: https://github.com/Abhiramrathod/mcp-testing/packages
+View available versions: https://jitpack.io/#Abhiramrathod/mcp-testing
 
-See [VERSIONING.md](VERSIONING.md) for version management details.
+See [VERSIONING.md](VERSIONING.md) for version management details and [JITPACK.md](JITPACK.md) for JitPack usage.
 
 ## Module Details
 

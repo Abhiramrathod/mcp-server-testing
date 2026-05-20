@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
   build-and-test:
@@ -47,14 +46,11 @@ jobs:
     - name: Build and Test
       run: mvn clean verify -B
     
-    - name: Update version and publish
+    - name: Update version and tag
       if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
       run: |
         # Update version in all POMs
         mvn versions:set -DnewVersion=${{ steps.version.outputs.new }} -DgenerateBackupPoms=false -B
-        
-        # Deploy to GitHub Packages
-        mvn deploy -DskipTests -B
         
         # Commit version changes
         git config user.name "github-actions[bot]"
@@ -63,7 +59,7 @@ jobs:
         git commit -m "chore: bump version to ${{ steps.version.outputs.new }} [skip ci]"
         git push
         
-        # Create and push tag
+        # Create and push tag for JitPack
         git tag v${{ steps.version.outputs.new }}
         git push origin v${{ steps.version.outputs.new }}
       env:
