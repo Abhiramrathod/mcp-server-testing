@@ -59,9 +59,14 @@ jobs:
         git commit -m "chore: bump version to ${{ steps.version.outputs.new }} [skip ci]"
         git push
         
-        # Create and push tag for JitPack
-        git tag v${{ steps.version.outputs.new }}
-        git push origin v${{ steps.version.outputs.new }}
+        # Create and push tag for JitPack (skip if exists)
+        if git rev-parse "v${{ steps.version.outputs.new }}" >/dev/null 2>&1; then
+          echo "Tag v${{ steps.version.outputs.new }} already exists, skipping tag creation"
+        else
+          git tag v${{ steps.version.outputs.new }}
+          git push origin v${{ steps.version.outputs.new }}
+          echo "Created and pushed tag v${{ steps.version.outputs.new }}"
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
