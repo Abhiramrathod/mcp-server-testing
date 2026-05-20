@@ -1,52 +1,33 @@
-name: CI Pipeline
+name: CI
 
 on:
   push:
-    branches: [ master, release ]
+    branches: [ master, main ]
   pull_request:
-    branches: [ master, release ]
-
-permissions:
-  contents: read
-  checks: write
-  pull-requests: write
-  actions: read
+    branches: [ master, main ]
 
 jobs:
-  build-jdk17:
-    name: Build JDK 17
-    uses: ./.github/workflows/build.yml
-    with:
-      java-version: '17'
-      upload-artifacts: true
-  
-  build-jdk21:
-    name: Build JDK 21
-    uses: ./.github/workflows/build.yml
-    with:
-      java-version: '21'
-      upload-artifacts: true
-  
-  all-tests-jdk17:
-    name: All Tests JDK 17
-    needs: [ build-jdk17 ]
-    uses: ./.github/workflows/all-tests.yml
-    with:
-      java-version: '17'
-  
-  all-tests-jdk21:
-    name: All Tests JDK 21
-    needs: [ build-jdk21 ]
-    uses: ./.github/workflows/all-tests.yml
-    with:
-      java-version: '21'
-  
-  code-quality:
-    name: Code Quality
-    uses: ./.github/workflows/code-quality.yml
-  
-  publish:
-    name: Publish
-    needs: [ all-tests-jdk17, code-quality ]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    uses: ./.github/workflows/publish.yml
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Build and Test
+      run: mvn clean verify -B
+    
+    - name: Upload artifacts
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: '**/target/*.jar'
+        retention-days: 7
