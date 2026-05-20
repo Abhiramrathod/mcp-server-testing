@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.abhi-ai</groupId>
         <artifactId>mcpTesting</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0.0</version>
     </parent>
 
     <artifactId>mcp-test-api</artifactId>

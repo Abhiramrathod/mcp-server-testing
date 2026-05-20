@@ -44,30 +44,30 @@ jobs:
         echo "New version: $NEW_VERSION"
         echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
     
-    - name: Update version
+    - name: Build and Test
+      run: mvn clean verify -B
+    
+    - name: Update version and publish
       if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
       run: |
+        # Update version in all POMs
         mvn versions:set -DnewVersion=${{ steps.version.outputs.new }} -DgenerateBackupPoms=false -B
+        
+        # Deploy to GitHub Packages
+        mvn deploy -DskipTests -B
+        
+        # Commit version changes
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git add pom.xml */pom.xml
         git commit -m "chore: bump version to ${{ steps.version.outputs.new }} [skip ci]"
         git push
-    
-    - name: Build and Test
-      run: mvn clean verify -B
-    
-    - name: Publish to GitHub Packages
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
-      run: mvn deploy -DskipTests -B
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Create Git Tag
-      if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
-      run: |
+        
+        # Create and push tag
         git tag v${{ steps.version.outputs.new }}
         git push origin v${{ steps.version.outputs.new }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Upload artifacts
       if: success()
