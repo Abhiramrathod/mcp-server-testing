@@ -17,6 +17,10 @@
     <name>MCP Test Interfaces</name>
     <description>Core interfaces for MCP testing framework</description>
 
+    <properties>
+        <maven.deploy.skip>false</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

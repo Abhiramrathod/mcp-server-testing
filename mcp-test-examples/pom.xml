@@ -17,6 +17,10 @@
     <name>MCP Test Examples</name>
     <description>Example tests demonstrating the MCP testing framework</description>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <!-- Only dependency needed - the public API -->
         <dependency>
