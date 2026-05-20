@@ -51,7 +51,7 @@ public final class McpExchangeAssertions {
     public List<McpExchangeSummary> all() {
         return tracker.all().stream()
                 .map(this::toSummary)
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     /**
@@ -63,7 +63,7 @@ public final class McpExchangeAssertions {
     public List<McpExchangeSummary> forMethod(String method) {
         return tracker.forMethod(method).stream()
                 .map(this::toSummary)
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     /**
