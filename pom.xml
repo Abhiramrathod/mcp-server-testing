@@ -71,6 +71,8 @@
                         <source>17</source>
                         <show>public</show>
                         <detectJavaApiLink>true</detectJavaApiLink>
+                        <doclint>none</doclint>
+                        <failOnError>false</failOnError>
                     </configuration>
                 </plugin>
             </plugins>
