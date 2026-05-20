@@ -26,15 +26,44 @@ mcp-test-api
 
 ## For Library Users
 
-**Add only `mcp-test-api` to your project:**
+### Installation from GitHub Packages
+
+**1. Add GitHub Packages repository to your `pom.xml`:**
+
+```xml
+<repositories>
+    <repository>
+        <id>github</id>
+        <url>https://maven.pkg.github.com/Abhiramrathod/mcp-testing</url>
+    </repository>
+</repositories>
+```
+
+**2. Add the dependency:**
 
 ```xml
 <dependency>
     <groupId>org.abhi-ai</groupId>
     <artifactId>mcp-test-api</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.1</version> <!-- Check latest version at https://github.com/Abhiramrathod/mcp-testing/packages -->
 </dependency>
 ```
+
+**3. Configure authentication in `~/.m2/settings.xml`:**
+
+```xml
+<settings>
+    <servers>
+        <server>
+            <id>github</id>
+            <username>YOUR_GITHUB_USERNAME</username>
+            <password>YOUR_GITHUB_TOKEN</password>
+        </server>
+    </servers>
+</settings>
+```
+
+Generate a GitHub Personal Access Token with `read:packages` scope at: https://github.com/settings/tokens
 
 All other modules (`mcp-test-interfaces`, `mcp-test-core`, `mcp-test-transport`, `mcp-test-client`) are transitive dependencies — you never import them directly.
 
@@ -125,12 +154,27 @@ Everything is accessed through:
 # Compile all modules
 mvn clean compile
 
+# Run tests
+mvn clean verify
+
 # Package all modules
 mvn clean package
 
 # Install to local Maven repo
 mvn clean install
 ```
+
+## CI/CD & Publishing
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+- **Automatic versioning**: Semantic versioning with auto-incrementing patch versions (1.0.0 → 1.0.1 → 1.0.2...)
+- **Automatic publishing**: Every push to `master`/`main` publishes to GitHub Packages
+- **Git tagging**: Each version is automatically tagged (e.g., `v1.0.1`)
+
+View published packages: https://github.com/Abhiramrathod/mcp-testing/packages
+
+See [VERSIONING.md](VERSIONING.md) for version management details.
 
 ## Module Details
 
