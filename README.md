@@ -26,7 +26,38 @@ mcp-test-api
 
 ## For Library Users
 
-### Installation from GitHub Packages
+### Installation from JitPack (No Authentication Required)
+
+**1. Add JitPack repository to your `pom.xml`:**
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+```
+
+**2. Add the dependency:**
+
+```xml
+<dependency>
+    <groupId>com.github.Abhiramrathod</groupId>
+    <artifactId>mcp-test-api</artifactId>
+    <version>v1.0.1</version> <!-- Use git tag version -->
+</dependency>
+```
+
+**Note:** JitPack builds from Git tags. Make sure to use tags like `v1.0.1`, `v1.0.2`, etc.
+
+Check available versions at: https://jitpack.io/#Abhiramrathod/mcp-testing
+
+All other modules (`mcp-test-interfaces`, `mcp-test-core`, `mcp-test-transport`, `mcp-test-client`) are transitive dependencies — you never import them directly.
+
+---
+
+### Alternative: Installation from GitHub Packages (Requires Authentication)
 
 **1. Add GitHub Packages repository to your `pom.xml`:**
 
@@ -45,7 +76,7 @@ mcp-test-api
 <dependency>
     <groupId>org.abhi-ai</groupId>
     <artifactId>mcp-test-api</artifactId>
-    <version>1.0.1</version> <!-- Check latest version at https://github.com/Abhiramrathod/mcp-testing/packages -->
+    <version>1.0.1</version>
 </dependency>
 ```
 
@@ -64,8 +95,6 @@ mcp-test-api
 ```
 
 Generate a GitHub Personal Access Token with `read:packages` scope at: https://github.com/settings/tokens
-
-All other modules (`mcp-test-interfaces`, `mcp-test-core`, `mcp-test-transport`, `mcp-test-client`) are transitive dependencies — you never import them directly.
 
 ## Usage
 
