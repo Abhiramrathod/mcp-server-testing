@@ -71,7 +71,7 @@ jobs:
     
     - name: Upload artifacts
       if: success()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: build-artifacts-v${{ steps.version.outputs.new }}
         path: '**/target/*.jar'
