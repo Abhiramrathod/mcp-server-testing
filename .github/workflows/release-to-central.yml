@@ -149,8 +149,10 @@ jobs:
           # copy the groupId tree from the local Maven repository into the bundle
           # this preserves the maven layout and ensures .pom files are present
           cp -R "$HOME/.m2/repository/io/github/abhiramrathod" bundle/ || true
-          # include any signatures (.asc) that were created next to artifacts
-          find "$HOME/.m2/repository/io/github/abhiramrathod" -type f -name "*.asc" -exec cp --parents {} bundle \; || true
+          # signatures (.asc) were created next to artifacts in the repo tree
+          # and are already included by the recursive copy above; do not use
+          # `cp --parents` (it embeds absolute paths like /home/runner) which
+          # will cause Sonatype bundle validation to fail.
           # create zip
           zip -r central-bundle.zip bundle
 
@@ -201,6 +203,7 @@ jobs:
             sleep 10
           done
           echo "Timed out waiting for publish"; exit 1
+
 
 
 
