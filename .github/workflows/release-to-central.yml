@@ -111,12 +111,83 @@ jobs:
             echo "~/.m2/settings.xml not found"
           fi
 
-      - name: Build and publish to Central
-        env:
-          GPG_TTY: /dev/console
+      - name: Build artifacts (package + sources + javadoc)
         run: |
-          # Run mvn deploy which will invoke the central-publishing-maven-plugin
-          mvn -B -DskipTests clean deploy
+          mvn -B -DskipTests clean package source:jar javadoc:jar
+
+      - name: Sign artifacts with GPG
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          # find artifacts and sign them (jars and poms)
+          files=$(find . -type f -path "*/target/*" \( -name "*.jar" -o -name "*.pom" \) ) || true
+          if [ -z "$files" ]; then
+            echo "No artifacts found to sign"; exit 1
+          fi
+          for f in $files; do
+            echo "Signing $f"
+            gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --detach-sign -a "$f"
+          done
+
+      - name: Assemble deployment bundle
+        run: |
+          set -euo pipefail
+          rm -rf central-bundle bundle || true
+          mkdir -p bundle
+          # copy artifacts, poms and their signatures into bundle
+          find . -type f -path "*/target/*" \( -name "*.jar" -o -name "*.pom" -o -name "*.asc" \) -exec cp --parents {} bundle \;
+          # create zip
+          zip -r central-bundle.zip bundle
+
+      - name: Upload bundle to Sonatype Central Publisher (AUTOMATIC)
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: |
+          set -euo pipefail
+          # compute base64 user token
+          token=$(printf "%s:%s" "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w0)
+          echo "Uploading bundle..."
+          resp=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $token" -F "bundle=@central-bundle.zip;type=application/octet-stream" "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC")
+          http=$(printf "%s" "$resp" | tail -n1)
+          body=$(printf "%s" "$resp" | sed '$d')
+          echo "HTTP status: $http"
+          echo "Body: $body"
+          if [ "$http" != "201" ] && [ "$http" != "200" ]; then
+            echo "Upload failed"; exit 1
+          fi
+          export DEPLOYMENT_ID=$(printf "%s" "$body" | tr -d '\r' | tail -n1)
+          echo "DEPLOYMENT_ID=$DEPLOYMENT_ID" >> $GITHUB_ENV
+
+      - name: Poll deployment status until published
+        env:
+          SONATYPE_TOKEN: ${{ secrets.CENTRAL_USERNAME }}:${{ secrets.CENTRAL_PASSWORD }}
+        run: |
+          set -euo pipefail
+          # compute base64 token again
+          token=$(printf "%s" "${{ secrets.CENTRAL_USERNAME }}:${{ secrets.CENTRAL_PASSWORD }}" | base64 -w0)
+          id="$DEPLOYMENT_ID"
+          echo "Polling deployment id: $id"
+          attempts=0
+          max=30
+          while [ $attempts -lt $max ]; do
+            attempts=$((attempts+1))
+            echo "Attempt $attempts"
+            out=$(curl -s -H "Authorization: Bearer $token" "https://central.sonatype.com/api/v1/publisher/status?id=$id")
+            echo "$out"
+            state=$(printf "%s" "$out" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("deploymentState",""))') || true
+            echo "State: $state"
+            if [ "$state" = "PUBLISHED" ]; then
+              echo "Deployment published successfully"; exit 0
+            fi
+            if [ "$state" = "FAILED" ]; then
+              echo "Deployment failed"; printf "%s" "$out" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("errors",""))' || true; exit 1
+            fi
+            sleep 10
+          done
+          echo "Timed out waiting for publish"; exit 1
+
 
 
 
