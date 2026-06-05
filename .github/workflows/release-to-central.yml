@@ -111,32 +111,46 @@ jobs:
             echo "~/.m2/settings.xml not found"
           fi
 
-      - name: Build artifacts (package)
+      - name: Build artifacts and install to local Maven repository
         run: |
-          mvn -B -DskipTests clean package
+          # Build modules and install artifacts into the local Maven repository
+          # so we can assemble a correctly structured Maven layout (with .pom files)
+          mvn -B -DskipTests -Dgpg.skip=true clean install
 
-      - name: Sign artifacts with GPG
+      # The install above writes artifacts and POMs into ~/.m2/repository
+      # in a proper Maven layout. We will use that layout for bundling so the
+      # Sonatype Central Publisher receives jars alongside their .pom files.
+
+      - name: Sign artifacts in local Maven repository with GPG
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           set -euo pipefail
-          # find artifacts and sign them (jars and poms)
-          files=$(find . -type f -path "*/target/*" \( -name "*.jar" -o -name "*.pom" \) ) || true
+          REPO="${HOME}/.m2/repository/io/github/abhiramrathod"
+          if [ ! -d "$REPO" ]; then
+            echo "Local repository path $REPO not found"; ls -la $(dirname "$REPO") || true; exit 1
+          fi
+          # find jars and poms under our groupId path and sign them
+          files=$(find "$REPO" -type f \( -name "*.jar" -o -name "*.pom" \) ) || true
           if [ -z "$files" ]; then
-            echo "No artifacts found to sign"; exit 1
+            echo "No artifacts found to sign in $REPO"; exit 1
           fi
           for f in $files; do
             echo "Signing $f"
+            # create detached ASCII-armored signatures next to each artifact
             gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --detach-sign -a "$f"
           done
 
-      - name: Assemble deployment bundle
+      - name: Assemble deployment bundle from local Maven repository
         run: |
           set -euo pipefail
           rm -rf central-bundle bundle || true
           mkdir -p bundle
-          # copy artifacts, poms and their signatures into bundle
-          find . -type f -path "*/target/*" \( -name "*.jar" -o -name "*.pom" -o -name "*.asc" \) -exec cp --parents {} bundle \;
+          # copy the groupId tree from the local Maven repository into the bundle
+          # this preserves the maven layout and ensures .pom files are present
+          cp -R "$HOME/.m2/repository/io/github/abhiramrathod" bundle/ || true
+          # include any signatures (.asc) that were created next to artifacts
+          find "$HOME/.m2/repository/io/github/abhiramrathod" -type f -name "*.asc" -exec cp --parents {} bundle \; || true
           # create zip
           zip -r central-bundle.zip bundle
 
@@ -187,6 +201,8 @@ jobs:
             sleep 10
           done
           echo "Timed out waiting for publish"; exit 1
+
+
 
 
 
