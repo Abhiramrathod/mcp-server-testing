@@ -1,273 +1,159 @@
-# MCP Testing Framework - Multimodule Architecture
+# MCP Testing Framework
 
-A fully abstracted Java testing framework for MCP (Model Context Protocol) servers.
+[![Maven Central](https://img.shields.io/maven-central/v/com.testMcp.io/mcp-test-api.svg)](https://search.maven.org/search?q=g:com.testMcp.io)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Java](https://img.shields.io/badge/Java-17%2B-orange.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 
-## Module Structure
+📚 [Documentation](https://YOUR_USERNAME.github.io/mcpTesting/) | 📦 [Maven Central](https://search.maven.org/search?q=g:com.testMcp.io) | 🐛 [Issues](https://github.com/YOUR_USERNAME/mcpTesting/issues) | 💬 [Discussions](https://github.com/YOUR_USERNAME/mcpTesting/discussions)
 
-```
-mcpTesting (parent)
-├── mcp-test-interfaces    → Core interfaces (McpTransport)
-├── mcp-test-core          → Core utilities (JSON codec, validation, constants)
-├── mcp-test-transport     → Transport layer (SSE implementation)
-├── mcp-test-client        → Internal client implementation (RPC, directories, McpTestClient)
-├── mcp-test-api           → Public API (McpClient, typed models, assertions)
-└── mcp-test-examples      → Example tests and usage demonstrations
-```
+A **production-grade** Java testing framework for Model Context Protocol (MCP) servers with type-safe APIs, fluent assertions, and comprehensive monitoring.
 
-### Dependency Graph
+## ✨ Features
 
-```
-mcp-test-api
-  └── mcp-test-client
-        └── mcp-test-transport
-              ├── mcp-test-interfaces
-              └── mcp-test-core
-```
+- 🎯 **Type-Safe API** - Strongly typed domain models, no raw JSON
+- 🔗 **Fluent Assertions** - Chainable methods for readable tests
+- 🏗️ **Modular Architecture** - Clean separation with 6 specialized modules
+- 📊 **Performance Monitoring** - Built-in latency tracking and percentiles
+- 🔒 **Complete Abstraction** - Internal details never leak to your code
+- 🔧 **Extensible** - Custom transport implementations supported
 
-## For Library Users
+## 🚀 Quick Start
 
-### Installation from JitPack (No Authentication Required)
+### Installation
 
-**1. Add JitPack repository to your `pom.xml`:**
-
-```xml
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
-</repositories>
-```
-
-**2. Add the dependency:**
+Add to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>com.github.Abhiramrathod</groupId>
+    <groupId>com.testMcp.io</groupId>
     <artifactId>mcp-test-api</artifactId>
-    <version>v1.0.1</version> <!-- Use git tag version -->
+    <version>1.0.0</version>
+    <scope>test</scope>
 </dependency>
 ```
 
-**Note:** JitPack builds from Git tags. Make sure to use tags like `v1.0.1`, `v1.0.2`, etc.
+Or Gradle:
 
-Check available versions at: https://jitpack.io/#Abhiramrathod/mcp-testing
-
-All other modules (`mcp-test-interfaces`, `mcp-test-core`, `mcp-test-transport`, `mcp-test-client`) are transitive dependencies — you never import them directly.
-
----
-
-### Alternative: Installation from GitHub Packages (Requires Authentication)
-
-**1. Add GitHub Packages repository to your `pom.xml`:**
-
-```xml
-<repositories>
-    <repository>
-        <id>github</id>
-        <url>https://maven.pkg.github.com/Abhiramrathod/mcp-testing</url>
-    </repository>
-</repositories>
+```gradle
+testImplementation 'com.testMcp.io:mcp-test-api:1.0.0'
 ```
 
-**2. Add the dependency:**
+> **Note:** Only add `mcp-test-api` - all other modules are included transitively.
 
-```xml
-<dependency>
-    <groupId>org.abhi-ai</groupId>
-    <artifactId>mcp-test-api</artifactId>
-    <version>1.0.1</version>
-</dependency>
-```
-
-**3. Configure authentication in `~/.m2/settings.xml`:**
-
-```xml
-<settings>
-    <servers>
-        <server>
-            <id>github</id>
-            <username>YOUR_GITHUB_USERNAME</username>
-            <password>YOUR_GITHUB_TOKEN</password>
-        </server>
-    </servers>
-</settings>
-```
-
-Generate a GitHub Personal Access Token with `read:packages` scope at: https://github.com/settings/tokens
-
-## Usage
+### Your First Test
 
 ```java
 import mcp.toolkit.testing.framework.api.*;
 import mcp.toolkit.testing.framework.api.model.*;
 
-// Build client
-McpClient client = McpClient.connectTo("http://localhost:8080")
-        .config(McpClientConfig.builder()
-                .timeout(Duration.ofSeconds(30))
-                .build())
-        .initializeOnBuild()
-        .build();
+public class MyMcpTest {
+    @Test
+    public void testMcpServer() {
+        // Connect to MCP server
+        McpClient client = McpClient.connectTo("http://localhost:8080")
+                .config(McpClientConfig.builder()
+                        .timeout(Duration.ofSeconds(30))
+                        .build())
+                .initializeOnBuild()
+                .build();
 
-// Server info
-McpServerInfo info = client.serverInfo();
-System.out.println(info.name() + " supports tools: " + info.supportsTools());
+        // Test tool invocation
+        McpToolResult result = client.tools()
+                .callTool("calculator", Map.of("operation", "add", "a", 5, "b", 3))
+                .assertSuccess()
+                .assertTextContains("8");
 
-// Tools
+        // Verify performance
+        client.exchanges().assertAverageLatencyBelow(McpMethod.TOOLS_CALL, 500);
+        
+        client.close();
+    }
+}
+```
+
+## 📖 Documentation
+
+**Full Documentation**: [https://YOUR_USERNAME.github.io/mcpTesting/](https://YOUR_USERNAME.github.io/mcpTesting/)
+
+## 🎯 Core Capabilities
+
+### Tools Testing
+```java
 List<McpTool> tools = client.tools().listTools();
-McpToolResult result = client.tools().callTool("my-tool", Map.of("key", "value"))
-        .assertSuccess()
-        .assertTextContains("expected");
+McpToolResult result = client.tools().callTool("my-tool", args).assertSuccess();
+```
 
-// Resources
-McpResourceContent content = client.resources().readResource("file://data.txt")
-        .assertNotEmpty()
-        .assertTextContains("hello");
+### Resources Testing
+```java
+List<McpResource> resources = client.resources().listResources();
+McpResourceContent content = client.resources().readResource("file://data.txt");
+```
 
-// Prompts
-McpPromptResult prompt = client.prompts().getPrompt("translate", Map.of("lang", "en"))
-        .assertNotEmpty()
-        .assertUserTextContains("translate");
+### Prompts Testing
+```java
+List<McpPrompt> prompts = client.prompts().listPrompts();
+McpPromptResult prompt = client.prompts().getPrompt("translate", args);
+```
 
-// Exchange assertions
-client.exchanges().assertLastSucceeded();
+### Performance Monitoring
+```java
 client.exchanges().assertAverageLatencyBelow(McpMethod.TOOLS_CALL, 500);
 long p99 = client.exchanges().latencyPercentile(McpMethod.TOOLS_CALL, 99);
-client.exchanges().assertLatencyPercentileBelow(McpMethod.TOOLS_CALL, 99, 1000);
-
-client.close();
 ```
 
-## Examples
+## 🏗️ Architecture
 
-See the `mcp-test-examples` module for comprehensive usage examples with a dummy MCP server:
-- `DummyMcpServer` - Simple HTTP-based MCP server for testing
-- `BasicClientTest` - Client setup and initialization
-- `ToolsClientTest` - Tool discovery and invocation
-- `ResourcesClientTest` - Resource listing and reading
-- `PromptsClientTest` - Prompt retrieval and inspection
-- `ExchangeTrackingTest` - Performance monitoring and assertions
-- `ComprehensiveIntegrationTest` - Full integration testing
-
-Run examples:
-```bash
-# Run all example tests
-cd mcp-test-examples
-mvn test
-
-# Run dummy server standalone
-mvn exec:java -Dexec.mainClass="mcp.toolkit.testing.examples.server.DummyMcpServer"
+```
+mcp-test-api (Public)
+  └── mcp-test-client (Internal)
+        └── mcp-test-transport (SSE)
+              ├── mcp-test-interfaces
+              └── mcp-test-core
 ```
 
-## What's Hidden
+**Design Principle:** Users only import `mcp-test-api`. All internal modules are abstracted away.
 
-Users **never** import or reference:
-- `McpTestClient` (internal implementation)
-- `McpRpcClient`, `RpcExchange`, `RpcExchangeTracker` (internal RPC layer)
-- `McpToolDirectory`, `McpResourceDirectory`, `McpPromptDirectory` (internal facades)
-- `McpTransport`, `McpSseTransport` (transport internals)
-- `McpJsonCodec`, `McpTestClientConstants`, `McpValidation` (core utilities)
+## 📦 Modules
 
-Everything is accessed through:
-- `McpClient` — entry point
-- `ToolsClient`, `ResourcesClient`, `PromptsClient` — typed domain clients
-- `McpExchangeAssertions` — fluent exchange inspection
-- Model classes — `McpTool`, `McpToolResult`, `McpResource`, `McpResourceContent`, `McpPrompt`, `McpPromptResult`, `McpServerInfo`, `McpExchangeSummary`
-- `McpClientConfig` — configuration
-- `McpMethod` — enum for method names
+| Module | Purpose | Visibility |
+|--------|---------|-----------|
+| `mcp-test-api` | Public-facing API | **Import this** |
+| `mcp-test-client` | Internal RPC implementation | Internal |
+| `mcp-test-transport` | SSE transport layer | Internal |
+| `mcp-test-interfaces` | Core interfaces | Internal |
+| `mcp-test-core` | Shared utilities | Internal |
+| `mcp-test-examples` | Usage examples | Reference |
 
-## Build
+## 💡 Examples
 
-```bash
-# Compile all modules
-mvn clean compile
+Check out complete examples in the [`mcp-test-examples`](mcp-test-examples/src/test/java/mcp/toolkit/testing/examples) module:
 
-# Run tests
-mvn clean verify
+- [BasicClientTest](mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/BasicClientTest.java) - Client initialization
+- [ToolsClientTest](mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ToolsClientTest.java) - Tool testing
+- [ResourcesClientTest](mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ResourcesClientTest.java) - Resource testing
+- [PromptsClientTest](mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/PromptsClientTest.java) - Prompt testing
+- [ExchangeTrackingTest](mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ExchangeTrackingTest.java) - Performance monitoring
+- [ComprehensiveIntegrationTest](mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ComprehensiveIntegrationTest.java) - Full integration
 
-# Package all modules
-mvn clean package
+## 🔧 Requirements
 
-# Install to local Maven repo
-mvn clean install
-```
+- Java 17 or higher
+- Maven 3.6+ or Gradle 7+
 
-## CI/CD & Publishing
+## 🤝 Contributing
 
-This project uses GitHub Actions for continuous integration and JitPack for distribution:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- **Automatic versioning**: Semantic versioning with auto-incrementing patch versions (1.0.0 → 1.0.1 → 1.0.2...)
-- **Automatic tagging**: Every push to `master`/`main` creates a Git tag (e.g., `v1.0.1`)
-- **JitPack distribution**: Users download from JitPack using Git tags (no authentication required)
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-View available versions: https://jitpack.io/#Abhiramrathod/mcp-testing
+## 📄 License
 
-See [VERSIONING.md](VERSIONING.md) for version management details and [JITPACK.md](JITPACK.md) for JitPack usage.
-
-## Module Details
-
-### mcp-test-interfaces
-- **Purpose**: Core interfaces for extensibility
-- **Exports**: `McpTransport` (interface)
-- **Dependencies**: Jackson only
-
-### mcp-test-core
-- **Purpose**: Shared utilities used by all other modules
-- **Exports**: `McpJsonCodec`, `McpValidation`, `McpTestClientConstants`
-- **Dependencies**: Jackson only
-
-### mcp-test-transport
-- **Purpose**: Transport abstraction and SSE implementation
-- **Exports**: `McpSseTransport`
-- **Dependencies**: `mcp-test-interfaces`, `mcp-test-core`
-
-### mcp-test-client
-- **Purpose**: Internal client implementation
-- **Exports**: `McpTestClient`, `McpRpcClient`, `RpcExchange`, `RpcExchangeTracker`, `McpToolDirectory`, `McpResourceDirectory`, `McpPromptDirectory`, `McpInitializationGuard`, `McpTestClientUtils`, `BaseMcpComponentTestSetup`
-- **Dependencies**: `mcp-test-transport` (transitively includes `mcp-test-core`)
-- **Note**: This module is internal — users should not depend on it directly
-
-### mcp-test-api
-- **Purpose**: Public-facing API layer
-- **Exports**: `McpClient`, `McpClientConfig`, `McpMethod`, `ToolsClient`, `ResourcesClient`, `PromptsClient`, `McpExchangeAssertions`, all model classes
-- **Dependencies**: `mcp-test-client` (transitively includes all other modules)
-- **Note**: This is the ONLY module users should add as a dependency
-
-### mcp-test-examples
-- **Purpose**: Example tests and usage demonstrations
-- **Exports**: Example test classes and quick start guide
-- **Dependencies**: `mcp-test-api`, JUnit 5
-- **Note**: Reference module showing best practices - not for production use
-
-## Design Principles
-
-1. **Separation of concerns** — interfaces in separate module for extensibility
-2. **Complete abstraction** — users never see internal implementation details
-2. **Typed domain models** — no raw `JsonNode` in public API (`.raw()` available for advanced use)
-3. **Fluent assertions** — chainable methods on result objects
-4. **Enum-based constants** — `McpMethod` instead of raw strings
-5. **Builder pattern** — `McpClient.connectTo(...).config(...).build()`
-6. **Lazy initialization** — connection happens on first use unless explicitly initialized
-7. **Thread-safe** — all exchange tracking and RPC operations are thread-safe
-8. **Zero leakage** — no Jackson, no internal types in public API signatures
-
-## Migration from Old API
-
-```java
-// Old (exposed internals)
-McpTestClient client = BaseMcpComponentTestSetup.initializeMcpTestClient("http://localhost:8080");
-JsonNode raw = client.tools().callTool("my-tool", args);
-if (raw.path("isError").asBoolean()) throw new AssertionError(...);
-
-// New (clean abstraction)
-McpClient client = McpClient.connectTo("http://localhost:8080")
-        .initializeOnBuild()
-        .build();
-McpToolResult result = client.tools().callTool("my-tool", args)
-        .assertSuccess();
-```
+Licensed under the [Apache License 2.0](LICENSE).
 
 ---
 
-**Users only ever add `mcp-test-api` as a dependency. Everything else is internal.**
+**Built with ❤️ for the developer community**
