@@ -39,12 +39,12 @@
         <repository>
             <id>ossrh</id>
             <name>OSSRH Staging</name>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
         <snapshotRepository>
             <id>ossrh</id>
             <name>OSSRH Snapshots</name>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -207,8 +207,8 @@
                 <configuration>
                     <serverId>ossrh</serverId>
                     <!-- Nexus staging plugin expects the Nexus base URL (no path) -->
-                    <!-- Ensure trailing slash so the plugin composes API paths correctly -->
-                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                    <!-- Use primary OSSRH host as fallback while s01 is down -->
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
