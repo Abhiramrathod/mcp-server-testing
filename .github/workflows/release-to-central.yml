@@ -91,9 +91,9 @@ jobs:
         run: |
           mkdir -p ~/.m2
           python3 - <<'PY'
-import os
-home = os.path.expanduser('~')
-settings = f'''<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+            import os
+            home = os.path.expanduser('~')
+            settings = f'''<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
   <servers>
@@ -109,8 +109,8 @@ settings = f'''<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
   </servers>
 </settings>
 '''
-open(os.path.join(home,'.m2','settings.xml'),'w').write(settings)
-PY
+            open(os.path.join(home,'.m2','settings.xml'),'w').write(settings)
+          PY
 
       - name: Build and publish to Central
         env:
@@ -118,6 +118,7 @@ PY
         run: |
           # Run mvn deploy which will invoke the central-publishing-maven-plugin
           mvn -B -DskipTests clean deploy
+
 
 
 
