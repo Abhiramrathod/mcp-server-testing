@@ -23,9 +23,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          server-ids: 'ossrh'
-          server-username: ${{ secrets.OSSRH_USERNAME }}
-          server-password: ${{ secrets.OSSRH_PASSWORD }}
+          # Use Central user token (create in central.sonatype.com -> User Tokens)
+          server-ids: 'central'
+          server-username: ${{ secrets.CENTRAL_USERNAME }}
+          server-password: ${{ secrets.CENTRAL_PASSWORD }}
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
@@ -37,9 +38,11 @@ jobs:
           restore-keys: |
             mvn-repo-${{ runner.os }}-
 
-      - name: Build and deploy to OSSRH
+      - name: Build and publish to Central
         env:
           GPG_TTY: /dev/console
         run: |
+          # Run mvn deploy which will invoke the central-publishing-maven-plugin
           mvn -B -DskipTests clean deploy
+
 
