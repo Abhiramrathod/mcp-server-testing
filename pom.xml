@@ -204,7 +204,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <!-- server id matched in settings.xml / Actions setup-java -->
-                    <publishingServerId>central</publishingServerId>
+                    <!-- Use 'ossrh' (Sonatype OSSRH server id) so credentials provided by
+                         the CI job are picked up for nexus staging and deploy steps. -->
+                    <publishingServerId>ossrh</publishingServerId>
                     <!-- Enable automatic publish after validation -->
                     <autoPublish>true</autoPublish>
                     <!-- Wait until published (blocks until published) -->

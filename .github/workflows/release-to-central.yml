@@ -23,8 +23,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          # Use Central user token (create in central.sonatype.com -> User Tokens)
-          server-ids: 'central'
+          # Use OSSRH credentials (create user token on Sonatype and set secrets)
+          # This will populate a <server> entry with id "ossrh" in settings.xml
+          server-ids: 'ossrh'
           server-username: ${{ secrets.CENTRAL_USERNAME }}
           server-password: ${{ secrets.CENTRAL_PASSWORD }}
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -81,6 +82,7 @@ jobs:
         run: |
           # Run mvn deploy which will invoke the central-publishing-maven-plugin
           mvn -B -DskipTests clean deploy
+
 
 
 
