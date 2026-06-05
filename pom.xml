@@ -4,10 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.abhi-ai</groupId>
+    <groupId>io.github.abhiramrathod</groupId>
     <artifactId>mcpTesting</artifactId>
     <version>1.0.3</version>
     <packaging>pom</packaging>
+
+    <name>MCP Testing Framework</name>
+    <description>Production-grade Java testing framework for Model Context Protocol (MCP) servers.</description>
+    <url>https://github.com/Abhiramrathod/mcp-testing</url>
 
     <modules>
         <module>mcp-test-interfaces</module>
@@ -23,15 +27,25 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jackson.version>2.15.2</jackson.version>
-        <maven.deploy.skip>true</maven.deploy.skip>
+        <!-- allow deploys; CI workflow should provide credentials and signing -->
+        <maven.deploy.skip>false</maven.deploy.skip>
     </properties>
 
+    <!-- Distribution configured for Sonatype OSSRH (Maven Central). To publish,
+         create Sonatype OSSRH credentials and configure CI to supply them as
+         secrets (OSSRH_USERNAME and OSSRH_PASSWORD). Snapshots will be published
+         to the snapshots repository. -->
     <distributionManagement>
         <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/${env.GITHUB_REPOSITORY}</url>
+            <id>ossrh</id>
+            <name>OSSRH Staging</name>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <name>OSSRH Snapshots</name>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
     </distributionManagement>
 
     <dependencyManagement>
@@ -42,32 +56,54 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.abhi-ai</groupId>
+                <groupId>io.github.abhiramrathod</groupId>
                 <artifactId>mcp-test-interfaces</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.abhi-ai</groupId>
+                <groupId>io.github.abhiramrathod</groupId>
                 <artifactId>mcp-test-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.abhi-ai</groupId>
+                <groupId>io.github.abhiramrathod</groupId>
                 <artifactId>mcp-test-transport</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.abhi-ai</groupId>
+                <groupId>io.github.abhiramrathod</groupId>
                 <artifactId>mcp-test-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.abhi-ai</groupId>
+                <groupId>io.github.abhiramrathod</groupId>
                 <artifactId>mcp-test-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/Abhiramrathod/mcp-testing</url>
+        <connection>scm:git:git://github.com/Abhiramrathod/mcp-testing.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/Abhiramrathod/mcp-testing.git</developerConnection>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>abhiramrathod</id>
+            <name>Abhiram Rathod</name>
+            <url>https://github.com/Abhiramrathod</url>
+        </developer>
+    </developers>
 
     <build>
         <pluginManagement>
@@ -113,6 +149,35 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- Signing plugin: signs artifacts before deploy -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Nexus staging plugin to work with Sonatype OSSRH -->
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.13</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
             </plugin>
         </plugins>
     </build>
