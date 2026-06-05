@@ -76,12 +76,24 @@ jobs:
           restore-keys: |
             mvn-repo-${{ runner.os }}-
 
+      - name: Show generated Maven settings (servers)
+        run: |
+          echo "--- ~/.m2/settings.xml ---"
+          if [ -f ~/.m2/settings.xml ]; then
+            sed -n '1,200p' ~/.m2/settings.xml || true
+            echo "--- grep for ossrh entries ---"
+            grep -n "<id>ossrh</id>" -n ~/.m2/settings.xml || true
+          else
+            echo "~/.m2/settings.xml not found"
+          fi
+
       - name: Build and publish to Central
         env:
           GPG_TTY: /dev/console
         run: |
           # Run mvn deploy which will invoke the central-publishing-maven-plugin
           mvn -B -DskipTests clean deploy
+
 
 
 
