@@ -192,7 +192,8 @@
                 <configuration>
                     <serverId>ossrh</serverId>
                     <!-- Nexus staging plugin expects the Nexus base URL (no path) -->
-                    <nexusUrl>https://s01.oss.sonatype.org</nexusUrl>
+                    <!-- Ensure trailing slash so the plugin composes API paths correctly -->
+                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
