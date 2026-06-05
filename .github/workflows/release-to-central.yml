@@ -1,0 +1,48 @@
+name: Release to Maven Central
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 and configure Maven credentials + GPG
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          # Use Central user token (create in central.sonatype.com -> User Tokens)
+          server-ids: 'central'
+          server-username: ${{ secrets.CENTRAL_USERNAME }}
+          server-password: ${{ secrets.CENTRAL_PASSWORD }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: mvn-repo-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            mvn-repo-${{ runner.os }}-
+
+      - name: Build and publish to Central
+        env:
+          GPG_TTY: /dev/console
+        run: |
+          # Run mvn deploy which will invoke the central-publishing-maven-plugin
+          mvn -B -DskipTests clean deploy
+
+
