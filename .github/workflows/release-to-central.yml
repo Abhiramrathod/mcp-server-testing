@@ -46,6 +46,11 @@ jobs:
           # ensure secret keys are available
           gpg --list-secret-keys --keyid-format LONG || true
 
+      - name: Export GPG passphrase to environment for Maven
+        run: |
+          echo "Exporting GPG_PASSPHRASE to environment (masked)"
+          echo "GPG_PASSPHRASE=${{ secrets.GPG_PASSPHRASE }}" >> $GITHUB_ENV
+
       - name: Enable GPG loopback pinentry (required for non-interactive signing)
         run: |
           mkdir -p ~/.gnupg
@@ -76,6 +81,7 @@ jobs:
         run: |
           # Run mvn deploy which will invoke the central-publishing-maven-plugin
           mvn -B -DskipTests clean deploy
+
 
 
 
