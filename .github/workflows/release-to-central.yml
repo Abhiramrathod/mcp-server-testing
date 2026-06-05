@@ -90,23 +90,27 @@ jobs:
       - name: Write Maven settings with OSSRH credentials
         run: |
           mkdir -p ~/.m2
-          cat > ~/.m2/settings.xml <<'EOF'
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          python3 - <<'PY'
+import os
+home = os.path.expanduser('~')
+settings = f'''<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
   <servers>
     <server>
       <id>ossrh</id>
-      <username>${{ secrets.CENTRAL_USERNAME }}</username>
-      <password>${{ secrets.CENTRAL_PASSWORD }}</password>
+      <username>{os.environ.get('CENTRAL_USERNAME','')}</username>
+      <password>{os.environ.get('CENTRAL_PASSWORD','')}</password>
     </server>
     <server>
       <id>gpg.passphrase</id>
-      <passphrase>${{ secrets.GPG_PASSPHRASE }}</passphrase>
+      <passphrase>{os.environ.get('GPG_PASSPHRASE','')}</passphrase>
     </server>
   </servers>
 </settings>
-EOF
+'''
+open(os.path.join(home,'.m2','settings.xml'),'w').write(settings)
+PY
 
       - name: Build and publish to Central
         env:
@@ -114,6 +118,7 @@ EOF
         run: |
           # Run mvn deploy which will invoke the central-publishing-maven-plugin
           mvn -B -DskipTests clean deploy
+
 
 
 
