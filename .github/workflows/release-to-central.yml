@@ -30,6 +30,22 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
+      - name: Import GPG private key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          set -e
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+          echo "Importing GPG private key (masked)..."
+          if [ -z "$GPG_PRIVATE_KEY" ]; then
+            echo "GPG_PRIVATE_KEY secret is empty or missing"; exit 1
+          fi
+          # import the provided ASCII-armored private key
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import || true
+          # ensure secret keys are available
+          gpg --list-secret-keys --keyid-format LONG || true
+
       - name: Enable GPG loopback pinentry (required for non-interactive signing)
         run: |
           mkdir -p ~/.gnupg
@@ -60,6 +76,7 @@ jobs:
         run: |
           # Run mvn deploy which will invoke the central-publishing-maven-plugin
           mvn -B -DskipTests clean deploy
+
 
 
 
