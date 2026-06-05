@@ -13,6 +13,9 @@ target/
 *.iml
 *.ipr
 
+# Ignore full IntelliJ project directory
+.idea/
+
 ### Eclipse ###
 .apt_generated
 .classpath

@@ -1,0 +1,63 @@
+name: Generate and publish Javadocs
+
+on:
+  # Run manually or via the Actions UI. Removed automatic push trigger to avoid
+  # running the workflow on every push to main by default.
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-publish-javadocs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: mvn-repo-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            mvn-repo-${{ runner.os }}-
+
+      - name: Build aggregated Javadocs
+        run: mvn -T 1C -DskipTests clean javadoc:aggregate
+
+      - name: Prepare docs/javadoc/apidocs
+        run: |
+          mkdir -p docs/javadoc/apidocs
+          if [ -d target/site/apidocs ]; then
+            cp -r target/site/apidocs/* docs/javadoc/apidocs/
+          else
+            echo "No generated apidocs found in target/site/apidocs" && exit 1
+          fi
+
+      - name: Upload Pages artifact (docs folder)
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: docs
+
+  deploy:
+    needs: build-and-publish-javadocs
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
+
+

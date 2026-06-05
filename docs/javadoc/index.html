@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MCP Testing — API Documentation</title>
+  <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../vendor/highlightjs/atom-one-dark.min.css">
+  <link rel="stylesheet" href="../style.css">
+  <meta name="robots" content="noindex">
+  <style>
+    /* Small overrides so this page blends with the site but stays minimal */
+    .jdoc-hero { padding: 4rem 0; text-align: center; }
+    .jdoc-card { max-width: 980px; margin: 1.5rem auto; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); }
+    .commands pre { white-space: pre-wrap; word-break: break-word; }
+    .center { text-align: center; }
+  </style>
+</head>
+<body>
+  <main class="main-content">
+    <section class="jdoc-hero">
+      <div class="container">
+        <div class="hero-meta">API Documentation</div>
+        <h1 class="hero-title">MCP Testing — Javadocs</h1>
+        <p class="hero-lead">This page hosts the project Javadocs. If generated apidocs are present the viewer link will appear below.</p>
+        <div class="hero-ctas center" style="margin-top:1rem">
+          <a id="viewJavadocs" class="btn btn-primary" href="#" style="display:none">Open Javadocs</a>
+          <a class="btn btn-secondary" href="../index.html">Back to docs</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="container">
+      <div class="jdoc-card">
+        <h2>Status</h2>
+        <p id="statusText">Checking for generated Javadocs...</p>
+
+        <h3>Generate Javadocs locally</h3>
+        <p>Run these commands from the repository root (<code>C:\Users\abhir\Downloads\my_projects\mcpTesting</code>) on a machine with Maven and a JDK installed. After generation, copy the produced apidocs into this folder (<code>docs/javadoc/apidocs</code>) so GitHub Pages will serve them.</p>
+        <div class="commands">
+          <pre><code>mvn -DskipTests javadoc:aggregate
+# copy generated apidocs into the docs folder so GitHub Pages will serve them
+# (PowerShell)
+Copy-Item -Path .\target\site\apidocs\* -Destination .\docs\javadoc\apidocs -Recurse -Force
+
+# (or using git & CI) run the build in CI and commit the generated apidocs into docs/javadoc/apidocs
+          </code></pre>
+        </div>
+
+        <h3>Need help?</h3>
+        <ul>
+          <li>If you'd like, I can provide a small PowerShell script to simplify the local generation and copy steps.</li>
+          <li>I can also help add a GitHub Actions workflow that generates the javadocs and commits the built files into the branch automatically (recommended for reproducibility).</li>
+        </ul>
+
+        <h3>Scripts (one-shot)</h3>
+        <p>Convenience scripts are included in the repository under <code>docs/scripts/</code>. Use them to generate and copy the aggregated Javadocs into <code>docs/javadoc/apidocs</code>.</p>
+        <ul>
+          <li><strong>PowerShell (Windows):</strong> <code>docs\scripts\generate_javadocs.ps1</code></li>
+          <li><strong>POSIX shell (macOS / Linux / WSL / Git Bash):</strong> <code>docs/scripts/generate_javadocs.sh</code></li>
+        </ul>
+
+        <div class="commands">
+          <pre><code># Run PowerShell (from repo root)
+PowerShell -ExecutionPolicy Bypass -File .\docs\scripts\generate_javadocs.ps1
+
+# Run POSIX shell
+sh docs/scripts/generate_javadocs.sh
+
+# (Optional) Make the shell script executable in the git repository so Unix checkouts preserve the bit:
+git add docs/scripts/generate_javadocs.sh
+git update-index --chmod=+x docs/scripts/generate_javadocs.sh
+git commit -m "chore(docs): add javadoc generation scripts (make sh executable)"
+          </code></pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Check whether an apidocs index exists and show the Open button if present
+    (async function() {
+      const status = document.getElementById('statusText');
+      const btn = document.getElementById('viewJavadocs');
+      try {
+        const resp = await fetch('apidocs/index.html', { method: 'HEAD' });
+        if (resp.ok) {
+          status.textContent = 'Aggregated Javadocs are available.';
+          btn.href = 'apidocs/index.html';
+          btn.style.display = 'inline-flex';
+        } else {
+          status.textContent = 'No generated Javadocs found in this branch. Follow the instructions below to generate and copy them into this folder.';
+        }
+      } catch (e) {
+        status.textContent = 'No generated Javadocs found in this branch. Follow the instructions below to generate and copy them into this folder.';
+      }
+    })();
+  </script>
+
+</body>
+</html>
+
+
