@@ -111,9 +111,9 @@ jobs:
             echo "~/.m2/settings.xml not found"
           fi
 
-      - name: Build artifacts (package + sources + javadoc)
+      - name: Build artifacts (package)
         run: |
-          mvn -B -DskipTests clean package source:jar javadoc:jar
+          mvn -B -DskipTests clean package
 
       - name: Sign artifacts with GPG
         env:
@@ -187,6 +187,7 @@ jobs:
             sleep 10
           done
           echo "Timed out waiting for publish"; exit 1
+
 
 
 

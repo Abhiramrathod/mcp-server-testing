@@ -151,20 +151,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Source JARs: required by Maven Central (attach sources jar) -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.4.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            <!-- ...existing code... -->
 
             <!-- Signing plugin: signs artifacts before deploy -->
             <plugin>
