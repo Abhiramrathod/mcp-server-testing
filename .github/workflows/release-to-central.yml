@@ -165,7 +165,8 @@ jobs:
           # compute base64 user token
           token=$(printf "%s:%s" "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w0)
           echo "Uploading bundle..."
-          resp=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $token" -F "bundle=@central-bundle.zip;type=application/octet-stream" "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC")
+          # Use HTTP Basic auth (base64 username:password) for the Publisher API
+          resp=$(curl -s -w "\n%{http_code}" -H "Authorization: Basic $token" -F "bundle=@central-bundle.zip;type=application/octet-stream" "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC")
           http=$(printf "%s" "$resp" | tail -n1)
           body=$(printf "%s" "$resp" | sed '$d')
           echo "HTTP status: $http"
@@ -190,7 +191,8 @@ jobs:
           while [ $attempts -lt $max ]; do
             attempts=$((attempts+1))
             echo "Attempt $attempts"
-            out=$(curl -s -H "Authorization: Bearer $token" "https://central.sonatype.com/api/v1/publisher/status?id=$id")
+            # Use HTTP Basic auth when polling status as well
+            out=$(curl -s -H "Authorization: Basic $token" "https://central.sonatype.com/api/v1/publisher/status?id=$id")
             echo "$out"
             state=$(printf "%s" "$out" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("deploymentState",""))') || true
             echo "State: $state"
@@ -203,6 +205,7 @@ jobs:
             sleep 10
           done
           echo "Timed out waiting for publish"; exit 1
+
 
 
 
