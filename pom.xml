@@ -162,6 +162,10 @@
                          and gpg-passphrase are supplied) must allow loopback pinentry so
                          the plugin can pass the passphrase non-interactively. -->
                     <useGpgCmd>true</useGpgCmd>
+                    <!-- Pass the passphrase from the CI environment to GPG in a
+                         non-interactive fashion. GitHub Actions will supply
+                         GPG_PASSPHRASE as an environment variable from secrets. -->
+                    <passphrase>${env.GPG_PASSPHRASE}</passphrase>
                     <gpgArguments>
                         <arg>--batch</arg>
                         <arg>--pinentry-mode</arg>

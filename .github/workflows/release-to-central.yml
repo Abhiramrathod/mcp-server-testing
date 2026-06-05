@@ -38,6 +38,14 @@ jobs:
           gpgconf --kill gpg-agent || true
           sleep 1
 
+      - name: Debug GPG setup
+        run: |
+          echo "GPG version:"; gpg --version
+          echo "List secret keys:"; gpg --list-secret-keys --keyid-format LONG || true
+          echo "GPG home:"; gpgconf --list-dirs
+          # show that the GPG_PASSPHRASE env is available (masked in logs)
+          echo "GPG_PASSPHRASE present:"; if [ -z "$GPG_PASSPHRASE" ]; then echo "(empty)"; else echo "(set)"; fi
+
       - name: Cache Maven local repository
         uses: actions/cache@v4
         with:
@@ -52,6 +60,7 @@ jobs:
         run: |
           # Run mvn deploy which will invoke the central-publishing-maven-plugin
           mvn -B -DskipTests clean deploy
+
 
 
 
