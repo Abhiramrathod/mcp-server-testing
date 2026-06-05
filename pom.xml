@@ -101,6 +101,7 @@
         <developer>
             <id>abhiramrathod</id>
             <name>Abhiram Rathod</name>
+            <email>abhiramrathod2003@gmail.com</email>
             <url>https://github.com/Abhiramrathod</url>
         </developer>
     </developers>
@@ -144,6 +145,20 @@
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Source JARs: required by Maven Central (attach sources jar) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
                         <goals>
                             <goal>jar</goal>
                         </goals>
