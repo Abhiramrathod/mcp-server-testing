@@ -1,9 +1,9 @@
 name: Generate and publish Javadocs
 
 on:
+  # Run manually or via the Actions UI. Removed automatic push trigger to avoid
+  # running the workflow on every push to main by default.
   workflow_dispatch: {}
-  push:
-    branches: [ main ]
 
 permissions:
   contents: read
@@ -59,4 +59,5 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
+
 
