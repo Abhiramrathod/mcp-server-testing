@@ -1,202 +1,204 @@
-// Initialize highlight.js
-document.addEventListener('DOMContentLoaded', function() {
-    hljs.highlightAll();
-});
+// Mobile Menu Toggle
+function toggleMobile() {
+    const menu = document.getElementById('mobileMenu');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
 
-// Mobile menu toggle
-function toggleMobileMenu() {
-    const mobileMenu = document.getElementById('mobileMenu');
-    if (mobileMenu.style.display === 'flex') {
-        mobileMenu.style.display = 'none';
+// Theme handling
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
     } else {
-        mobileMenu.style.display = 'flex';
+        document.documentElement.removeAttribute('data-theme');
     }
+    try { localStorage.setItem('theme', theme); } catch(e) {}
+    updateThemeToggleUI(theme);
 }
 
-// Tab switching for code examples
-function showTab(tabName) {
-    // Hide all tab contents
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabContents.forEach(content => {
-        content.classList.remove('active');
-    });
-    
-    // Remove active class from all buttons
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    tabButtons.forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected tab
-    document.getElementById(tabName).classList.add('active');
-    
-    // Add active class to clicked button
-    event.target.classList.add('active');
-    
-    // Re-highlight code
-    hljs.highlightAll();
+function detectPreferredTheme() {
+    const stored = (() => { try { return localStorage.getItem('theme'); } catch(e) { return null; } })();
+    if (stored) return stored;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+    return 'light';
 }
 
-// Capability tabs switching
-function showCapability(capabilityName) {
-    // Hide all capability panels
-    const panels = document.querySelectorAll('.capability-panel');
-    panels.forEach(panel => {
+function updateThemeToggleUI(theme) {
+    const btn = document.getElementById('themeToggle');
+    if (btn) {
+        btn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+    }
+    const mobileLabel = document.getElementById('mobileThemeToggle');
+    if (mobileLabel) mobileLabel.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+}
+
+// Tab Switching
+function switchTab(tabId) {
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-panel').forEach(panel => {
         panel.classList.remove('active');
     });
     
-    // Remove active class from all buttons
-    const buttons = document.querySelectorAll('.capability-btn');
-    buttons.forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected panel
-    document.getElementById(capabilityName).classList.add('active');
-    
-    // Add active class to clicked button
     event.target.classList.add('active');
-    
-    // Re-highlight code
-    hljs.highlightAll();
+    document.getElementById(tabId).classList.add('active');
 }
 
-// Smooth scroll for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        const href = this.getAttribute('href');
-        if (href === '#') return;
-        
-        e.preventDefault();
-        const target = document.querySelector(href);
-        if (target) {
-            const headerOffset = 80;
-            const elementPosition = target.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+// Smooth Scroll
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize theme early
+    const starting = detectPreferredTheme();
+    applyTheme(starting);
 
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            });
-            
-            // Close mobile menu if open
-            const mobileMenu = document.getElementById('mobileMenu');
-            if (mobileMenu.style.display === 'flex') {
-                mobileMenu.style.display = 'none';
+    // Theme toggle button handler
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+
+    // Initialize Highlight.js
+    if (typeof hljs !== 'undefined') {
+        hljs.highlightAll();
+    }
+    
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            if (href !== '#' && href.length > 1) {
+                e.preventDefault();
+                const target = document.querySelector(href);
+                if (target) {
+                    const offset = 80;
+                    const targetPosition = target.offsetTop - offset;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
             }
-        }
+        });
     });
-});
-
-// Header scroll effect
-let lastScroll = 0;
-window.addEventListener('scroll', () => {
-    const header = document.querySelector('.header');
-    const currentScroll = window.pageYOffset;
     
-    if (currentScroll > 100) {
-        header.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
-    } else {
-        header.style.boxShadow = 'none';
-    }
-    
-    lastScroll = currentScroll;
-});
-
-// Add copy button to code blocks
-document.querySelectorAll('pre code').forEach((block) => {
-    const button = document.createElement('button');
-    button.className = 'copy-code-btn';
-    button.innerHTML = '<i class="fas fa-copy"></i>';
-    button.title = 'Copy code';
-    
-    button.addEventListener('click', async () => {
-        const code = block.textContent;
-        try {
-            await navigator.clipboard.writeText(code);
-            button.innerHTML = '<i class="fas fa-check"></i>';
-            button.style.background = '#10b981';
-            
-            setTimeout(() => {
+    // Add copy buttons to code blocks
+    document.querySelectorAll('pre').forEach(pre => {
+                const button = document.createElement('button');
+                button.className = 'copy-code';
                 button.innerHTML = '<i class="fas fa-copy"></i>';
-                button.style.background = '';
-            }, 2000);
-        } catch (err) {
-            console.error('Failed to copy:', err);
-        }
+
+        pre.style.position = 'relative';
+        pre.appendChild(button);
+        
+        button.addEventListener('click', () => {
+            const code = pre.querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                // show success state
+                button.innerHTML = '<i class="fas fa-check"></i>';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.classList.remove('copied');
+                    button.innerHTML = '<i class="fas fa-copy"></i>';
+                }, 1600);
+            });
+        });
     });
     
-    const pre = block.parentElement;
-    pre.style.position = 'relative';
-    
-    // Add copy button
-    const btnContainer = document.createElement('div');
-    btnContainer.className = 'code-actions';
-    btnContainer.appendChild(button);
-    pre.appendChild(btnContainer);
-});
-
-// Intersection Observer for animations
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
+    // Intersection Observer for fade-in animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
     });
-}, observerOptions);
+    
+    // Observe elements
+    document.querySelectorAll('.feature, .example, .doc-card').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'all 0.6s ease-out';
+        observer.observe(el);
+    });
 
-// Observe elements for animation
-document.querySelectorAll('.feature-card, .example-card, .capability-panel').forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
-    observer.observe(el);
+    // Floating TOC: populate from sections with ids and wire toggle + scrollspy
+    const tocToggle = document.getElementById('tocToggle');
+    const tocPanel = document.getElementById('tocPanel');
+    const tocList = document.getElementById('tocList');
+    if (tocList) {
+        // Build TOC from sections that have ids
+        const sections = Array.from(document.querySelectorAll('section[id]'));
+        sections.forEach(sec => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = '#' + sec.id;
+            // Prefer the section header H2 text if present
+            const header = sec.querySelector('.section-header h2');
+            a.textContent = header ? header.textContent.trim() : sec.id;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (tocPanel) { tocPanel.hidden = true; tocToggle && tocToggle.setAttribute('aria-expanded', 'false'); }
+                const target = document.getElementById(sec.id);
+                if (target) {
+                    const offset = 80;
+                    const top = target.offsetTop - offset;
+                    window.scrollTo({ top, behavior: 'smooth' });
+                }
+            });
+            li.appendChild(a);
+            tocList.appendChild(li);
+        });
+
+        // Observe sections to mark active TOC link
+        const tocObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.id;
+                if (!id) return;
+                const link = tocList.querySelector('a[href="#' + id + '"]');
+                if (!link) return;
+                if (entry.isIntersecting) {
+                    tocList.querySelectorAll('a').forEach(a => a.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            });
+        }, { threshold: 0.45 });
+
+        sections.forEach(s => tocObserver.observe(s));
+    }
+
+    if (tocToggle && tocPanel) {
+        tocToggle.addEventListener('click', (e) => {
+            const wasHidden = tocPanel.hidden;
+            tocPanel.hidden = !wasHidden;
+            tocToggle.setAttribute('aria-expanded', (!wasHidden).toString());
+        });
+
+        // close TOC when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!tocPanel || !tocToggle) return;
+            const inside = tocPanel.contains(e.target) || tocToggle.contains(e.target);
+            if (!inside) {
+                tocPanel.hidden = true;
+                tocToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
 });
 
-// Close mobile menu on window resize
-window.addEventListener('resize', () => {
-    if (window.innerWidth > 768) {
-        const mobileMenu = document.getElementById('mobileMenu');
-        mobileMenu.style.display = 'none';
+// Close mobile menu when clicking outside
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('mobileMenu');
+    const toggle = document.querySelector('.mobile-toggle');
+    
+    if (menu && toggle && !menu.contains(e.target) && !toggle.contains(e.target)) {
+        menu.style.display = 'none';
     }
 });
-
-// Add style for copy button
-const style = document.createElement('style');
-style.textContent = `
-    .code-actions {
-        position: absolute;
-        top: 0.75rem;
-        right: 0.75rem;
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .copy-code-btn {
-        padding: 0.5rem 0.75rem;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 0.375rem;
-        color: white;
-        cursor: pointer;
-        font-size: 0.875rem;
-        transition: all 0.2s;
-    }
-    
-    .copy-code-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-    }
-    
-    pre {
-        position: relative;
-    }
-`;
-document.head.appendChild(style);
-
-console.log('🚀 MCP Testing Framework Documentation loaded');

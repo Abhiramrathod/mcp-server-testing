@@ -1,10 +1,10 @@
 # MCP Testing Framework
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.testMcp.io/mcp-test-api.svg)](https://search.maven.org/search?q=g:com.testMcp.io)
+[![Maven Central](https://img.shields.io/maven-central/v/org.abhi-ai/mcp-test-api.svg)](https://search.maven.org/search?q=g:org.abhi-ai)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 
-📚 [Documentation](https://YOUR_USERNAME.github.io/mcpTesting/) | 📦 [Maven Central](https://search.maven.org/search?q=g:com.testMcp.io) | 🐛 [Issues](https://github.com/YOUR_USERNAME/mcpTesting/issues) | 💬 [Discussions](https://github.com/YOUR_USERNAME/mcpTesting/discussions)
+📚 [Documentation](https://abhiramrathod.github.io/mcp-testing/) | 📦 [Maven Central](https://search.maven.org/search?q=g:org.abhi-ai) | 🐛 [Issues](https://github.com/Abhiramrathod/mcp-testing/issues) | 💬 [Discussions](https://github.com/Abhiramrathod/mcp-testing/discussions)
 
 A **production-grade** Java testing framework for Model Context Protocol (MCP) servers with type-safe APIs, fluent assertions, and comprehensive monitoring.
 
@@ -25,9 +25,9 @@ Add to your `pom.xml`:
 
 ```xml
 <dependency>
-    <groupId>com.testMcp.io</groupId>
+    <groupId>org.abhi-ai</groupId>
     <artifactId>mcp-test-api</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.3</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -35,7 +35,7 @@ Add to your `pom.xml`:
 Or Gradle:
 
 ```gradle
-testImplementation 'com.testMcp.io:mcp-test-api:1.0.0'
+testImplementation 'org.abhi-ai:mcp-test-api:1.0.3'
 ```
 
 > **Note:** Only add `mcp-test-api` - all other modules are included transitively.
@@ -73,7 +73,50 @@ public class MyMcpTest {
 
 ## 📖 Documentation
 
-**Full Documentation**: [https://YOUR_USERNAME.github.io/mcpTesting/](https://YOUR_USERNAME.github.io/mcpTesting/)
+**Full Documentation**: [https://abhiramrathod.github.io/mcp-testing/](https://abhiramrathod.github.io/mcp-testing/)
+
+## ⚙️ Configuration
+
+MCP client configuration is available via `McpClientConfig`. Key options:
+
+- `timeout` (Duration) — request timeout applied to connections and RPC calls. Default: 10 seconds (`McpClientConfig.DEFAULT_TIMEOUT`).
+- `protocolVersion` (String) — MCP protocol version advertised during initialize handshake. Default: `2024-11-05` (`McpClientConfig.DEFAULT_PROTOCOL_VERSION`).
+- SSE path — the default Server-Sent Events endpoint path is `/sse` (`McpClientConfig.DEFAULT_SSE_PATH`).
+
+Create a config with the fluent builder:
+
+```java
+McpClientConfig config = McpClientConfig.builder()
+        .timeout(Duration.ofSeconds(30))
+        .protocolVersion("2024-11-05")
+        .build();
+```
+
+Pass it to the client with `.config(config)` when building the `McpClient`.
+
+## 🧰 Build, tests and Javadocs
+
+Build the multi-module project with Maven (from repo root):
+
+```bash
+mvn -T 1C clean install
+```
+
+Run tests for examples module (example tests use JUnit 5):
+
+```bash
+mvn -pl mcp-test-examples test
+```
+
+Generate Javadocs (the build is configured to attach javadocs during release builds):
+
+```bash
+mvn javadoc:jar
+```
+
+Publishing notes:
+- The project previously included a `distributionManagement` entry for GitHub Packages in `pom.xml`; builds on CI may be configured to publish artifacts to GitHub Packages or other registries (JitPack is also a common distribution option). See CI workflow for publishing configuration.
+
 
 ## 🎯 Core Capabilities
 
