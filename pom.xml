@@ -29,6 +29,10 @@
         <jackson.version>2.15.2</jackson.version>
         <!-- allow deploys; CI workflow should provide credentials and signing -->
         <maven.deploy.skip>false</maven.deploy.skip>
+        <!-- When using explicit GPG signing in CI (Portal API flow), skip the maven-gpg-plugin
+             to avoid plugin-invoked signing failures in environments where gpg is handled
+             by the workflow itself. The CI will set this property as needed. -->
+        <gpg.skip>true</gpg.skip>
     </properties>
 
     <!-- Distribution configured for Sonatype OSSRH (Maven Central). To publish,
