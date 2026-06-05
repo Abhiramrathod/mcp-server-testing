@@ -156,6 +156,18 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
                 <version>3.0.1</version>
+                <configuration>
+                    <!-- Configure GPG for non-interactive CI signing. The runner's GPG
+                         environment (provided by actions/setup-java when gpg-private-key
+                         and gpg-passphrase are supplied) must allow loopback pinentry so
+                         the plugin can pass the passphrase non-interactively. -->
+                    <useGpgCmd>true</useGpgCmd>
+                    <gpgArguments>
+                        <arg>--batch</arg>
+                        <arg>--pinentry-mode</arg>
+                        <arg>loopback</arg>
+                    </gpgArguments>
+                </configuration>
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>

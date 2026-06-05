@@ -30,6 +30,14 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
+      - name: Enable GPG loopback pinentry (required for non-interactive signing)
+        run: |
+          mkdir -p ~/.gnupg
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          # restart gpg-agent so the new setting takes effect
+          gpgconf --kill gpg-agent || true
+          sleep 1
+
       - name: Cache Maven local repository
         uses: actions/cache@v4
         with:
@@ -44,5 +52,6 @@ jobs:
         run: |
           # Run mvn deploy which will invoke the central-publishing-maven-plugin
           mvn -B -DskipTests clean deploy
+
 
 
