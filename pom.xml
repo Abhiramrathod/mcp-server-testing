@@ -191,8 +191,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <serverId>ossrh</serverId>
-                    <!-- Use the service/local endpoint for nexus-staging plugin to avoid 404s -->
-                    <nexusUrl>https://s01.oss.sonatype.org/service/local/</nexusUrl>
+                    <!-- Nexus staging plugin expects the Nexus base URL (no path) -->
+                    <nexusUrl>https://s01.oss.sonatype.org</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
