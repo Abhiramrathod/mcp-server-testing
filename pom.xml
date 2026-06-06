@@ -153,7 +153,7 @@
                         <id>create-checksums</id>
                         <phase>verify</phase>
                         <goals>
-                            <goal>checksum</goal>
+                            <goal>files</goal>
                         </goals>
                         <configuration>
                             <algorithms>
@@ -175,7 +175,7 @@
                         <id>create-checksums-repo</id>
                         <phase>verify</phase>
                         <goals>
-                            <goal>checksum</goal>
+                            <goal>files</goal>
                         </goals>
                         <configuration>
                             <algorithms>
