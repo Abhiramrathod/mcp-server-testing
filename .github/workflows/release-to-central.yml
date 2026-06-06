@@ -144,17 +144,14 @@ jobs:
       - name: Assemble deployment bundle from local Maven repository
         run: |
           set -euo pipefail
-          rm -rf central-bundle bundle || true
-          mkdir -p bundle
-          # copy the groupId tree from the local Maven repository into the bundle
-          # this preserves the maven layout and ensures .pom files are present
-          cp -R "$HOME/.m2/repository/io/github/abhiramrathod" bundle/ || true
-          # signatures (.asc) were created next to artifacts in the repo tree
-          # and are already included by the recursive copy above; do not use
-          # `cp --parents` (it embeds absolute paths like /home/runner) which
-          # will cause Sonatype bundle validation to fail.
-          # create zip
-          zip -r central-bundle.zip bundle
+          rm -rf central-bundle.zip bundle || true
+          mkdir -p bundle/io/github
+          # copy the groupId tree from the local Maven repository into the bundle preserving the path
+          cp -R "$HOME/.m2/repository/io/github/abhiramrathod" bundle/io/github/
+          # create zip with the correct directory structure at the root of the archive
+          cd bundle
+          zip -r ../central-bundle.zip io
+          cd ..
 
       - name: Upload bundle to Sonatype Central Publisher (AUTOMATIC)
         env:
