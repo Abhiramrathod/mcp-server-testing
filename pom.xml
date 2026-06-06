@@ -145,9 +145,9 @@
     
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checksum-plugin</artifactId>
-                    <version>1.2</version>
+                <groupId>net.nicoulaj.maven.plugins</groupId>
+                <artifactId>checksum-maven-plugin</artifactId>
+                <version>1.11</version>
                 <executions>
                     <execution>
                         <id>create-checksums</id>
