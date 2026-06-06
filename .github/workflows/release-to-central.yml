@@ -113,11 +113,10 @@ jobs:
 
       - name: Build artifacts and install to local Maven repository
         run: |
-          # Build modules and install artifacts into the local Maven repository
-          # so we can assemble a correctly structured Maven layout (with .pom files)
+          # Build modules and install artifacts (including sources + javadoc JARs)
+          # into the local Maven repository. Source and javadoc plugins are configured
+          # in pom.xml and run automatically during the package phase.
           mvn -B -DskipTests -Dgpg.skip=true clean install
-          # Generate source and javadoc jars for all modules
-          mvn source:jar javadoc:jar
 
       - name: Verify POM files exist
         run: |
@@ -167,9 +166,21 @@ jobs:
             echo "❌ Unable to determine GPG key ID"
             exit 1
           fi
-          echo "Publishing public key $KEY_ID to keyserver.ubuntu.com"
-          gpg --export -a "$KEY_ID" | curl -s --request POST "https://keyserver.ubuntu.com/pks/add" --data-binary @-
-          echo "✅ Public key uploaded"
+          echo "Publishing public key $KEY_ID to keyservers..."
+          # Export the public key
+          gpg --export -a "$KEY_ID" > /tmp/gpg-public-key.asc
+          # Upload to keyserver.ubuntu.com (HKP protocol uses 'keytext' form field)
+          curl -s --request POST "https://keyserver.ubuntu.com/pks/add" \
+            --data-urlencode "keytext@/tmp/gpg-public-key.asc" || echo "Warning: ubuntu keyserver upload failed"
+          # Upload to keys.openpgp.org
+          curl -s --request POST "https://keys.openpgp.org/vks/v1/upload" \
+            -F "keytext@/tmp/gpg-public-key.asc" || echo "Warning: openpgp.org upload failed"
+          # Also try HKP send via gpg directly
+          gpg --keyserver hkps://keyserver.ubuntu.com --send-keys "$KEY_ID" || echo "Warning: gpg --send-keys failed"
+          gpg --keyserver hkps://keys.openpgp.org --send-keys "$KEY_ID" || echo "Warning: gpg --send-keys openpgp failed"
+          # Allow time for key propagation
+          sleep 10
+          echo "✅ Public key upload attempted to multiple keyservers"
 
       - name: Generate checksum files
         run: |

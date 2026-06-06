@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>mcp-test-transport</artifactId>
+    <name>MCP Test Transport</name>
 
     <properties>
         <maven.deploy.skip>false</maven.deploy.skip>

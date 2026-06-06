@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>mcp-test-api</artifactId>
+    <name>MCP Test API</name>
 
     <properties>
         <maven.deploy.skip>false</maven.deploy.skip>

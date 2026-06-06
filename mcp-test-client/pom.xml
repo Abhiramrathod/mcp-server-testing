@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>mcp-test-client</artifactId>
+    <name>MCP Test Client</name>
 
     <properties>
         <maven.deploy.skip>false</maven.deploy.skip>

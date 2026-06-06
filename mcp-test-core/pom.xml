@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>mcp-test-core</artifactId>
+    <name>MCP Test Core</name>
 
     <properties>
         <maven.deploy.skip>false</maven.deploy.skip>
