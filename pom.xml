@@ -142,51 +142,58 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+    
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
+                <artifactId>maven-checksum-plugin</artifactId>
+                <version>1.1</version>
                 <executions>
                     <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- ...existing code... -->
-
-            <!-- Signing plugin: signs artifacts before deploy -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.0.1</version>
-                <configuration>
-                    <!-- Configure GPG for non-interactive CI signing. The runner's GPG
-                         environment (provided by actions/setup-java when gpg-private-key
-                         and gpg-passphrase are supplied) must allow loopback pinentry so
-                         the plugin can pass the passphrase non-interactively. -->
-                    <useGpgCmd>true</useGpgCmd>
-                    <!-- Pass the passphrase from the CI environment to GPG in a
-                         non-interactive fashion. GitHub Actions will supply
-                         GPG_PASSPHRASE as an environment variable from secrets. -->
-                    <passphrase>${env.GPG_PASSPHRASE}</passphrase>
-                    <gpgArguments>
-                        <arg>--batch</arg>
-                        <arg>--pinentry-mode</arg>
-                        <arg>loopback</arg>
-                    </gpgArguments>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
+                        <id>create-checksums</id>
                         <phase>verify</phase>
                         <goals>
-                            <goal>sign</goal>
+                            <goal>checksum</goal>
                         </goals>
+                        <configuration>
+                            <algorithms>
+                                <algorithm>MD5</algorithm>
+                                <algorithm>SHA-1</algorithm>
+                            </algorithms>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>*.jar</include>
+                                        <include>*.pom</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                        </configuration>
                     </execution>
-                </executions>
+                                    <execution>
+                        <id>create-checksums-repo</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>checksum</goal>
+                        </goals>
+                        <configuration>
+                            <algorithms>
+                                <algorithm>MD5</algorithm>
+                                <algorithm>SHA-1</algorithm>
+                            </algorithms>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${settings.localRepository}</directory>
+                                    <includes>
+                                        <include>**/*.jar</include>
+                                        <include>**/*.pom</include>
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                        </configuration>
+                    </execution>
+                    </executions>
             </plugin>
 
             <!-- Nexus staging plugin to work with Sonatype OSSRH -->

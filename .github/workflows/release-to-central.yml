@@ -116,6 +116,21 @@ jobs:
           # Build modules and install artifacts into the local Maven repository
           # so we can assemble a correctly structured Maven layout (with .pom files)
           mvn -B -DskipTests -Dgpg.skip=true clean install
+          # Generate source and javadoc jars for all modules
+          mvn source:jar javadoc:jar
+
+      - name: Verify POM files exist
+        run: |
+          set -euo pipefail
+          MODULES="mcp-test-interfaces mcp-test-core mcp-test-transport mcp-test-client mcp-test-api mcp-test-examples mcpTesting"
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | grep -v "^\[" | tail -n 1)
+          for mod in $MODULES; do
+            pom_path="${HOME}/.m2/repository/io/github/abhiramrathod/$mod/$VERSION/$mod-$VERSION.pom"
+            if [[ ! -f "$pom_path" ]]; then
+              echo "❌ Missing POM: $pom_path"
+              exit 1
+            fi
+          done
 
       # The install above writes artifacts and POMs into ~/.m2/repository
       # in a proper Maven layout. We will use that layout for bundling so the
@@ -139,6 +154,31 @@ jobs:
             echo "Signing $f"
             # create detached ASCII-armored signatures next to each artifact
             gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --detach-sign -a "$f"
+          done
+
+      - name: Publish GPG public key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import --yes
+          KEY_ID=$(gpg --list-keys --with-colons | awk -F: '$1=="pub"{print $5}' | head -n1)
+          if [ -z "$KEY_ID" ]; then
+            echo "❌ Unable to determine GPG key ID"
+            exit 1
+          fi
+          echo "Publishing public key $KEY_ID to keyserver.ubuntu.com"
+          gpg --export -a "$KEY_ID" | curl -s --request POST "https://keyserver.ubuntu.com/pks/add" --data-binary @-
+          echo "✅ Public key uploaded"
+
+      - name: Generate checksum files
+        run: |
+          set -euo pipefail
+          REPO="${HOME}/.m2/repository/io/github/abhiramrathod"
+          find "$REPO" -type f \( -name "*.jar" -o -name "*.pom" -o -name "*.asc" \) | while read -r f; do
+            md5sum "$f" | awk '{print $1}' > "${f}.md5"
+            sha1sum "$f" | awk '{print $1}' > "${f}.sha1"
+            echo "✔ Checksums for $f"
           done
 
       - name: Assemble deployment bundle from local Maven repository
