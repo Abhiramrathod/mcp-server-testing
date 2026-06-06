@@ -162,9 +162,8 @@ jobs:
           set -euo pipefail
           # compute base64 user token
           token=$(printf "%s:%s" "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w0)
-          echo "Uploading bundle (trying Basic auth)..."
-          # Use HTTP Basic auth (base64 username:password) for the Publisher API
-          resp=$(curl -s -w "\n%{http_code}" -H "Authorization: Basic $token" -F "bundle=@central-bundle.zip;type=application/octet-stream" "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC") || true
+          echo "Uploading bundle (trying Bearer auth with base64 user token)..."
+          resp=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $token" -F "bundle=@central-bundle.zip;type=application/octet-stream" "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC") || true
           http=$(printf "%s" "$resp" | tail -n1)
           body=$(printf "%s" "$resp" | sed '$d')
           echo "HTTP status: $http"
@@ -174,10 +173,9 @@ jobs:
             echo "DEPLOYMENT_ID=$DEPLOYMENT_ID" >> $GITHUB_ENV
             exit 0
           fi
-          if [ "$http" = "403" ]; then
-            echo "Upload returned 403 Forbidden with Basic auth. If you have a Sonatype API token, trying Bearer auth next..."
+          if [ "$http" = "403" ] || [ "$http" = "401" ]; then
+            echo "Upload returned $http. Trying fallback with Bearer CENTRAL_API_TOKEN..."
             if [ -n "${CENTRAL_API_TOKEN:-}" ]; then
-              echo "Uploading bundle (trying Bearer token)..."
               resp2=$(curl -s -w "\n%{http_code}" -H "Authorization: Bearer $CENTRAL_API_TOKEN" -F "bundle=@central-bundle.zip;type=application/octet-stream" "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC") || true
               http2=$(printf "%s" "$resp2" | tail -n1)
               body2=$(printf "%s" "$resp2" | sed '$d')
@@ -192,19 +190,24 @@ jobs:
             else
               echo "No CENTRAL_API_TOKEN secret set; cannot try Bearer token fallback."
             fi
-            echo "Upload failed with 403. Common causes: invalid credentials, using the wrong secret (use a Sonatype user token as password), or the account is not authorized for the groupId."
-            echo "Please verify the secrets: CENTRAL_USERNAME, CENTRAL_PASSWORD (user token), or set CENTRAL_API_TOKEN for a bearer token.";
+            echo "Upload failed with $http. Common causes: invalid credentials, wrong secret type, or account not authorized for the groupId."
             exit 1
           fi
           echo "Upload failed (HTTP $http). Body: $body"; exit 1
-
+ 
       - name: Poll deployment status until published
         env:
-          SONATYPE_TOKEN: ${{ secrets.CENTRAL_USERNAME }}:${{ secrets.CENTRAL_PASSWORD }}
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          CENTRAL_API_TOKEN: ${{ secrets.CENTRAL_API_TOKEN }}
         run: |
           set -euo pipefail
-          # compute base64 token again
-          token=$(printf "%s" "${{ secrets.CENTRAL_USERNAME }}:${{ secrets.CENTRAL_PASSWORD }}" | base64 -w0)
+          # compute base64 user token
+          if [ -n "$CENTRAL_USERNAME" ] && [ -n "$CENTRAL_PASSWORD" ]; then
+            token=$(printf "%s:%s" "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w0)
+          else
+            token=""
+          fi
           id="$DEPLOYMENT_ID"
           echo "Polling deployment id: $id"
           attempts=0
@@ -214,7 +217,14 @@ jobs:
           while [ $attempts -lt $max ]; do
             attempts=$((attempts+1))
             echo "Attempt $attempts"
-            out=$(curl -s -w "\n%{http_code}" -H "Authorization: Basic $token" "https://central.sonatype.com/api/v1/publisher/status?id=$id") || true
+            if [ -n "$token" ]; then
+              auth_header="Authorization: Bearer $token"
+            elif [ -n "$CENTRAL_API_TOKEN" ]; then
+              auth_header="Authorization: Bearer $CENTRAL_API_TOKEN"
+            else
+              echo "No credentials available for status check"; exit 1
+            fi
+            out=$(curl -s -w "\n%{http_code}" -X POST -H "$auth_header" "https://central.sonatype.com/api/v1/publisher/status?id=$id") || true
             http=$(printf "%s" "$out" | tail -n1)
             body=$(printf "%s" "$out" | sed '$d')
             echo "HTTP status: $http"
