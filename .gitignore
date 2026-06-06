@@ -15,7 +15,7 @@ target/
 
 # Ignore full IntelliJ project directory
 .idea/
-
+.continue
 ### Eclipse ###
 .apt_generated
 .classpath

@@ -14,40 +14,24 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
-          attempts=0
-          max=120
-          sleep_seconds=15
-          # Treat 5xx as transient server-side issues; retry with backoff
-          while [ $attempts -lt $max ]; do
-            attempts=$((attempts+1))
-            echo "Attempt $attempts"
-            out=$(curl -s -w "\n%{http_code}" -H "Authorization: Basic $token" "https://central.sonatype.com/api/v1/publisher/status?id=$id") || true
-            http=$(printf "%s" "$out" | tail -n1)
-            body=$(printf "%s" "$out" | sed '$d')
-            echo "HTTP status: $http"
-            echo "Body: $body"
-            if [ "$http" = "200" ]; then
-              state=$(printf "%s" "$body" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("deploymentState",""))') || true
-              echo "State: $state"
-              if [ "$state" = "PUBLISHED" ]; then
-                echo "Deployment published successfully"; exit 0
-              fi
-              if [ "$state" = "FAILED" ]; then
-                echo "Deployment failed"; printf "%s" "$body" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("errors",""))' || true; exit 1
-              fi
-            elif [ "$http" = "500" ]; then
-              echo "Sonatype returned 500 (server error). This is likely transient; retrying after backoff..."
-              # exponential-ish backoff (capped)
-              if [ $sleep_seconds -lt 120 ]; then sleep_seconds=$((sleep_seconds*2)); fi
-            elif [ "$http" = "401" ] || [ "$http" = "403" ]; then
-              echo "Authentication/authorization error (HTTP $http). Please verify CENTRAL_USERNAME/CENTRAL_PASSWORD and that the account is authorized for the groupId."; exit 1
-            else
-              echo "Unexpected HTTP status: $http; treating as retryable (will sleep and retry)."
-            fi
-            echo "Sleeping $sleep_seconds seconds before next attempt..."
-            sleep $sleep_seconds
-          done
-          echo "Timed out waiting for publish after $attempts attempts"; exit 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 and configure Maven credentials + GPG
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          # Use OSSRH credentials (create user token on Sonatype and set secrets)
+          # This will populate a <server> entry with id "ossrh" in settings.xml
+          server-ids: 'ossrh'
+          server-username: ${{ secrets.CENTRAL_USERNAME }}
+          server-password: ${{ secrets.CENTRAL_PASSWORD }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Import GPG private key
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
@@ -227,24 +211,39 @@ jobs:
           id="$DEPLOYMENT_ID"
           echo "Polling deployment id: $id"
           attempts=0
-          max=30
+          max=120
+          sleep_seconds=15
+          # Treat 5xx as transient server-side issues; retry with backoff
           while [ $attempts -lt $max ]; do
             attempts=$((attempts+1))
             echo "Attempt $attempts"
-            # Use HTTP Basic auth when polling status as well
-            out=$(curl -s -H "Authorization: Basic $token" "https://central.sonatype.com/api/v1/publisher/status?id=$id")
-            echo "$out"
-            state=$(printf "%s" "$out" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("deploymentState",""))') || true
-            echo "State: $state"
-            if [ "$state" = "PUBLISHED" ]; then
-              echo "Deployment published successfully"; exit 0
+            out=$(curl -s -w "\n%{http_code}" -H "Authorization: Basic $token" "https://central.sonatype.com/api/v1/publisher/status?id=$id") || true
+            http=$(printf "%s" "$out" | tail -n1)
+            body=$(printf "%s" "$out" | sed '$d')
+            echo "HTTP status: $http"
+            echo "Body: $body"
+            if [ "$http" = "200" ]; then
+              state=$(printf "%s" "$body" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("deploymentState",""))') || true
+              echo "State: $state"
+              if [ "$state" = "PUBLISHED" ]; then
+                echo "Deployment published successfully"; exit 0
+              fi
+              if [ "$state" = "FAILED" ]; then
+                echo "Deployment failed"; printf "%s" "$body" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("errors",""))' || true; exit 1
+              fi
+            elif [ "$http" = "500" ]; then
+              echo "Sonatype returned 500 (server error). This is likely transient; retrying after backoff..."
+              # exponential-ish backoff (capped)
+              if [ $sleep_seconds -lt 120 ]; then sleep_seconds=$((sleep_seconds*2)); fi
+            elif [ "$http" = "401" ] || [ "$http" = "403" ]; then
+              echo "Authentication/authorization error (HTTP $http). Please verify CENTRAL_USERNAME/CENTRAL_PASSWORD and that the account is authorized for the groupId."; exit 1
+            else
+              echo "Unexpected HTTP status: $http; treating as retryable (will sleep and retry)."
             fi
-            if [ "$state" = "FAILED" ]; then
-              echo "Deployment failed"; printf "%s" "$out" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("errors",""))' || true; exit 1
-            fi
-            sleep 10
+            echo "Sleeping $sleep_seconds seconds before next attempt..."
+            sleep $sleep_seconds
           done
-          echo "Timed out waiting for publish"; exit 1
+          echo "Timed out waiting for publish after $attempts attempts"; exit 1
 
 
 
