@@ -145,9 +145,28 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf central-bundle.zip bundle || true
-          mkdir -p bundle/io/github
-          # copy the groupId tree from the local Maven repository into the bundle preserving the path
-          cp -R "$HOME/.m2/repository/io/github/abhiramrathod" bundle/io/github/
+          
+          # Extract project version from pom.xml
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | grep -v "^\[" | tail -n 1)
+          echo "Assembling bundle for version: $VERSION"
+          
+          mkdir -p bundle/io/github/abhiramrathod
+          
+          # Copy only the directories of the specific version being released
+          for module in mcp-test-interfaces mcp-test-core mcp-test-transport mcp-test-client mcp-test-api mcp-test-examples mcpTesting; do
+            src_dir="$HOME/.m2/repository/io/github/abhiramrathod/$module/$VERSION"
+            if [ -d "$src_dir" ]; then
+              echo "Copying $module version $VERSION"
+              mkdir -p "bundle/io/github/abhiramrathod/$module"
+              cp -R "$src_dir" "bundle/io/github/abhiramrathod/$module/"
+            else
+              echo "Warning: Directory $src_dir not found!"
+            fi
+          done
+          
+          # Remove internal Maven metadata files and lock files
+          find bundle -type f \( -name "_remote.repositories" -o -name "maven-metadata-local.xml" -o -name "*.lastUpdated" -o -name "*.resolver" \) -delete || true
+          
           # create zip with the correct directory structure at the root of the archive
           cd bundle
           zip -r ../central-bundle.zip io
