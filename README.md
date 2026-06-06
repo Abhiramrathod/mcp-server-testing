@@ -27,7 +27,7 @@ Add to your `pom.xml`:
 <dependency>
     <groupId>io.github.abhiramrathod</groupId>
     <artifactId>mcp-test-api</artifactId>
-    <version>1.0.13</version>
+    <version>1.0.15</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -35,7 +35,7 @@ Add to your `pom.xml`:
 Or Gradle:
 
 ```gradle
-testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.13'
+testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.15'
 ```
 
 > **Note:** Only add `mcp-test-api` - all other modules are included transitively.
