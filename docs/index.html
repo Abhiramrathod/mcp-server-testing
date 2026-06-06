@@ -158,14 +158,14 @@
                 </div>
                 <div id="maven" class="tab-panel active">
                     <pre><code class="language-xml">&lt;dependency&gt;
-    &lt;groupId&gt;org.abhi-ai&lt;/groupId&gt;
+    &lt;groupId&gt;io.github.abhiramrathod&lt;/groupId&gt;
     &lt;artifactId&gt;mcp-test-api&lt;/artifactId&gt;
     &lt;version&gt;1.0.3&lt;/version&gt;
     &lt;scope&gt;test&lt;/scope&gt;
 &lt;/dependency&gt;</code></pre>
                 </div>
                 <div id="gradle" class="tab-panel">
-                    <pre><code class="language-gradle">testImplementation 'org.abhi-ai:mcp-test-api:1.0.3'</code></pre>
+                    <pre><code class="language-gradle">testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.3'</code></pre>
                 </div>
                 <div class="info-note">
                     <i class="fas fa-info-circle"></i>
@@ -241,7 +241,7 @@ McpClient client = McpClient.connectTo("http://localhost:8080")
             <div class="components-grid">
                 <div class="component-card">
                     <h3>mcp-test-api</h3>
-                    <p><strong>Coordinates:</strong> <code>org.abhi-ai:mcp-test-api:1.0.3</code></p>
+                    <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-api:1.0.3</code></p>
                     <p><strong>Purpose:</strong> Public API surface exported to tests. Import this artifact in your test scope to use the client, models and assertions.</p>
                     <p><strong>Key packages / classes:</strong> <code>mcp.toolkit.testing.framework.api</code> — <code>McpClientConfig</code>, factory classes (connect/build), models and assertion helpers.</p>
                     <p><strong>Source:</strong> <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-api/src/main/java/mcp/toolkit/testing/framework/api/McpClientConfig.java" target="_blank">McpClientConfig.java</a></p>
@@ -251,7 +251,7 @@ McpClient client = McpClient.connectTo("http://localhost:8080")
 
                 <div class="component-card">
                     <h3>mcp-test-client</h3>
-                    <p><strong>Coordinates:</strong> <code>org.abhi-ai:mcp-test-client:1.0.3</code></p>
+                    <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-client:1.0.3</code></p>
                     <p><strong>Purpose:</strong> Internal client implementation used by the public API. Handles initialization, component wiring and high-level helpers.</p>
                     <p><strong>Key classes:</strong> <code>McpTestClient</code> (connection lifecycle), client directories: tools/resources/prompts, and exchange tracking (performance APIs).</p>
                     <p><strong>Source:</strong> <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-client/src/main/java/mcp/toolkit/testing/framework/McpTestClient.java" target="_blank">McpTestClient.java</a></p>
@@ -259,7 +259,7 @@ McpClient client = McpClient.connectTo("http://localhost:8080")
 
                 <div class="component-card">
                     <h3>mcp-test-transport</h3>
-                    <p><strong>Coordinates:</strong> <code>org.abhi-ai:mcp-test-transport:1.0.3</code></p>
+                    <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-transport:1.0.3</code></p>
                     <p><strong>Purpose:</strong> Transport implementations for communicating with MCP servers.</p>
                     <p><strong>Key classes:</strong> <code>McpSseTransport</code> — SSE-based transport that opens a streaming connection and posts messages to the MCP message endpoint.</p>
                     <p><strong>Source:</strong> <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-transport/src/main/java/mcp/toolkit/testing/framework/transport/McpSseTransport.java" target="_blank">McpSseTransport.java</a></p>
@@ -268,14 +268,14 @@ McpClient client = McpClient.connectTo("http://localhost:8080")
 
                 <div class="component-card">
                     <h3>mcp-test-core</h3>
-                    <p><strong>Coordinates:</strong> <code>org.abhi-ai:mcp-test-core:1.0.3</code></p>
+                    <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-core:1.0.3</code></p>
                     <p><strong>Purpose:</strong> Core utilities, codecs and constants shared by client and transport implementations.</p>
                     <p><strong>Key packages:</strong> <code>mcp.toolkit.testing.framework.core</code> — JSON codec, constants and common helpers.</p>
                 </div>
 
                 <div class="component-card">
                     <h3>mcp-test-interfaces</h3>
-                    <p><strong>Coordinates:</strong> <code>org.abhi-ai:mcp-test-interfaces:1.0.3</code></p>
+                    <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-interfaces:1.0.3</code></p>
                     <p><strong>Purpose:</strong> Public interfaces used by internal modules and custom extensions.</p>
                     <p><strong>Key interfaces:</strong> <code>mcp.toolkit.testing.framework.interfaces.McpTransport</code> — transport abstraction for sending/receiving MCP JSON-RPC messages.</p>
                 </div>
@@ -461,7 +461,7 @@ long p99 = client.exchanges()
                     <a href="#installation">Installation</a>
                     <a href="#docs">Documentation</a>
                     <a href="#examples">Examples</a>
-                    <a href="https://search.maven.org/search?q=g:org.abhi-ai" target="_blank">Maven Central</a>
+                    <a href="https://search.maven.org/search?q=g:io.github.abhiramrathod" target="_blank">Maven Central</a>
                 </div>
                 <div class="footer-section">
                     <h4>Community</h4>
