@@ -1,70 +1,88 @@
 import { motion } from 'framer-motion'
 import { modules } from '../data/content'
-import TiltCard from './TiltCard'
+
+const tagStyles: Record<string, string> = {
+  'bg-indigo-500': '#818cf8',
+  'bg-pink-500': '#f472b6',
+  'bg-purple-500': '#a78bfa',
+  'bg-emerald-500': '#34d399',
+  'bg-amber-500': '#fbbf24',
+  'bg-cyan-500': '#22d3ee',
+}
 
 export default function Modules() {
   return (
-    <section id="components" className="py-20 sm:py-28 relative" style={{ background: 'var(--bg-alt)' }}>
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/2 right-0 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)', filter: 'blur(80px)', opacity: 0.3 }} />
-      </div>
-      <div className="max-w-6xl mx-auto px-6 relative z-[1]">
+    <section id="components" className="py-24 relative">
+      <div className="max-w-5xl mx-auto px-5">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-14"
+          className="mb-12"
         >
-          <span className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: 'var(--accent)' }}>Architecture</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-3" style={{ color: 'var(--text)' }}>Modular by Design</h2>
-          <p className="text-base max-w-md mx-auto" style={{ color: 'var(--text-sec)' }}>Six specialized modules with clean separation of concerns</p>
+          <div className="section-label mb-3">modules</div>
+          <h2 className="section-title">Package Structure</h2>
+          <p className="section-sub font-mono">ls -la ./mcp-test-*/</p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {modules.map((m, i) => (
-            <TiltCard key={m.name} intensity={4}>
-              <motion.div
-                initial={{ opacity: 0, y: 25 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.05 }}
-                className="relative p-6 rounded-2xl transition-all duration-300 overflow-hidden card-shine"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.06)' }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 pointer-events-none" style={{ background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)', opacity: 0.5 }} />
-                <h3 className="text-base font-semibold mb-3 flex items-center gap-2 flex-wrap" style={{ color: 'var(--text)' }}>
-                  {m.name}
-                  <span className={`text-[0.6rem] font-bold px-2 py-0.5 rounded text-white ${m.tagColor}`}>{m.tag}</span>
-                </h3>
-                {m.coords && (
-                  <p className="text-xs mb-2 font-mono" style={{ color: 'var(--text-ter)' }}>{m.coords}</p>
-                )}
-                <p className="text-sm mb-2" style={{ color: 'var(--text-sec)' }}>{m.desc}</p>
-                {m.details && (
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-ter)' }}>{m.details}</p>
-                )}
-              </motion.div>
-            </TiltCard>
-          ))}
+        <div className="terminal-window">
+          <div className="terminal-header">
+            <span className="terminal-dot red" />
+            <span className="terminal-dot yellow" />
+            <span className="terminal-dot green" />
+            <span className="terminal-title ml-2">mcp-testing — directory listing</span>
+          </div>
+          <div className="terminal-body">
+            <p className="text-xs mb-4" style={{ color: '#666' }}>
+              <span className="prompt" /> tree ./ --depth=1
+            </p>
+
+            <div className="space-y-2">
+              {modules.map((m, i) => (
+                <motion.div
+                  key={m.name}
+                  initial={{ opacity: 0, x: -8 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-start gap-3 py-2 px-3 rounded transition-colors"
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(95,255,167,0.03)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  <span style={{ color: '#5fffa7', fontSize: 12 }}>📁</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium" style={{ color: '#e0e0e0' }}>{m.name}/</span>
+                      <span
+                        className="text-[9px] px-1.5 py-0.5 rounded font-medium"
+                        style={{
+                          background: `${tagStyles[m.tagColor] || '#666'}18`,
+                          color: tagStyles[m.tagColor] || '#666',
+                          border: `1px solid ${tagStyles[m.tagColor] || '#666'}25`,
+                        }}
+                      >
+                        {m.tag}
+                      </span>
+                    </div>
+                    {m.coords && (
+                      <p className="text-xs mt-0.5" style={{ color: '#555', fontFamily: 'monospace' }}>{m.coords}</p>
+                    )}
+                    <p className="text-xs mt-0.5" style={{ color: '#777' }}>{m.desc}</p>
+                    {m.details && (
+                      <p className="text-xs mt-0.5" style={{ color: '#555' }}>{m.details}</p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="mt-5 pt-3 border-t text-xs" style={{ borderColor: '#1a1a1a', color: '#555' }}>
+              <span style={{ color: '#888' }}>Build:</span> <span style={{ color: '#5fffa7' }}>mvn -T 1C clean install</span>
+              <span className="mx-2" style={{ color: '#333' }}>|</span>
+              <span style={{ color: '#888' }}>Docs:</span> <span style={{ color: '#5fffa7' }}>./javadoc/index.html</span>
+            </div>
+          </div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-6 p-5 rounded-2xl glass text-sm leading-relaxed"
-          style={{ color: 'var(--text-sec)' }}
-        >
-          <strong style={{ color: 'var(--text)' }}>Build:</strong> <code style={{ color: 'var(--accent)' }}>mvn -T 1C clean install</code> &nbsp;·&nbsp;
-          <strong style={{ color: 'var(--text)' }}>Javadocs:</strong> <code style={{ color: 'var(--accent)' }}>mvn javadoc:jar</code> &nbsp;·&nbsp;
-          <strong style={{ color: 'var(--text)' }}>Dist:</strong> Sonatype OSSRH / Maven Central
-          <br />
-          View <a href="./javadoc/index.html" style={{ color: 'var(--accent)', fontWeight: 600 }}>API Javadocs</a> (if generated locally).
-        </motion.div>
       </div>
     </section>
   )

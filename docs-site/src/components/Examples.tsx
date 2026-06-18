@@ -1,62 +1,57 @@
 import { motion } from 'framer-motion'
 import { examples } from '../data/content'
-import { PlayCircle, Wrench, FolderOpen, MessageSquare, LineChart, CheckCheck, ArrowRight, Github } from 'lucide-react'
-import TiltCard from './TiltCard'
+import { ArrowRight, Github } from 'lucide-react'
 
-const iconMap: Record<string, React.ElementType> = { PlayCircle, Wrench, FolderOpen, MessageSquare, LineChart, CheckCheck }
+const iconSymbols: Record<string, string> = {
+  PlayCircle: '▶', Wrench: '◈', FolderOpen: '📂', MessageSquare: '💬', LineChart: '📊', CheckCheck: '✓',
+}
 
 export default function Examples() {
   return (
-    <section id="examples" className="py-20 sm:py-28 relative">
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="examples" className="py-24 relative" style={{ background: '#0d0d0d' }}>
+      <div className="max-w-5xl mx-auto px-5">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-14"
+          className="mb-12"
         >
-          <span className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: 'var(--accent)' }}>Examples</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-3" style={{ color: 'var(--text)' }}>See It In Action</h2>
-          <p className="text-base max-w-md mx-auto" style={{ color: 'var(--text-sec)' }}>Real-world tests to get you started</p>
+          <div className="section-label mb-3">examples</div>
+          <h2 className="section-title">Test Suites</h2>
+          <p className="section-sub font-mono">ls ./mcp-test-examples/src/test/</p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {examples.map((ex, i) => {
-            const Icon = iconMap[ex.icon] || PlayCircle
-            return (
-              <TiltCard key={ex.title} intensity={4}>
-                <motion.a
-                  href={ex.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  initial={{ opacity: 0, y: 25 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.05 }}
-                  className="group block p-6 rounded-2xl transition-all duration-300 no-underline relative overflow-hidden card-shine"
-                  style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'inherit' }}
-                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.06)' }}
-                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}
-                >
-                  <div className="absolute top-0 left-0 right-0 h-0.5 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100" style={{ background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110" style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }}>
-                    <Icon size={18} />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {examples.map((ex, i) => (
+            <motion.a
+              key={ex.title}
+              href={ex.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              className="card-terminal group block no-underline"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-sm mt-0.5" style={{ color: '#5fffa7' }}>
+                  {iconSymbols[ex.icon] || '◆'}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium" style={{ color: '#e0e0e0' }}>{ex.title}</span>
+                    <ArrowRight size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#5fffa7' }} />
                   </div>
-                  <h4 className="text-base font-semibold mb-1.5" style={{ color: 'var(--text)' }}>{ex.title}</h4>
-                  <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--text-sec)' }}>{ex.desc}</p>
-                  <span
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold transition-all duration-300"
-                    style={{ color: 'var(--accent)' }}
-                  >
-                    <Github size={12} />
-                    View source
-                    <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />
+                  <p className="text-xs leading-relaxed" style={{ color: '#666' }}>{ex.desc}</p>
+                  <span className="inline-flex items-center gap-1 text-xs mt-2" style={{ color: '#555' }}>
+                    <Github size={10} />
+                    view source
                   </span>
-                </motion.a>
-              </TiltCard>
-            )
-          })}
+                </div>
+              </div>
+            </motion.a>
+          ))}
         </div>
       </div>
     </section>

@@ -28,12 +28,6 @@ export interface Example {
   url: string
 }
 
-export interface Testimonial {
-  quote: string
-  author: string
-  role: string
-}
-
 export const features: Feature[] = [
   { icon: 'Shield', title: 'Type-Safe API', desc: 'Strongly typed domain models eliminate runtime errors. No raw JSON handling.' },
   { icon: 'Link2', title: 'Fluent Assertions', desc: 'Chainable methods make tests readable and maintainable.' },

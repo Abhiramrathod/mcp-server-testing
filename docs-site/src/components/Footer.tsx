@@ -1,103 +1,86 @@
-import { motion } from 'framer-motion'
-import { Github, Heart, ExternalLink } from 'lucide-react'
-
-const links = [
-  { label: 'Resources', items: [
-    { label: 'Installation', href: '#installation' },
-    { label: 'Documentation', href: '#docs' },
-    { label: 'Examples', href: '#examples' },
-    { label: 'Maven Central', href: 'https://central.sonatype.com/artifact/io.github.abhiramrathod/mcp-test-api', external: true },
-  ]},
-  { label: 'Community', items: [
-    { label: 'GitHub', href: 'https://github.com/Abhiramrathod/mcp-testing', external: true },
-    { label: 'Issues', href: 'https://github.com/Abhiramrathod/mcp-testing/issues', external: true },
-    { label: 'Discussions', href: 'https://github.com/Abhiramrathod/mcp-testing/discussions', external: true },
-    { label: 'License', href: 'https://github.com/Abhiramrathod/mcp-testing/blob/master/LICENSE', external: true },
-  ]},
-]
+import { Github, ExternalLink, Heart } from 'lucide-react'
 
 export default function Footer() {
+  const year = new Date().getFullYear()
+
   return (
-    <footer className="relative border-t" style={{ background: 'var(--bg-alt)', borderColor: 'var(--border)' }}>
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
-
-      <div className="max-w-6xl mx-auto px-6 py-14">
-        <div className="grid sm:grid-cols-[2fr_1fr_1fr] gap-10 mb-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <a href="#" className="inline-flex items-center gap-2.5 font-bold text-lg no-underline mb-3" style={{ color: 'var(--text)' }}>
-              <span
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-sm text-white"
-                style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))' }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+    <footer className="relative py-14 border-t" style={{ background: '#0d0d0d', borderColor: '#1a1a1a' }}>
+      <div className="max-w-6xl mx-auto px-5">
+        <div className="grid sm:grid-cols-[2fr_1fr_1fr] gap-8 mb-8">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-medium mb-3" style={{ color: '#e0e0e0' }}>
+              <span className="px-2 py-0.5 rounded text-xs" style={{ background: 'rgba(95,255,167,0.1)', color: '#5fffa7', border: '1px solid rgba(95,255,167,0.15)' }}>
+                mcp-test
               </span>
-              MCP Testing
-            </a>
-            <p className="text-sm leading-relaxed max-w-sm" style={{ color: 'var(--text-sec)' }}>
-              Production-grade Java testing framework for Model Context Protocol servers. Type-safe, fluent, extensible.
-            </p>
-            <div className="flex items-center gap-3 mt-4">
-              <a
-                href="https://github.com/Abhiramrathod/mcp-testing"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px var(--accent-glow)' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
-                aria-label="GitHub"
-              >
-                <Github size={16} />
-              </a>
+              <span style={{ color: '#555' }}>v1.0.15</span>
             </div>
-          </motion.div>
-
-          {links.map(col => (
-            <motion.div
-              key={col.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
+            <p className="text-xs leading-relaxed max-w-sm" style={{ color: '#666' }}>
+              Production-grade Java testing framework for Model Context Protocol servers.
+              Type-safe, fluent assertions, pluggable transports.
+            </p>
+            <a
+              href="https://github.com/Abhiramrathod/mcp-testing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded text-xs transition-all"
+              style={{ color: '#666', border: '1px solid #2a2a2a' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#5fffa7'; e.currentTarget.style.borderColor = 'rgba(95,255,167,0.2)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#666'; e.currentTarget.style.borderColor = '#2a2a2a' }}
             >
-              <h4 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>{col.label}</h4>
-              <div className="space-y-2">
-                {col.items.map(l => (
-                  <a
-                    key={l.label}
-                    href={l.href}
-                    target={l.external ? '_blank' : undefined}
-                    rel={l.external ? 'noopener noreferrer' : undefined}
-                    className="group inline-flex items-center gap-1.5 text-sm transition-all duration-200 no-underline"
-                    style={{ color: 'var(--text-sec)' }}
-                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.transform = 'translateX(3px)' }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-sec)'; e.currentTarget.style.transform = 'none' }}
-                  >
-                    {l.label}
-                    {l.external && <ExternalLink size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" />}
-                  </a>
-                ))}
-              </div>
-            </motion.div>
-          ))}
+              <Github size={12} />
+              gh:Abhiramrathod/mcp-testing
+            </a>
+          </div>
+
+          <div>
+            <p className="text-xs font-medium mb-3" style={{ color: '#888', letterSpacing: '1px', textTransform: 'uppercase' }}>Links</p>
+            <div className="space-y-1.5">
+              {[
+                { label: './install', href: '#installation' },
+                { label: './docs', href: '#docs' },
+                { label: './examples', href: '#examples' },
+                { label: 'maven-central', href: 'https://central.sonatype.com/artifact/io.github.abhiramrathod/mcp-test-api' },
+              ].map(l => (
+                <a key={l.label} href={l.href} target={l.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs transition-colors no-underline w-fit"
+                  style={{ color: '#555' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#5fffa7'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#555'}
+                >
+                  {l.label} {l.href.startsWith('http') && <ExternalLink size={10} />}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-medium mb-3" style={{ color: '#888', letterSpacing: '1px', textTransform: 'uppercase' }}>Community</p>
+            <div className="space-y-1.5">
+              {[
+                { label: 'github', href: 'https://github.com/Abhiramrathod/mcp-testing' },
+                { label: 'issues', href: 'https://github.com/Abhiramrathod/mcp-testing/issues' },
+                { label: 'discussions', href: 'https://github.com/Abhiramrathod/mcp-testing/discussions' },
+                { label: 'license (apache 2.0)', href: 'https://github.com/Abhiramrathod/mcp-testing/blob/master/LICENSE' },
+              ].map(l => (
+                <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs transition-colors no-underline w-fit"
+                  style={{ color: '#555' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#5fffa7'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#555'}
+                >
+                  {l.label} <ExternalLink size={10} />
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-8 border-t text-xs"
-          style={{ borderColor: 'var(--border)', color: 'var(--text-ter)' }}
-        >
-          <span>&copy; {new Date().getFullYear()} MCP Testing Framework — Apache 2.0</span>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 pt-6 border-t text-xs" style={{ borderColor: '#1a1a1a', color: '#444' }}>
+          <span>&copy; {year} Apache 2.0</span>
           <span className="inline-flex items-center gap-1">
-            Made with <Heart size={11} style={{ color: '#ef4444' }} /> by the community
+            built with <Heart size={10} style={{ color: '#ff4444' }} /> for the community
           </span>
-        </motion.div>
+        </div>
       </div>
     </footer>
   )

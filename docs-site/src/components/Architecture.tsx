@@ -1,94 +1,98 @@
 import { motion } from 'framer-motion'
-import { Lightbulb, ChevronDown, Sparkles, ArrowRight } from 'lucide-react'
 
 const layers = [
-  { label: 'Public', name: 'mcp-test-api', color: '#6366f1', desc: 'The only artifact you import — fluent client builders, domain models, assertions.' },
-  { label: 'Internal', name: 'mcp-test-client', color: '#ec4899', desc: 'RPC orchestration, component wiring, exchange tracking, initialization.' },
-  { label: 'Transport', name: 'mcp-test-transport', color: '#8b5cf6', desc: 'SSE and Streamable HTTP implementations. Pluggable via SPI.' },
-  { label: 'Core & SPI', name: 'mcp-test-interfaces / mcp-test-core', color: '#22c55e', desc: 'McpTransport SPI, JSON codec, constants, validation.' },
+  {
+    label: 'PUBLIC', name: 'mcp-test-api', color: '#5fffa7',
+    desc: 'Public API surface — client builders, domain models, assertions.',
+  },
+  {
+    label: 'INTERNAL', name: 'mcp-test-client', color: '#60a5fa',
+    desc: 'RPC orchestration, initialization, exchange tracking.',
+  },
+  {
+    label: 'TRANSPORT', name: 'mcp-test-transport', color: '#a78bfa',
+    desc: 'SSE and Streamable HTTP via McpTransport SPI.',
+  },
+  {
+    label: 'CORE', name: 'mcp-test-interfaces / core', color: '#fbbf24',
+    desc: 'McpTransport SPI contract, JSON codec, constants, utilities.',
+  },
 ]
 
 export default function Architecture() {
   return (
-    <section id="architecture" className="py-20 sm:py-28 relative" style={{ background: 'var(--bg-alt)' }}>
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute bottom-0 left-1/3 w-96 h-96 rounded-full" style={{ background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)', filter: 'blur(80px)', opacity: 0.3 }} />
-      </div>
-      <div className="max-w-6xl mx-auto px-6 relative z-[1]">
+    <section id="architecture" className="py-24 relative">
+      <div className="max-w-4xl mx-auto px-5">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-14"
+          className="mb-12"
         >
-          <span className="text-xs font-bold tracking-[0.15em] uppercase inline-flex items-center gap-1.5" style={{ color: 'var(--accent)' }}>
-            <Sparkles size={12} />
-            Architecture
-            <Sparkles size={12} />
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-3" style={{ color: 'var(--text)' }}>Clean &amp; Layered</h2>
-          <p className="text-base max-w-md mx-auto" style={{ color: 'var(--text-sec)' }}>Modular design with clear separation of concerns</p>
+          <div className="section-label mb-3">architecture</div>
+          <h2 className="section-title">Dependency Tree</h2>
+          <p className="section-sub font-mono">tree --charset=ascii</p>
         </motion.div>
 
-        <div className="max-w-lg mx-auto">
-          {layers.map((l, i) => (
-            <motion.div
-              key={l.label}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.12 }}
-              className="flex flex-col items-center"
-            >
-              <motion.div
-                className="w-full p-5 rounded-2xl transition-all duration-300 cursor-default"
-                style={{
-                  background: `${l.color}08`,
-                  border: `1.5px solid ${l.color}25`,
-                }}
-                whileHover={{
-                  scale: 1.02,
-                  boxShadow: `0 12px 32px ${l.color}15`,
-                  borderColor: l.color,
-                }}
-              >
-                <div className="flex items-center gap-3 mb-1.5">
-                  <span
-                    className="text-[0.55rem] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md text-white"
-                    style={{ background: l.color }}
-                  >
-                    {l.label}
-                  </span>
-                  <span className="text-sm font-semibold opacity-90" style={{ color: 'var(--text)' }}>{l.name}</span>
-                </div>
-                <p className="text-xs leading-relaxed ml-1" style={{ color: 'var(--text-sec)' }}>{l.desc}</p>
-              </motion.div>
-              {i < layers.length - 1 && (
-                <div className="flex justify-center py-2" style={{ color: 'var(--text-ter)' }}>
-                  <motion.div
-                    animate={{ y: [0, 3, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
-                  >
-                    <ChevronDown size={18} />
-                  </motion.div>
-                </div>
-              )}
-            </motion.div>
-          ))}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="terminal-window"
+        >
+          <div className="terminal-header">
+            <span className="terminal-dot red" />
+            <span className="terminal-dot yellow" />
+            <span className="terminal-dot green" />
+            <span className="terminal-title ml-2">mcp-testing — dependency graph</span>
+          </div>
+          <div className="terminal-body">
+            <p className="text-xs mb-4" style={{ color: '#666' }}>
+              <span className="prompt" /> tree ./mcp-test-*/ --deps
+            </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="flex items-center gap-2.5 mt-8 px-5 py-4 rounded-xl glass text-sm"
-            style={{ color: 'var(--text-sec)' }}
-          >
-            <Lightbulb size={16} style={{ color: '#f59e0b' }} />
-            <span>Import only <code style={{ color: 'var(--accent)', fontWeight: 600 }}>mcp-test-api</code> — all internal modules are pulled in transitively</span>
-          </motion.div>
-        </div>
+            <div className="font-mono text-xs">
+              <div className="leading-relaxed">
+                <span style={{ color: '#5fffa7' }}>.</span>
+                {layers.map((l, i) => (
+                  <motion.div
+                    key={l.name}
+                    initial={{ opacity: 0, x: -4 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="ml-4"
+                  >
+                    <div className="flex items-start gap-2 py-2 px-2 rounded transition-colors cursor-default"
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(95,255,167,0.03)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <span style={{ color: '#444', flexShrink: 0, width: 12 }}>
+                        {i < layers.length - 1 ? '├' : '└'}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span style={{ color: '#5fffa7', fontWeight: 500 }}>{l.name}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: `${l.color}15`, color: l.color, border: `1px solid ${l.color}20` }}>
+                            {l.label}
+                          </span>
+                        </div>
+                        <p className="text-xs mt-0.5" style={{ color: '#666' }}>{l.desc}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 pt-3 border-t flex items-center gap-2 text-xs" style={{ borderColor: '#1a1a1a', color: '#555' }}>
+              <span style={{ color: '#fbbf24' }}>◆</span>
+              <span>
+                Import only <code style={{ color: '#5fffa7' }}>mcp-test-api</code> — all internal modules are transitive.
+              </span>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   )

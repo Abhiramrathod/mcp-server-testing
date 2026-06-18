@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { Info, Copy, Check } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 
 const maven = `<dependency>
   <groupId>io.github.abhiramrathod</groupId>
@@ -14,47 +14,42 @@ const maven = `<dependency>
 const gradle = `testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.15'`
 
 const firstTest = `import mcp.toolkit.testing.framework.api.*;
-import mcp.toolkit.testing.framework.api.model.*;
 
 public class MyFirstTest {
   @Test
   public void testMcpServer() {
     McpClient client = McpClient.connectTo("http://localhost:8080")
-        .config(McpClientConfig.builder()
-            .timeout(Duration.ofSeconds(30))
-            .build())
+        .streamableHttp()
         .initializeOnBuild()
         .build();
 
-    McpToolResult result = client.tools()
-        .callTool("calculator", Map.of("operation", "add", "a", 5, "b", 3))
+    client.tools()
+        .callTool("calculator", Map.of("a", 5, "b", 3))
         .assertSuccess()
         .assertTextContains("8");
 
-    client.exchanges().assertAverageLatencyBelow(McpMethod.TOOLS_CALL, 500);
     client.close();
   }
 }`
 
-function CodeBlock({ code, language }: { code: string; language: string }) {
+function CodeBlock({ code, lang }: { code: string; lang: string }) {
   const [copied, setCopied] = useState(false)
   return (
     <div className="relative group">
       <SyntaxHighlighter
-        language={language}
+        language={lang === 'xml' ? 'xml' : 'java'}
         style={atomDark}
-        customStyle={{ padding: '1.25rem 1.5rem', borderRadius: '0.625rem', fontSize: '0.8rem', lineHeight: '1.65', margin: 0, border: '1px solid rgba(255,255,255,0.06)', background: '#0c1427' }}
+        customStyle={{ padding: '14px 16px', borderRadius: '4px', fontSize: '12px', lineHeight: '1.65', margin: 0, background: '#0a0a0a', border: '1px solid #1a1a1a' }}
         showLineNumbers={false}
       >
         {code}
       </SyntaxHighlighter>
       <button
         onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1600) }}
-        className="absolute top-2.5 right-2.5 p-2 rounded-md transition-all duration-200 opacity-0 group-hover:opacity-100"
-        style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-ter)', border: '1px solid rgba(255,255,255,0.08)' }}
-        aria-label="Copy code"
+        className="absolute top-2 right-2 p-1.5 rounded transition-all duration-200 opacity-0 group-hover:opacity-100"
+        style={{ background: '#1a1a1a', color: '#666', border: '1px solid #2a2a2a' }}
       >
-        {copied ? <Check size={14} style={{ color: '#22c55e' }} /> : <Copy size={14} />}
+        {copied ? <Check size={12} style={{ color: '#5fffa7' }} /> : <Copy size={12} />}
       </button>
     </div>
   )
@@ -64,60 +59,87 @@ export default function Installation() {
   const [tab, setTab] = useState<'maven' | 'gradle'>('maven')
 
   return (
-    <section id="installation" className="py-20 sm:py-28">
-      <div className="max-w-4xl mx-auto px-6">
+    <section id="installation" className="py-24 relative" style={{ background: '#0d0d0d' }}>
+      <div className="max-w-4xl mx-auto px-5">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-14"
+          className="mb-12"
         >
-          <span className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: 'var(--accent)' }}>Get Started</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-3" style={{ color: 'var(--text)' }}>Quick Installation</h2>
-          <p className="text-base" style={{ color: 'var(--text-sec)' }}>Add one dependency — that&rsquo;s it</p>
+          <div className="section-label mb-3">install</div>
+          <h2 className="section-title">Quick Setup</h2>
+          <p className="section-sub font-mono">curl -s https://maven.central/mcp-test-api</p>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 25 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="glass rounded-2xl p-6 sm:p-8 mb-6"
+          className="terminal-window mb-6"
         >
-          <div className="flex gap-2 mb-5">
-            {(['maven', 'gradle'] as const).map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 capitalize"
-                style={{
-                  background: tab === t ? 'linear-gradient(135deg, var(--accent), var(--accent-dark))' : 'var(--bg-alt)',
-                  color: tab === t ? 'white' : 'var(--text-sec)',
-                  border: tab === t ? 'none' : '1px solid var(--border)',
-                  boxShadow: tab === t ? '0 2px 8px var(--accent-glow)' : 'none',
-                }}
+          <div className="terminal-header">
+            <span className="terminal-dot red" />
+            <span className="terminal-dot yellow" />
+            <span className="terminal-dot green" />
+            <span className="terminal-title ml-2">dependencies — pom.xml</span>
+          </div>
+
+          <div className="terminal-body">
+            <div className="flex gap-2 mb-4">
+              {(['maven', 'gradle'] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className="px-3 py-1.5 rounded text-xs font-medium transition-all capitalize"
+                  style={{
+                    background: tab === t ? 'rgba(95,255,167,0.1)' : 'transparent',
+                    color: tab === t ? '#5fffa7' : '#555',
+                    border: tab === t ? '1px solid rgba(95,255,167,0.2)' : '1px solid transparent',
+                  }}
+                >
+                  ${t === 'maven' ? 'mvn' : 'gradle'} {t}
+                </button>
+              ))}
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
               >
-                {t}
-              </button>
-            ))}
-          </div>
-          <CodeBlock code={tab === 'maven' ? maven : gradle} language={tab === 'maven' ? 'xml' : 'gradle'} />
-          <div className="flex items-center gap-2.5 mt-4 px-4 py-3 rounded-lg text-sm" style={{ background: 'var(--accent-glow)', border: '1px solid var(--accent-glow)', color: 'var(--text-sec)' }}>
-            <Info size={15} style={{ color: 'var(--accent)' }} />
-            Only add <code style={{ color: 'var(--accent)', fontWeight: 600 }}>mcp-test-api</code> — all other modules are pulled in transitively.
+                <CodeBlock code={tab === 'maven' ? maven : gradle} lang={tab === 'maven' ? 'xml' : 'gradle'} />
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="mt-3 flex items-center gap-2 text-xs" style={{ color: '#555' }}>
+              <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: '#5fffa7' }} />
+              Only add <code style={{ color: '#5fffa7' }}>mcp-test-api</code> — others are transitive.
+            </div>
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 25 }}
+          initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="glass rounded-2xl p-6 sm:p-8"
+          transition={{ delay: 0.1 }}
+          className="terminal-window"
         >
-          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>Your First Test</h3>
-          <CodeBlock code={firstTest} language="java" />
+          <div className="terminal-header">
+            <span className="terminal-dot red" />
+            <span className="terminal-dot yellow" />
+            <span className="terminal-dot green" />
+            <span className="terminal-title ml-2">example — FirstTest.java</span>
+          </div>
+          <div className="terminal-body">
+            <p className="text-xs mb-3" style={{ color: '#888' }}>
+              <span className="prompt" /> <span style={{ color: '#666' }}>cat ./src/test/java/FirstTest.java</span>
+            </p>
+            <CodeBlock code={firstTest} lang="java" />
+          </div>
         </motion.div>
       </div>
     </section>
