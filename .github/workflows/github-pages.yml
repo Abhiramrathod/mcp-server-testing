@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
     paths:
-      - 'docs/**'
+      - 'docs-site/**'
       - '.github/workflows/github-pages.yml'
   workflow_dispatch:
 
@@ -18,27 +18,40 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy to GitHub Pages
+  build-and-deploy:
+    name: Build & Deploy to GitHub Pages
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: docs-site/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+      working-directory: docs-site
+
+    - name: Build site
+      run: npm run build
+      working-directory: docs-site
+
     - name: Setup Pages
       uses: actions/configure-pages@v4
-    
+
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
         path: './docs'
-    
+
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4

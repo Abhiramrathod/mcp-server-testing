@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --accent: #6366f1;
+    --accent-light: #818cf8;
+    --accent-dark: #4f46e5;
+    --accent-glow: rgba(99, 102, 241, 0.15);
+    --bg: #f8fafc;
+    --bg-alt: #f1f5f9;
+    --bg-card: rgba(255, 255, 255, 0.72);
+    --text: #1e293b;
+    --text-sec: #64748b;
+    --text-ter: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --code-bg: #1e293b;
+    --nav-blur: 16px;
+  }
+
+  .dark {
+    --accent: #818cf8;
+    --accent-light: #a5b4fc;
+    --accent-dark: #6366f1;
+    --accent-glow: rgba(129, 140, 248, 0.12);
+    --bg: #080e1a;
+    --bg-alt: #0c1427;
+    --bg-card: rgba(15, 23, 42, 0.75);
+    --text: #e2e8f0;
+    --text-sec: #94a3b8;
+    --text-ter: #64748b;
+    --border: #1e293b;
+    --border-light: #0f172a;
+    --code-bg: #0c1427;
+  }
+
+  * { @apply m-0 p-0 box-border; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    transition: background-color 0.3s, color 0.3s;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: white;
+  }
+}
+
+@layer components {
+  .glass {
+    background: var(--bg-card);
+    backdrop-filter: blur(var(--nav-blur));
+    -webkit-backdrop-filter: blur(var(--nav-blur));
+    border: 1px solid var(--border);
+  }
+
+  .glass-strong {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--accent), var(--accent-light), #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-border {
+    position: relative;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--accent), transparent, var(--accent-light));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  .text-balance { text-wrap: balance; }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+}
+
+pre {
+  background: var(--code-bg) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
