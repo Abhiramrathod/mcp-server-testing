@@ -17,7 +17,7 @@ function Code({ code, lang }: { code: string; lang: string }) {
       <button onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1600) }}
         className="absolute top-1.5 right-1.5 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#111', border: '1px solid #222' }}
       >
-        {copied ? <Check size={11} style={{ color: '#5fffa7' }} /> : <Copy size={11} style={{ color: '#666' }} />}
+        {copied ? <Check size={11} style={{ color: 'var(--accent)' }} /> : <Copy size={11} style={{ color: '#666' }} />}
       </button>
     </div>
   )
@@ -29,31 +29,33 @@ export default function Docs() {
   return (
     <section id="docs" className="py-8 section-content">
       <div className="output-block">
-        <p className="text-xs dim mb-3">
+        <p className="text-xs mb-3" style={{ color: 'var(--text-dim)' }}>
           <span className="cmd">#</span> docs
         </p>
-        <p className="text-xs dim2 mb-3">$ man mcp-test-api</p>
+        <p className="text-xs mb-3" style={{ color: 'var(--text-dim2)' }}>$ man mcp-test-api</p>
 
-        <div className="flex flex-wrap gap-1 mb-4 pb-3" style={{ borderBottom: '1px solid #181818' }}>
+        <div className="fade-in flex flex-wrap gap-1 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
           {docSections.map((s, i) => (
             <button key={s.title} onClick={() => setSection(i)}
               className="px-2.5 py-1 rounded text-xs transition-all"
-              style={{ background: section === i ? 'rgba(95,255,167,0.08)' : 'transparent', color: section === i ? '#5fffa7' : '#555', border: section === i ? '1px solid rgba(95,255,167,0.12)' : '1px solid transparent' }}
+              style={{ background: section === i ? 'var(--accent-dim)' : 'transparent', color: section === i ? 'var(--accent)' : 'var(--text-dim)', border: section === i ? '1px solid var(--accent-glow)' : '1px solid transparent' }}
             >
               {s.title.toLowerCase().replace(/\s+/g, '-')}
             </button>
           ))}
         </div>
 
-        <p className="text-xs font-medium mb-1" style={{ color: '#5fffa7' }}>{docSections[section].title}</p>
-        <p className="text-xs dim2 mb-3">{docSections[section].desc}</p>
-        <Code code={docSections[section].code} lang={docSections[section].lang} />
+        <p className="text-xs font-medium mb-1 fade-in" style={{ color: 'var(--accent)' }} key={`t-${section}`}>{docSections[section].title}</p>
+        <p className="text-xs mb-3 fade-in fade-in-1" style={{ color: 'var(--text-dim2)' }} key={`d-${section}`}>{docSections[section].desc}</p>
+        <div className="fade-in fade-in-2" key={`c-${section}`}>
+          <Code code={docSections[section].code} lang={docSections[section].lang} />
+        </div>
 
         <div className="flex justify-center gap-1.5 mt-4">
           {docSections.map((_, i) => (
             <button key={i} onClick={() => setSection(i)}
               className="w-1.5 h-1.5 rounded-full transition-all"
-              style={{ background: section === i ? '#5fffa7' : '#222', boxShadow: section === i ? '0 0 4px rgba(95,255,167,0.4)' : 'none' }}
+              style={{ background: section === i ? 'var(--accent)' : 'var(--border)', boxShadow: section === i ? '0 0 4px var(--accent-glow)' : 'none' }}
             />
           ))}
         </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Check, Copy } from 'lucide-react'
+import { useTypewriter } from '../hooks/useTypewriter'
 
 const deps = {
   maven: `<dependency>
@@ -45,10 +46,15 @@ function Code({ code, lang }: { code: string; lang: string }) {
       <button onClick={() => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1600) }}
         className="absolute top-1.5 right-1.5 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: '#111', border: '1px solid #222' }}
       >
-        {copied ? <Check size={11} style={{ color: '#5fffa7' }} /> : <Copy size={11} style={{ color: '#666' }} />}
+        {copied ? <Check size={11} style={{ color: 'var(--accent)' }} /> : <Copy size={11} style={{ color: '#666' }} />}
       </button>
     </div>
   )
+}
+
+function TypeLine({ text, speed = 20, delay = 0 }: { text: string; speed?: number; delay?: number }) {
+  const { displayed, done } = useTypewriter(text, speed, delay)
+  return <span>{displayed}{!done && <span className="cursor-blink-thin" />}</span>
 }
 
 export default function Installation() {
@@ -57,36 +63,42 @@ export default function Installation() {
   return (
     <section id="installation" className="py-8 section-content">
       <div className="output-block">
-        <p className="text-xs dim mb-3">
-          <span className="cmd">#</span> install
+        <p className="text-xs mb-3" style={{ color: 'var(--text-dim)' }}>
+          <span className="cmd">#</span>{' '}
+          <TypeLine text="install" speed={15} delay={100} />
         </p>
-        <p className="text-xs dim2 mb-3">Add a single dependency to your project:</p>
+        <p className="text-xs mb-3" style={{ color: 'var(--text-dim2)' }}>
+          <TypeLine text="Add a single dependency to your project:" speed={12} delay={500} />
+        </p>
 
-        <div className="flex gap-2 mb-3">
+        <div className="fade-in fade-in-1 flex gap-2 mb-3">
           {(['maven', 'gradle'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className="px-2.5 py-1 rounded text-xs transition-all capitalize"
-              style={{ background: tab === t ? 'rgba(95,255,167,0.08)' : 'transparent', color: tab === t ? '#5fffa7' : '#555', border: tab === t ? '1px solid rgba(95,255,167,0.15)' : '1px solid transparent' }}
+              style={{ background: tab === t ? 'var(--accent-dim)' : 'transparent', color: tab === t ? 'var(--accent)' : 'var(--text-dim)', border: tab === t ? '1px solid var(--accent-glow)' : '1px solid transparent' }}
             >
               {t}
             </button>
           ))}
         </div>
 
-        <div className="mb-4">
+        <div className="fade-in fade-in-2 mb-4">
           <Code code={deps[tab]} lang={tab === 'maven' ? 'xml' : 'gradle'} />
         </div>
 
-        <p className="text-xs dim mb-2 mt-5">
-          <span className="cmd">#</span> your first test
+        <p className="text-xs mb-2 mt-5 fade-in fade-in-3" style={{ color: 'var(--text-dim)' }}>
+          <span className="cmd">#</span>{' '}
+          <TypeLine text="your first test" speed={15} delay={200} />
         </p>
-        <p className="text-xs dim2 mb-2">
-          <span className="dim">$</span> cat src/test/java/MyFirstTest.java
+        <p className="text-xs mb-2 fade-in fade-in-4" style={{ color: 'var(--text-dim2)' }}>
+          <span style={{ color: 'var(--text-dim)' }}>$</span> cat src/test/java/MyFirstTest.java
         </p>
-        <Code code={firstTest} lang="java" />
+        <div className="fade-in fade-in-4">
+          <Code code={firstTest} lang="java" />
+        </div>
 
-        <p className="text-xs dim2 mt-3">
-          <span className="dim">└──</span> Only import <span style={{ color: '#5fffa7' }}>mcp-test-api</span> — everything else is transitive.
+        <p className="text-xs mt-3 fade-in fade-in-5" style={{ color: 'var(--text-dim2)' }}>
+          <span style={{ color: 'var(--text-dim)' }}>└──</span> Only import <span style={{ color: 'var(--accent)' }}>mcp-test-api</span> — everything else is transitive.
         </p>
       </div>
     </section>

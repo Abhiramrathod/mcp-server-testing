@@ -73,6 +73,20 @@ McpPromptResult prompt = client.prompts()
     .assertNotEmpty();`,
   },
   {
+    icon: 'Wifi', title: 'SSE Transport', desc: 'Use SSE (Server-Sent Events) transport for persistent streaming connections.',
+    lang: 'java', code: `McpClient client = McpClient.connectTo("http://localhost:8080")
+    .config(McpClientConfig.builder()
+        .timeout(Duration.ofSeconds(30))
+        .build())
+    .sse()    // <-- use SSE (default if omitted)
+    .initializeOnBuild()
+    .build();
+
+// Transport is abstracted — same fluent API
+client.tools().callTool("calculator", args)
+    .assertSuccess();`,
+  },
+  {
     icon: 'Radio', title: 'Streamable HTTP', desc: 'Use Streamable HTTP transport for stateless request/response testing without persistent SSE.',
     lang: 'java', code: `McpClient client = McpClient.connectTo("http://localhost:8080")
     .config(McpClientConfig.builder()
@@ -82,7 +96,7 @@ McpPromptResult prompt = client.prompts()
     .initializeOnBuild()
     .build();
 
-// Use the same fluent API — transport is abstracted
+// Transport is abstracted — same fluent API
 client.tools().callTool("calculator", args)
     .assertSuccess();`,
   },

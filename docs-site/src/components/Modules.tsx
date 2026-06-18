@@ -9,32 +9,32 @@ export default function Modules() {
   return (
     <section id="components" className="py-8 section-content">
       <div className="output-block">
-        <p className="text-xs dim mb-3">
+        <p className="text-xs mb-3" style={{ color: 'var(--text-dim)' }}>
           <span className="cmd">#</span> modules
         </p>
-        <p className="text-xs dim2 mb-3">$ tree ./ --depth=1</p>
+        <p className="text-xs mb-3" style={{ color: 'var(--text-dim2)' }}>$ tree ./ --depth=1</p>
 
         {modules.map((m, i) => (
-          <div key={m.name} className="flex items-start gap-3 py-1.5">
-            <span className="text-xs dim2 w-4 shrink-0" style={{ color: '#5fffa7' }}>📁</span>
+          <div key={m.name} className={`flex items-start gap-3 py-1.5 fade-in fade-in-${Math.min(i + 1, 6)}`}>
+            <span className="text-xs w-4 shrink-0" style={{ color: 'var(--accent)' }}>📁</span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-medium" style={{ color: '#d4d4d4' }}>{m.name}/</span>
+                <span className="text-xs font-medium" style={{ color: 'var(--text)' }}>{m.name}/</span>
                 <span className="tag" style={{ background: `${tagColors[m.tagColor] || '#666'}15`, color: tagColors[m.tagColor] || '#666', border: `1px solid ${tagColors[m.tagColor] || '#666'}20` }}>
                   {m.tag}
                 </span>
               </div>
-              {m.coords && <p className="text-xs dim mt-0.5">{m.coords}</p>}
-              <p className="text-xs dim2 mt-0.5">{m.desc}</p>
-              {m.details && <p className="text-xs dim mt-0.5">{m.details}</p>}
+              {m.coords && <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{m.coords}</p>}
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim2)' }}>{m.desc}</p>
+              {m.details && <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{m.details}</p>}
             </div>
           </div>
         ))}
 
-        <p className="text-xs dim mt-4">
-          <span className="dim">└──</span> build: <span style={{ color: '#5fffa7' }}>mvn -T 1C clean install</span>
-          <span className="dim2"> | </span>
-          <span className="dim">javadoc:</span> <span style={{ color: '#5fffa7' }}>./javadoc/index.html</span>
+        <p className="text-xs mt-4 fade-in fade-in-6" style={{ color: 'var(--text-dim)' }}>
+          <span style={{ color: 'var(--text-dim)' }}>└──</span> build: <span style={{ color: 'var(--accent)' }}>mvn -T 1C clean install</span>
+          <span style={{ color: 'var(--text-dim2)' }}> | </span>
+          <span style={{ color: 'var(--text-dim)' }}>javadoc:</span> <span style={{ color: 'var(--accent)' }}>./javadoc/index.html</span>
         </p>
       </div>
     </section>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTheme } from '../hooks/useTheme'
 
 const links = [
   { label: 'features', href: '#features' },
@@ -11,6 +12,7 @@ const links = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
+  const { theme, toggle } = useTheme()
 
   const scroll = (id: string) => {
     const el = document.getElementById(id)
@@ -19,45 +21,55 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50" style={{ background: '#0a0a0a', borderBottom: '1px solid #181818' }}>
+    <nav className="fixed top-0 left-0 right-0 z-50" style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
       <div className="max-w-720px mx-auto flex items-center justify-between h-12 px-5">
-        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2 text-xs font-medium" style={{ color: '#d4d4d4' }}>
-          <span style={{ color: '#5fffa7' }}>~</span>
+        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2 text-xs font-medium" style={{ color: 'var(--text)' }}>
+          <span style={{ color: 'var(--accent)' }}>~</span>
           <span>/mcp-test</span>
         </button>
 
         <div className="hidden md:flex items-center gap-0.5">
           {links.map(l => (
             <button key={l.href} onClick={() => scroll(l.href.slice(1))}
-              className="px-2.5 py-1 rounded text-xs transition-colors" style={{ color: '#555' }}
-              onMouseEnter={e => e.currentTarget.style.color = '#999'}
-              onMouseLeave={e => e.currentTarget.style.color = '#555'}
+              className="px-2.5 py-1 rounded text-xs transition-colors" style={{ color: 'var(--text-dim)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-dim)'}
             >
               {l.label}
             </button>
           ))}
+
+          <button onClick={toggle}
+            className="ml-2 px-2 py-1 rounded text-xs transition-all" style={{ color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+          >
+            {theme === 'dark' ? 'light' : 'dark'}
+          </button>
+
           <a href="https://github.com/Abhiramrathod/mcp-testing" target="_blank" rel="noopener noreferrer"
-            className="ml-2 px-2.5 py-1 rounded text-xs" style={{ color: '#444', border: '1px solid #1a1a1a' }}
+            className="ml-1 px-2.5 py-1 rounded text-xs" style={{ color: 'var(--text-dim2)', border: '1px solid var(--border)' }}
           >
             gh:repo
           </a>
         </div>
 
-        <button onClick={() => setOpen(!open)} className="md:hidden text-xs px-2 py-1 rounded" style={{ color: '#666', border: '1px solid #1a1a1a' }}>
+        <button onClick={() => setOpen(!open)} className="md:hidden text-xs px-2 py-1 rounded" style={{ color: 'var(--text-dim)', border: '1px solid var(--border)' }}>
           {open ? 'close' : 'menu'}
         </button>
       </div>
 
       {open && (
-        <div style={{ background: '#0a0a0a', borderTop: '1px solid #181818' }}>
+        <div style={{ background: 'var(--bg)', borderTop: '1px solid var(--border)' }}>
           <div className="px-5 py-2 space-y-1">
             {links.map(l => (
               <button key={l.href} onClick={() => scroll(l.href.slice(1))}
-                className="block w-full text-left text-xs py-1.5" style={{ color: '#666' }}
+                className="block w-full text-left text-xs py-1.5" style={{ color: 'var(--text-dim)' }}
               >
                 $ cd {l.label}
               </button>
             ))}
+            <button onClick={toggle} className="block w-full text-left text-xs py-1.5" style={{ color: 'var(--accent)' }}>
+              $ toggle {theme === 'dark' ? 'light' : 'dark'}
+            </button>
           </div>
         </div>
       )}
