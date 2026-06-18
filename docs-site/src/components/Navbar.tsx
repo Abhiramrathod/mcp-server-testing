@@ -39,10 +39,13 @@ export default function Navbar() {
             </button>
           ))}
 
-          <button onClick={toggle}
-            className="ml-2 px-2 py-1 rounded text-xs transition-all" style={{ color: 'var(--text-dim)', border: '1px solid var(--border)' }}
+          <button onClick={toggle} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            className="ml-2 px-2.5 py-1 rounded text-xs transition-all font-medium"
+            style={{ color: 'var(--accent)', background: 'var(--accent-dim)', border: '1px solid var(--accent-glow)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--accent-glow)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--accent-dim)' }}
           >
-            {theme === 'dark' ? 'light' : 'dark'}
+            {theme === 'dark' ? '☀︎ light' : '☾ dark'}
           </button>
 
           <a href="https://github.com/Abhiramrathod/mcp-testing" target="_blank" rel="noopener noreferrer"
@@ -68,7 +71,7 @@ export default function Navbar() {
               </button>
             ))}
             <button onClick={toggle} className="block w-full text-left text-xs py-1.5" style={{ color: 'var(--accent)' }}>
-              $ toggle {theme === 'dark' ? 'light' : 'dark'}
+              $ {theme === 'dark' ? '☀︎ light' : '☾ dark'} mode
             </button>
           </div>
         </div>
