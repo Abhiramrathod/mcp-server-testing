@@ -28,6 +28,12 @@ export interface Example {
   url: string
 }
 
+export interface Testimonial {
+  quote: string
+  author: string
+  role: string
+}
+
 export const features: Feature[] = [
   { icon: 'Shield', title: 'Type-Safe API', desc: 'Strongly typed domain models eliminate runtime errors. No raw JSON handling.' },
   { icon: 'Link2', title: 'Fluent Assertions', desc: 'Chainable methods make tests readable and maintainable.' },
@@ -71,6 +77,20 @@ McpResourceContent content = client.resources()
 McpPromptResult prompt = client.prompts()
     .getPrompt("translate", Map.of("lang", "en"))
     .assertNotEmpty();`,
+  },
+  {
+    icon: 'Radio', title: 'Streamable HTTP', desc: 'Use Streamable HTTP transport for stateless request/response testing without persistent SSE.',
+    lang: 'java', code: `McpClient client = McpClient.connectTo("http://localhost:8080")
+    .config(McpClientConfig.builder()
+        .timeout(Duration.ofSeconds(30))
+        .build())
+    .streamableHttp()    // <-- use Streamable HTTP
+    .initializeOnBuild()
+    .build();
+
+// Use the same fluent API — transport is abstracted
+client.tools().callTool("calculator", args)
+    .assertSuccess();`,
   },
   {
     icon: 'LineChart', title: 'Performance Monitoring', desc: 'Track every JSON-RPC exchange and assert on latency thresholds.',

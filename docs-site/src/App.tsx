@@ -8,6 +8,9 @@ import Docs from './components/Docs'
 import Architecture from './components/Architecture'
 import Examples from './components/Examples'
 import Footer from './components/Footer'
+import CursorGlow from './components/CursorGlow'
+import ParticlesBg from './components/ParticlesBg'
+import NoiseOverlay from './components/NoiseOverlay'
 import { useTheme } from './hooks/useTheme'
 
 const sections = [
@@ -52,12 +55,12 @@ function TocDots() {
             const el = document.getElementById(s.id)
             if (el) window.scrollTo({ top: el.offsetTop - 72, behavior: 'smooth' })
           }}
-          className="w-2 h-2 rounded-full transition-all duration-300"
+          className="w-2.5 h-2.5 rounded-full transition-all duration-500"
           style={{
             background: active === s.id ? 'var(--accent)' : 'var(--text-ter)',
-            opacity: active === s.id ? 1 : 0.25,
-            transform: active === s.id ? 'scale(1.4)' : 'scale(1)',
-            boxShadow: active === s.id ? '0 0 8px var(--accent-glow)' : 'none',
+            opacity: active === s.id ? 1 : 0.2,
+            transform: active === s.id ? 'scale(1.6)' : 'scale(1)',
+            boxShadow: active === s.id ? `0 0 12px var(--accent-glow)` : 'none',
           }}
           aria-label={s.label}
         />
@@ -71,19 +74,44 @@ export default function App() {
 
   return (
     <>
-      <div className="fixed inset-0 pointer-events-none z-[-1] bg-grid" style={{ opacity: 0.15 }} />
+      <ParticlesBg />
+      <NoiseOverlay />
+      <CursorGlow />
+
+      <div className="fixed inset-0 pointer-events-none z-[2] bg-grid" style={{ opacity: 0.12 }} />
+
       <div
-        className="fixed pointer-events-none z-[-1] rounded-full animate-float"
+        className="fixed pointer-events-none z-[2] rounded-full animate-float"
         style={{
-          width: 500, height: 500,
+          width: 600, height: 600,
           background: 'var(--accent-glow)',
           top: '-10%', right: '-5%',
+          filter: 'blur(100px)',
+          opacity: 0.7,
+        }}
+      />
+      <div
+        className="fixed pointer-events-none z-[2] rounded-full animate-float-slow"
+        style={{
+          width: 400, height: 400,
+          background: 'radial-gradient(circle, rgba(192,132,252,0.08) 0%, transparent 70%)',
+          bottom: '-5%', left: '-5%',
           filter: 'blur(80px)',
         }}
       />
+      <div
+        className="fixed pointer-events-none z-[2] rounded-full animate-drift"
+        style={{
+          width: 300, height: 300,
+          background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)',
+          top: '40%', left: '60%',
+          filter: 'blur(60px)',
+        }}
+      />
+
       <Navbar theme={theme} toggle={toggle} />
       <TocDots />
-      <main>
+      <main className="relative z-[3]">
         <Hero />
         <Features />
         <Installation />
