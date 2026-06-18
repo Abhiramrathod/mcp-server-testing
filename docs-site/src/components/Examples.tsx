@@ -1,58 +1,36 @@
-import { motion } from 'framer-motion'
 import { examples } from '../data/content'
-import { ArrowRight, Github } from 'lucide-react'
+import { Github } from 'lucide-react'
 
-const iconSymbols: Record<string, string> = {
-  PlayCircle: '▶', Wrench: '◈', FolderOpen: '📂', MessageSquare: '💬', LineChart: '📊', CheckCheck: '✓',
+const sym: Record<string, string> = {
+  PlayCircle: '▶', Wrench: '◇', FolderOpen: '📂', MessageSquare: '💬', LineChart: '📊', CheckCheck: '✓',
 }
 
 export default function Examples() {
   return (
-    <section id="examples" className="py-24 relative" style={{ background: '#0d0d0d' }}>
-      <div className="max-w-5xl mx-auto px-5">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="mb-12"
-        >
-          <div className="section-label mb-3">examples</div>
-          <h2 className="section-title">Test Suites</h2>
-          <p className="section-sub font-mono">ls ./mcp-test-examples/src/test/</p>
-        </motion.div>
+    <section id="examples" className="py-8 section-content">
+      <div className="output-block">
+        <p className="text-xs dim mb-3">
+          <span className="cmd">#</span> examples
+        </p>
+        <p className="text-xs dim2 mb-3">$ ls mcp-test-examples/src/test/</p>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {examples.map((ex, i) => (
-            <motion.a
-              key={ex.title}
-              href={ex.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className="card-terminal group block no-underline"
-            >
-              <div className="flex items-start gap-3">
-                <span className="text-sm mt-0.5" style={{ color: '#5fffa7' }}>
-                  {iconSymbols[ex.icon] || '◆'}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium" style={{ color: '#e0e0e0' }}>{ex.title}</span>
-                    <ArrowRight size={11} className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#5fffa7' }} />
-                  </div>
-                  <p className="text-xs leading-relaxed" style={{ color: '#666' }}>{ex.desc}</p>
-                  <span className="inline-flex items-center gap-1 text-xs mt-2" style={{ color: '#555' }}>
-                    <Github size={10} />
-                    view source
-                  </span>
-                </div>
+        {examples.map((ex, i) => (
+          <a key={ex.title} href={ex.url} target="_blank" rel="noopener noreferrer"
+            className="flex items-start gap-3 py-1.5 rounded no-underline transition-colors group"
+            style={{ color: 'inherit' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(95,255,167,0.03)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <span className="text-xs shrink-0 mt-0.5" style={{ color: '#5fffa7' }}>{sym[ex.icon] || '◆'}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium" style={{ color: '#d4d4d4' }}>{ex.title}</span>
+                <Github size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#555' }} />
               </div>
-            </motion.a>
-          ))}
-        </div>
+              <p className="text-xs dim2">{ex.desc}</p>
+            </div>
+          </a>
+        ))}
       </div>
     </section>
   )
