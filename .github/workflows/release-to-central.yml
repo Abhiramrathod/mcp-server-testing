@@ -41,10 +41,22 @@ jobs:
           CURRENT_VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | tr -d '[:space:]')
           echo "Current version: $CURRENT_VERSION"
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+
+          # Keep bumping until we find a version whose tag doesn't exist yet
+          NEW_VERSION=""
+          while true; do
+            PATCH=$((PATCH + 1))
+            CANDIDATE="${MAJOR}.${MINOR}.${PATCH}"
+            if ! git rev-parse "v$CANDIDATE" >/dev/null 2>&1; then
+              NEW_VERSION="$CANDIDATE"
+              break
+            fi
+            echo "Tag v$CANDIDATE already exists, bumping further..."
+          done
+
           echo "New version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New patch: $PATCH"
 
           mvn versions:set -DnewVersion="$NEW_VERSION" -DgenerateBackupPoms=false -B
 
