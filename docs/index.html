@@ -1,488 +1,443 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCP Testing Framework - Java Testing for Model Context Protocol</title>
-    <meta name="description" content="Production-grade Java testing framework for Model Context Protocol servers with type-safe APIs and fluent assertions">
-    
-    <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="vendor/highlightjs/atom-one-dark.min.css">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Testing Framework — Java Testing for Model Context Protocol</title>
+  <meta name="description" content="Production-grade Java testing framework for Model Context Protocol servers with type-safe APIs and fluent assertions">
+
+  <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="vendor/highlightjs/atom-one-dark.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <i class="fas fa-flask"></i>
-                <span>MCP Testing</span>
-            </div>
-            <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#installation">Installation</a>
-                <a href="#configuration">Configuration</a>
-                <a href="#components">Components</a>
-                <a href="#docs">Documentation</a>
-                <a href="#examples">Examples</a>
-                <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
-                    <i class="fas fa-moon"></i>
-                </button>
-                <a href="https://github.com/Abhiramrathod/mcp-testing" target="_blank" class="nav-github">
-                    <i class="fab fa-github"></i>
-                    GitHub
-                </a>
-            </div>
-            <button class="mobile-toggle" onclick="toggleMobile()">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
-    </nav>
 
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <a href="#features" onclick="toggleMobile()">Features</a>
-        <a href="#installation" onclick="toggleMobile()">Installation</a>
-        <a href="#configuration" onclick="toggleMobile()">Configuration</a>
-        <a href="#components" onclick="toggleMobile()">Components</a>
-        <a href="#docs" onclick="toggleMobile()">Documentation</a>
-        <a href="#architecture" onclick="toggleMobile()">Architecture</a>
-        <a href="#examples" onclick="toggleMobile()">Examples</a>
-        <a href="javascript:void(0)" id="mobileThemeToggle" onclick="toggleTheme()">Dark mode</a>
-        <a href="https://github.com/Abhiramrathod/mcp-testing" target="_blank">GitHub</a>
+<!-- Navigation -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="#" class="nav-brand">
+      <i class="fas fa-flask"></i>
+      <span>MCP Testing</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#installation">Install</a>
+      <a href="#configuration">Config</a>
+      <a href="#components">Modules</a>
+      <a href="#docs">Docs</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#examples">Examples</a>
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+        <i class="fas fa-moon"></i>
+      </button>
+      <a href="https://github.com/Abhiramrathod/mcp-testing" target="_blank" class="nav-github">
+        <i class="fab fa-github"></i> GitHub
+      </a>
     </div>
+    <button class="mobile-toggle" onclick="toggleMobile()" aria-label="Menu">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+</nav>
 
-    <!-- Floating compact Table of Contents (small, accessible) -->
-    <div class="floating-toc" id="floatingToc" aria-hidden="false">
-        <button id="tocToggle" class="floating-toc-toggle" aria-expanded="false" aria-controls="tocPanel" aria-label="Open table of contents">
-            <i class="fas fa-list"></i>
-        </button>
-        <nav id="tocPanel" class="floating-toc-panel" aria-label="Table of contents" hidden>
-            <ul id="tocList"></ul>
-        </nav>
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features" onclick="toggleMobile()">Features</a>
+  <a href="#installation" onclick="toggleMobile()">Installation</a>
+  <a href="#configuration" onclick="toggleMobile()">Configuration</a>
+  <a href="#components" onclick="toggleMobile()">Modules</a>
+  <a href="#docs" onclick="toggleMobile()">Documentation</a>
+  <a href="#architecture" onclick="toggleMobile()">Architecture</a>
+  <a href="#examples" onclick="toggleMobile()">Examples</a>
+  <a href="javascript:void(0)" id="mobileThemeToggle" onclick="toggleTheme()">Dark mode</a>
+  <a href="https://github.com/Abhiramrathod/mcp-testing" target="_blank">GitHub</a>
+</div>
+
+<!-- Navigation dots (TOC) -->
+<nav class="floating-toc" id="floatingToc" aria-label="Section navigation"></nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-meta">
+        <i class="fas fa-flask"></i> Production-ready testing for MCP
+      </div>
+      <h1 class="hero-title">Test <span>MCP Servers</span> with confidence</h1>
+      <p class="hero-lead">A lightweight Java framework to write maintainable MCP tests, track performance, and assert on exchanges — with a type-safe, fluent API.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="#installation">Get Started</a>
+        <a class="btn btn-secondary" href="#components">Components</a>
+        <a class="btn btn-ghost" href="https://github.com/Abhiramrathod/mcp-testing" target="_blank">View on GitHub</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong>6</strong> modules</div>
+        <div><strong>Java 17+</strong></div>
+        <div><strong>Maven Central</strong></div>
+      </div>
     </div>
+  </div>
+</section>
 
-    <div class="docs-layout">
-        <main class="main-content">
-            <!-- Enhanced Hero -->
-            <section class="hero hero--enhanced">
-                <div class="container">
-                    <div class="hero-content">
-                        <div class="hero-meta">Production-Ready testing for MCP</div>
-                        <h1 class="hero-title">Test MCP Servers with confidence — fast, reliable, type-safe</h1>
-                        <p class="hero-lead">A lightweight Java framework to write maintainable MCP tests, track performance, and assert on exchanges.</p>
-                        <div class="hero-ctas">
-                            <a class="btn btn-primary" href="#installation">Get Started</a>
-                            <a class="btn btn-secondary" href="#components">Components</a>
-                            <a class="btn btn-ghost" href="https://github.com/Abhiramrathod/mcp-testing" target="_blank">View on GitHub</a>
-                        </div>
-                        <div class="hero-stats">
-                            <div><strong>6</strong> modules</div>
-                            <div><strong>Java 17+</strong></div>
-                            <div><strong>Javadoc</strong> ready</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+<!-- Features -->
+<section id="features" class="features">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>Built for Developers</h2>
+      <p>Everything you need to test MCP servers effectively</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature fade-in">
+        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+        <h3>Type-Safe API</h3>
+        <p>Strongly typed domain models eliminate runtime errors. No raw JSON handling.</p>
+      </div>
+      <div class="feature fade-in">
+        <div class="feature-icon"><i class="fas fa-link"></i></div>
+        <h3>Fluent Assertions</h3>
+        <p>Chainable methods make tests readable and maintainable.</p>
+      </div>
+      <div class="feature fade-in">
+        <div class="feature-icon"><i class="fas fa-cubes"></i></div>
+        <h3>Modular Design</h3>
+        <p>Clean separation with 6 specialized modules. Import only the API artifact.</p>
+      </div>
+      <div class="feature fade-in">
+        <div class="feature-icon"><i class="fas fa-gauge-high"></i></div>
+        <h3>Performance Tracking</h3>
+        <p>Built-in latency monitoring with percentile calculations.</p>
+      </div>
+      <div class="feature fade-in">
+        <div class="feature-icon"><i class="fas fa-lock"></i></div>
+        <h3>Full Abstraction</h3>
+        <p>Internal details never leak to your test code.</p>
+      </div>
+      <div class="feature fade-in">
+        <div class="feature-icon"><i class="fas fa-plug"></i></div>
+        <h3>Extensible</h3>
+        <p>Custom transport implementations supported.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-
-
-    <!-- Features -->
-    <section id="features" class="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>Built for Developers</h2>
-                <p>Everything you need to test MCP servers effectively</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature">
-                    <div class="feature-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3>Type-Safe API</h3>
-                    <p>Strongly typed domain models eliminate runtime errors. No raw JSON handling.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">
-                        <i class="fas fa-link"></i>
-                    </div>
-                    <h3>Fluent Assertions</h3>
-                    <p>Chainable methods make tests readable and maintainable.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">
-                        <i class="fas fa-cubes"></i>
-                    </div>
-                    <h3>Modular Design</h3>
-                    <p>Clean separation with 6 specialized modules. Import only what you need.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">
-                        <i class="fas fa-tachometer-alt"></i>
-                    </div>
-                    <h3>Performance Tracking</h3>
-                    <p>Built-in latency monitoring with percentile calculations.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <h3>Complete Abstraction</h3>
-                    <p>Internal details never leak to your test code.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">
-                        <i class="fas fa-plug"></i>
-                    </div>
-                    <h3>Extensible</h3>
-                    <p>Custom transport implementations supported.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Installation -->
-    <section id="installation" class="installation">
-        <div class="container">
-            <div class="section-header">
-                <h2>Quick Installation</h2>
-                <p>Get started in minutes with Maven or Gradle</p>
-            </div>
-            <div class="install-box">
-                <div class="tabs">
-                    <button class="tab active" onclick="switchTab('maven')">Maven</button>
-                    <button class="tab" onclick="switchTab('gradle')">Gradle</button>
-                </div>
-                <div id="maven" class="tab-panel active">
-                    <pre><code class="language-xml">&lt;dependency&gt;
-    &lt;groupId&gt;io.github.abhiramrathod&lt;/groupId&gt;
-    &lt;artifactId&gt;mcp-test-api&lt;/artifactId&gt;
-    &lt;version&gt;1.0.3&lt;/version&gt;
-    &lt;scope&gt;test&lt;/scope&gt;
+<!-- Installation -->
+<section id="installation" class="installation">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>Quick Installation</h2>
+      <p>Get started in minutes</p>
+    </div>
+    <div class="install-box fade-in">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('maven')">Maven</button>
+        <button class="tab" onclick="switchTab('gradle')">Gradle</button>
+      </div>
+      <div id="maven" class="tab-panel active">
+        <pre><code class="language-xml">&lt;dependency&gt;
+  &lt;groupId&gt;io.github.abhiramrathod&lt;/groupId&gt;
+  &lt;artifactId&gt;mcp-test-api&lt;/artifactId&gt;
+  &lt;version&gt;1.0.15&lt;/version&gt;
+  &lt;scope&gt;test&lt;/scope&gt;
 &lt;/dependency&gt;</code></pre>
-                </div>
-                <div id="gradle" class="tab-panel">
-                    <pre><code class="language-gradle">testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.3'</code></pre>
-                </div>
-                <div class="info-note">
-                    <i class="fas fa-info-circle"></i>
-                    Only add <code>mcp-test-api</code> - all modules are included transitively
-                </div>
-            </div>
-            <div class="example-box">
-                <h3>Your First Test</h3>
-                <pre><code class="language-java">import mcp.toolkit.testing.framework.api.*;
+      </div>
+      <div id="gradle" class="tab-panel">
+        <pre><code class="language-gradle">testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.15'</code></pre>
+      </div>
+      <div class="info-note">
+        <i class="fas fa-info-circle"></i>
+        Only add <code>mcp-test-api</code> — all other modules are included transitively.
+      </div>
+    </div>
+    <div class="example-box fade-in">
+      <h3>Your First Test</h3>
+      <pre><code class="language-java">import mcp.toolkit.testing.framework.api.*;
 import mcp.toolkit.testing.framework.api.model.*;
 
 public class MyFirstTest {
-    @Test
-    public void testMcpServer() {
-        // Connect to MCP server
-        McpClient client = McpClient.connectTo("http://localhost:8080")
-                .config(McpClientConfig.builder()
-                        .timeout(Duration.ofSeconds(30))
-                        .build())
-                .initializeOnBuild()
-                .build();
-
-        // Test tool invocation
-        McpToolResult result = client.tools()
-                .callTool("calculator", Map.of("operation", "add", "a", 5, "b", 3))
-                .assertSuccess()
-                .assertTextContains("8");
-
-        // Verify performance
-        client.exchanges().assertAverageLatencyBelow(McpMethod.TOOLS_CALL, 500);
-        
-        client.close();
-    }
-}</code></pre>
-            </div>
-        </div>
-    </section>
-
-    <!-- Configuration -->
-    <section id="configuration" class="configuration">
-        <div class="container">
-            <div class="section-header">
-                <h2>Configuration</h2>
-                <p>Control client behavior via <code>McpClientConfig</code></p>
-            </div>
-            <div class="install-box">
-                <h3>Key Options</h3>
-                <ul>
-                    <li><strong>timeout</strong> (Duration) — request timeout for connections and RPC calls. Default: 10s.</li>
-                    <li><strong>protocolVersion</strong> (String) — MCP protocol version advertised during initialize. Default: 2024-11-05.</li>
-                    <li><strong>sseEndpointPath</strong> — default SSE endpoint path: <code>/sse</code>.</li>
-                </ul>
-                <pre><code class="language-java">McpClientConfig config = McpClientConfig.builder()
-        .timeout(Duration.ofSeconds(30))
-        .protocolVersion("2024-11-05")
+  @Test
+  public void testMcpServer() {
+    McpClient client = McpClient.connectTo("http://localhost:8080")
+        .config(McpClientConfig.builder()
+            .timeout(Duration.ofSeconds(30))
+            .build())
+        .initializeOnBuild()
         .build();
 
+    McpToolResult result = client.tools()
+        .callTool("calculator", Map.of("operation", "add", "a", 5, "b", 3))
+        .assertSuccess()
+        .assertTextContains("8");
+
+    client.exchanges().assertAverageLatencyBelow(McpMethod.TOOLS_CALL, 500);
+    client.close();
+  }
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- Configuration -->
+<section id="configuration" class="configuration">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>Configuration</h2>
+      <p>Control client behavior via <code>McpClientConfig</code></p>
+    </div>
+    <div class="install-box fade-in">
+      <h3>Key Options</h3>
+      <ul>
+        <li><strong>timeout</strong> (Duration) — request timeout for connections and RPC calls. Default: 10s.</li>
+        <li><strong>protocolVersion</strong> (String) — MCP protocol version. Default: <code>2024-11-05</code>.</li>
+        <li><strong>SSE path</strong> — default SSE endpoint: <code>/sse</code>.</li>
+        <li><strong>Streamable HTTP path</strong> — default endpoint: <code>/mcp</code>.</li>
+      </ul>
+      <pre><code class="language-java">McpClientConfig config = McpClientConfig.builder()
+    .timeout(Duration.ofSeconds(30))
+    .protocolVersion("2024-11-05")
+    .build();
+
 McpClient client = McpClient.connectTo("http://localhost:8080")
-        .config(config)
-        .build();</code></pre>
-            </div>
+    .config(config)
+    .build();</code></pre>
+      <div class="info-note" style="margin-top:1.25rem">
+        <i class="fas fa-exchange-alt"></i>
+        Use <code>.streamableHttp()</code> on the builder for Streamable HTTP transport instead of SSE.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Components / Modules -->
+<section id="components" class="components">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>Modules</h2>
+      <p>Six specialized modules with clean separation of concerns</p>
+    </div>
+    <div class="components-grid">
+      <div class="component-card fade-in">
+        <h3>mcp-test-api</h3>
+        <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-api</code></p>
+        <p><strong>Purpose:</strong> Public API — import this artifact in your test scope.</p>
+        <p><strong>Key classes:</strong> <code>McpClient</code>, <code>McpClientConfig</code>, <code>ToolsClient</code>, <code>ResourcesClient</code>, <code>PromptsClient</code>, domain models, assertions.</p>
+      </div>
+      <div class="component-card fade-in">
+        <h3>mcp-test-client</h3>
+        <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-client</code></p>
+        <p><strong>Purpose:</strong> Internal client implementation. Handles initialization, RPC, and component wiring.</p>
+        <p><strong>Key classes:</strong> <code>McpTestClient</code>, tool/resource/prompt directories, exchange tracking.</p>
+      </div>
+      <div class="component-card fade-in">
+        <h3>mcp-test-transport</h3>
+        <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-transport</code></p>
+        <p><strong>Purpose:</strong> Transport implementations — SSE and Streamable HTTP.</p>
+        <p><strong>Key classes:</strong> <code>McpSseTransport</code>, <code>McpStreamableHttpTransport</code>.</p>
+        <p><em>Transport is pluggable via <code>McpTransport</code> interface.</em></p>
+      </div>
+      <div class="component-card fade-in">
+        <h3>mcp-test-core</h3>
+        <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-core</code></p>
+        <p><strong>Purpose:</strong> Shared utilities — JSON codec, constants, validation helpers.</p>
+        <p><strong>Key packages:</strong> <code>mcp.toolkit.testing.framework.core</code></p>
+      </div>
+      <div class="component-card fade-in">
+        <h3>mcp-test-interfaces</h3>
+        <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-interfaces</code></p>
+        <p><strong>Purpose:</strong> Core SPI — the <code>McpTransport</code> interface for custom transport implementations.</p>
+      </div>
+      <div class="component-card fade-in">
+        <h3>mcp-test-examples</h3>
+        <p><strong>Purpose:</strong> Example tests demonstrating tools, resources, prompts, performance monitoring, and full integration workflows.</p>
+        <p><strong>Run:</strong> <code>mvn -pl mcp-test-examples test</code></p>
+      </div>
+    </div>
+    <div class="component-note fade-in">
+      <p><strong>Build:</strong> <code>mvn -T 1C clean install</code> &nbsp;·&nbsp; <strong>Javadocs:</strong> <code>mvn javadoc:jar</code> &nbsp;·&nbsp; <strong>Publishing:</strong> Configured for Sonatype OSSRH / Maven Central.</p>
+      <p>View <a href="./javadoc/index.html">API Javadocs</a> (if generated).</p>
+    </div>
+  </div>
+</section>
+
+<!-- Documentation -->
+<section id="docs" class="documentation">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>Core Capabilities</h2>
+      <p>Comprehensive testing for all MCP features</p>
+    </div>
+    <div class="docs-grid">
+      <div class="doc-card fade-in">
+        <div class="doc-header">
+          <i class="fas fa-tools"></i>
+          <h3>Tools Testing</h3>
         </div>
-    </section>
-
-    <!-- Components / Modules -->
-    <section id="components" class="components">
-        <div class="container">
-            <div class="section-header">
-                <h2>Components (Modules)</h2>
-                <p>Overview of each module in the project, coordinates, key classes and notes for maintainers and users.</p>
-            </div>
-
-            <div class="components-grid">
-                <div class="component-card">
-                    <h3>mcp-test-api</h3>
-                    <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-api:1.0.3</code></p>
-                    <p><strong>Purpose:</strong> Public API surface exported to tests. Import this artifact in your test scope to use the client, models and assertions.</p>
-                    <p><strong>Key packages / classes:</strong> <code>mcp.toolkit.testing.framework.api</code> — <code>McpClientConfig</code>, factory classes (connect/build), models and assertion helpers.</p>
-                    <p><strong>Source:</strong> <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-api/src/main/java/mcp/toolkit/testing/framework/api/McpClientConfig.java" target="_blank">McpClientConfig.java</a></p>
-                    <p><strong>Notes:</strong> This module re-exports functionality implemented in internal modules; use only this artifact in test code.</p>
-                    <p><em>Built artifact (if built locally):</em> <a href="../mcp-test-api/target/mcp-test-api-1.0-SNAPSHOT.jar">mcp-test-api target jar</a></p>
-                </div>
-
-                <div class="component-card">
-                    <h3>mcp-test-client</h3>
-                    <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-client:1.0.3</code></p>
-                    <p><strong>Purpose:</strong> Internal client implementation used by the public API. Handles initialization, component wiring and high-level helpers.</p>
-                    <p><strong>Key classes:</strong> <code>McpTestClient</code> (connection lifecycle), client directories: tools/resources/prompts, and exchange tracking (performance APIs).</p>
-                    <p><strong>Source:</strong> <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-client/src/main/java/mcp/toolkit/testing/framework/McpTestClient.java" target="_blank">McpTestClient.java</a></p>
-                </div>
-
-                <div class="component-card">
-                    <h3>mcp-test-transport</h3>
-                    <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-transport:1.0.3</code></p>
-                    <p><strong>Purpose:</strong> Transport implementations for communicating with MCP servers.</p>
-                    <p><strong>Key classes:</strong> <code>McpSseTransport</code> — SSE-based transport that opens a streaming connection and posts messages to the MCP message endpoint.</p>
-                    <p><strong>Source:</strong> <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-transport/src/main/java/mcp/toolkit/testing/framework/transport/McpSseTransport.java" target="_blank">McpSseTransport.java</a></p>
-                    <p><strong>Notes:</strong> Transport is pluggable — you can implement <code>mcp.toolkit.testing.framework.interfaces.McpTransport</code> to provide custom wiring.</p>
-                </div>
-
-                <div class="component-card">
-                    <h3>mcp-test-core</h3>
-                    <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-core:1.0.3</code></p>
-                    <p><strong>Purpose:</strong> Core utilities, codecs and constants shared by client and transport implementations.</p>
-                    <p><strong>Key packages:</strong> <code>mcp.toolkit.testing.framework.core</code> — JSON codec, constants and common helpers.</p>
-                </div>
-
-                <div class="component-card">
-                    <h3>mcp-test-interfaces</h3>
-                    <p><strong>Coordinates:</strong> <code>io.github.abhiramrathod:mcp-test-interfaces:1.0.3</code></p>
-                    <p><strong>Purpose:</strong> Public interfaces used by internal modules and custom extensions.</p>
-                    <p><strong>Key interfaces:</strong> <code>mcp.toolkit.testing.framework.interfaces.McpTransport</code> — transport abstraction for sending/receiving MCP JSON-RPC messages.</p>
-                </div>
-
-                <div class="component-card">
-                    <h3>mcp-test-examples</h3>
-                    <p><strong>Purpose:</strong> Example tests demonstrating usage patterns and integration scenarios. Not published; useful for learning and CI tests.</p>
-                    <p><strong>How to run:</strong> <code>mvn -pl mcp-test-examples test</code></p>
-                </div>
-            </div>
-
-            <div class="component-note">
-                <p><strong>Build &amp; Javadocs:</strong> The parent POM attaches javadocs during the build. To build and create attached javadocs for publishable artifacts run:</p>
-                <pre><code class="language-bash">mvn -T 1C clean install
-# javadocs attached automatically by parent POM; to produce only javadocs:
-mvn javadoc:jar -pl mcp-test-api</code></pre>
-                <p><strong>Publishing:</strong> Distribution is configured to publish to GitHub Packages via <code>https://maven.pkg.github.com/${env.GITHUB_REPOSITORY}</code>. Set appropriate credentials (GITHUB_TOKEN or personal access token) in your CI or settings.xml when deploying.</p>
-                <p><strong>Javadocs (local):</strong> If an aggregated Javadoc has been generated and placed under <code>docs/javadoc</code>, view it here: <a href="./javadoc/index.html">API Javadocs</a>.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Documentation -->
-    <section id="docs" class="documentation">
-        <div class="container">
-            <div class="section-header">
-                <h2>Core Capabilities</h2>
-                <p>Comprehensive testing for all MCP features</p>
-            </div>
-            <div class="docs-grid">
-                <div class="doc-card">
-                    <div class="doc-header">
-                        <i class="fas fa-tools"></i>
-                        <h3>Tools Testing</h3>
-                    </div>
-                    <p>Discover and invoke MCP tools with strongly-typed results</p>
-                    <pre><code class="language-java">List&lt;McpTool&gt; tools = client.tools().listTools();
+        <p>Discover and invoke MCP tools with strongly-typed results and fluent assertions.</p>
+        <pre><code class="language-java">List&lt;McpTool&gt; tools = client.tools().listTools();
 
 McpToolResult result = client.tools()
-        .callTool("calculator", Map.of("op", "add", "a", 5, "b", 3))
-        .assertSuccess()
-        .assertTextContains("8");</code></pre>
-                </div>
-
-                <div class="doc-card">
-                    <div class="doc-header">
-                        <i class="fas fa-folder-open"></i>
-                        <h3>Resources Testing</h3>
-                    </div>
-                    <p>List and read MCP resources with content validation</p>
-                    <pre><code class="language-java">List&lt;McpResource&gt; resources = client.resources().listResources();
+    .callTool("calculator", Map.of("op", "add", "a", 5, "b", 3))
+    .assertSuccess()
+    .assertTextContains("8");</code></pre>
+      </div>
+      <div class="doc-card fade-in">
+        <div class="doc-header">
+          <i class="fas fa-folder-open"></i>
+          <h3>Resources Testing</h3>
+        </div>
+        <p>List and read MCP resources with content validation.</p>
+        <pre><code class="language-java">List&lt;McpResource&gt; resources = client.resources().listResources();
 
 McpResourceContent content = client.resources()
-        .readResource("file://config.json")
-        .assertNotEmpty();</code></pre>
-                </div>
-
-                <div class="doc-card">
-                    <div class="doc-header">
-                        <i class="fas fa-comments"></i>
-                        <h3>Prompts Testing</h3>
-                    </div>
-                    <p>Retrieve and inspect MCP prompts with arguments</p>
-                    <pre><code class="language-java">List&lt;McpPrompt&gt; prompts = client.prompts().listPrompts();
+    .readResource("file://config.json")
+    .assertNotEmpty();</code></pre>
+      </div>
+      <div class="doc-card fade-in">
+        <div class="doc-header">
+          <i class="fas fa-comments"></i>
+          <h3>Prompts Testing</h3>
+        </div>
+        <p>Retrieve and inspect MCP prompts with argument validation.</p>
+        <pre><code class="language-java">List&lt;McpPrompt&gt; prompts = client.prompts().listPrompts();
 
 McpPromptResult prompt = client.prompts()
-        .getPrompt("translate", Map.of("lang", "en"))
-        .assertNotEmpty();</code></pre>
-                </div>
-
-                <div class="doc-card">
-                    <div class="doc-header">
-                        <i class="fas fa-chart-line"></i>
-                        <h3>Performance Monitoring</h3>
-                    </div>
-                    <p>Track RPC exchanges and assert on latency</p>
-                    <pre><code class="language-java">client.exchanges()
-        .assertAverageLatencyBelow(McpMethod.TOOLS_CALL, 500);
+    .getPrompt("translate", Map.of("lang", "en"))
+    .assertNotEmpty();</code></pre>
+      </div>
+      <div class="doc-card fade-in">
+        <div class="doc-header">
+          <i class="fas fa-chart-line"></i>
+          <h3>Performance Monitoring</h3>
+        </div>
+        <p>Track every JSON-RPC exchange and assert on latency thresholds.</p>
+        <pre><code class="language-java">client.exchanges()
+    .assertAverageLatencyBelow(McpMethod.TOOLS_CALL, 500);
 
 long p99 = client.exchanges()
-        .latencyPercentile(McpMethod.TOOLS_CALL, 99);</code></pre>
-                </div>
-            </div>
-        </div>
-    </section>
+    .latencyPercentile(McpMethod.TOOLS_CALL, 99);</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <!-- Architecture -->
-    <section class="architecture">
-        <div class="container">
-            <div class="section-header">
-                <h2>Clean Architecture</h2>
-                <p>Modular design with clear separation of concerns</p>
-            </div>
-            <div class="arch-container">
-                <div class="arch-box public">
-                    <div class="arch-label">Public API</div>
-                    <div class="arch-module">mcp-test-api</div>
-                </div>
-                <div class="arch-arrow">↓</div>
-                <div class="arch-box internal">
-                    <div class="arch-label">Internal</div>
-                    <div class="arch-module">mcp-test-client</div>
-                </div>
-                <div class="arch-arrow">↓</div>
-                <div class="arch-box transport">
-                    <div class="arch-label">Transport</div>
-                    <div class="arch-module">mcp-test-transport</div>
-                </div>
-                <div class="arch-arrow">↓</div>
-                <div class="arch-box core">
-                    <div class="arch-label">Core</div>
-                    <div class="arch-modules">
-                        <span>mcp-test-interfaces</span>
-                        <span>mcp-test-core</span>
-                    </div>
-                </div>
-            </div>
-            <div class="arch-note">
-                <i class="fas fa-lightbulb"></i>
-                <span>Users only import <code>mcp-test-api</code> - all other modules are internal</span>
-            </div>
-        </div>
-    </section>
+<!-- Architecture -->
+<section id="architecture" class="architecture">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>Clean Architecture</h2>
+      <p>Modular design with clear separation of concerns</p>
+    </div>
+    <div class="arch-diagram fade-in">
+      <div class="arch-layer public">
+        <span class="layer-badge">Public</span>
+        <span class="layer-modules">mcp-test-api</span>
+      </div>
+      <div class="arch-arrow"><i class="fas fa-chevron-down"></i></div>
+      <div class="arch-layer internal">
+        <span class="layer-badge">Internal</span>
+        <span class="layer-modules">mcp-test-client</span>
+      </div>
+      <div class="arch-arrow"><i class="fas fa-chevron-down"></i></div>
+      <div class="arch-layer transport">
+        <span class="layer-badge">Transport</span>
+        <span class="layer-modules">mcp-test-transport</span>
+      </div>
+      <div class="arch-arrow"><i class="fas fa-chevron-down"></i></div>
+      <div class="arch-layer core">
+        <span class="layer-badge">Core</span>
+        <span class="layer-modules">mcp-test-interfaces / mcp-test-core</span>
+      </div>
+      <div class="arch-note">
+        <i class="fas fa-lightbulb"></i>
+        <span>Users only import <code>mcp-test-api</code> — all other modules are internal dependencies</span>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <!-- Examples -->
-    <section id="examples" class="examples">
-        <div class="container">
-            <div class="section-header">
-                <h2>Example Tests</h2>
-                <p>Real-world usage examples to get you started</p>
-            </div>
-            <div class="examples-grid">
-                <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/BasicClientTest.java" class="example" target="_blank">
-                    <i class="fas fa-play-circle"></i>
-                    <h4>Basic Client Setup</h4>
-                    <p>Initialize and configure the MCP client</p>
-                    <span class="link">View Example →</span>
-                </a>
-                <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ToolsClientTest.java" class="example" target="_blank">
-                    <i class="fas fa-tools"></i>
-                    <h4>Tools Testing</h4>
-                    <p>Discover and invoke MCP tools</p>
-                    <span class="link">View Example →</span>
-                </a>
-                <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ResourcesClientTest.java" class="example" target="_blank">
-                    <i class="fas fa-folder-open"></i>
-                    <h4>Resources Testing</h4>
-                    <p>List and read MCP resources</p>
-                    <span class="link">View Example →</span>
-                </a>
-                <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/PromptsClientTest.java" class="example" target="_blank">
-                    <i class="fas fa-comments"></i>
-                    <h4>Prompts Testing</h4>
-                    <p>Retrieve and inspect prompts</p>
-                    <span class="link">View Example →</span>
-                </a>
-                <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ExchangeTrackingTest.java" class="example" target="_blank">
-                    <i class="fas fa-chart-line"></i>
-                    <h4>Performance Monitoring</h4>
-                    <p>Track and assert on latency</p>
-                    <span class="link">View Example →</span>
-                </a>
-                <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ComprehensiveIntegrationTest.java" class="example" target="_blank">
-                    <i class="fas fa-check-double"></i>
-                    <h4>Full Integration</h4>
-                    <p>End-to-end testing workflow</p>
-                    <span class="link">View Example →</span>
-                </a>
-            </div>
-        </div>
-    </section>
+<!-- Examples -->
+<section id="examples" class="examples">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2>Example Tests</h2>
+      <p>Real-world usage to get you started quickly</p>
+    </div>
+    <div class="examples-grid">
+      <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/BasicClientTest.java" class="example fade-in" target="_blank">
+        <i class="fas fa-play-circle"></i>
+        <h4>Basic Client Setup</h4>
+        <p>Initialize and configure the MCP client</p>
+        <span class="link">View Example →</span>
+      </a>
+      <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ToolsClientTest.java" class="example fade-in" target="_blank">
+        <i class="fas fa-tools"></i>
+        <h4>Tools Testing</h4>
+        <p>Discover and invoke MCP tools</p>
+        <span class="link">View Example →</span>
+      </a>
+      <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ResourcesClientTest.java" class="example fade-in" target="_blank">
+        <i class="fas fa-folder-open"></i>
+        <h4>Resources Testing</h4>
+        <p>List and read MCP resources</p>
+        <span class="link">View Example →</span>
+      </a>
+      <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/PromptsClientTest.java" class="example fade-in" target="_blank">
+        <i class="fas fa-comments"></i>
+        <h4>Prompts Testing</h4>
+        <p>Retrieve and inspect prompts</p>
+        <span class="link">View Example →</span>
+      </a>
+      <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ExchangeTrackingTest.java" class="example fade-in" target="_blank">
+        <i class="fas fa-chart-line"></i>
+        <h4>Performance Monitoring</h4>
+        <p>Track and assert on latency</p>
+        <span class="link">View Example →</span>
+      </a>
+      <a href="https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ComprehensiveIntegrationTest.java" class="example fade-in" target="_blank">
+        <i class="fas fa-check-double"></i>
+        <h4>Full Integration</h4>
+        <p>End-to-end testing workflow</p>
+        <span class="link">View Example →</span>
+      </a>
+    </div>
+  </div>
+</section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h4>MCP Testing Framework</h4>
-                    <p>Production-grade Java testing for Model Context Protocol servers</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Resources</h4>
-                    <a href="#installation">Installation</a>
-                    <a href="#docs">Documentation</a>
-                    <a href="#examples">Examples</a>
-                    <a href="https://search.maven.org/search?q=g:io.github.abhiramrathod" target="_blank">Maven Central</a>
-                </div>
-                <div class="footer-section">
-                    <h4>Community</h4>
-                                <a href="https://github.com/Abhiramrathod/mcp-testing" target="_blank">GitHub</a>
-                    <a href="https://github.com/Abhiramrathod/mcp-testing/issues" target="_blank">Issues</a>
-                    <a href="https://github.com/Abhiramrathod/mcp-testing/discussions" target="_blank">Discussions</a>
-                    <a href="https://github.com/Abhiramrathod/mcp-testing/blob/master/LICENSE" target="_blank">License</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>© 2024 MCP Testing Framework. Licensed under Apache 2.0</p>
-                <p>Built with ❤️ for the developer community</p>
-            </div>
-        </div>
-    </footer>
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>MCP Testing Framework</h4>
+        <p>Production-grade Java testing framework for Model Context Protocol servers. Type-safe, fluent, and extensible.</p>
+      </div>
+      <div class="footer-section">
+        <h4>Resources</h4>
+        <a href="#installation">Installation</a>
+        <a href="#docs">Documentation</a>
+        <a href="#examples">Examples</a>
+        <a href="https://central.sonatype.com/artifact/io.github.abhiramrathod/mcp-test-api" target="_blank">Maven Central</a>
+      </div>
+      <div class="footer-section">
+        <h4>Community</h4>
+        <a href="https://github.com/Abhiramrathod/mcp-testing" target="_blank">GitHub</a>
+        <a href="https://github.com/Abhiramrathod/mcp-testing/issues" target="_blank">Issues</a>
+        <a href="https://github.com/Abhiramrathod/mcp-testing/discussions" target="_blank">Discussions</a>
+        <a href="https://github.com/Abhiramrathod/mcp-testing/blob/master/LICENSE" target="_blank">License</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2024 MCP Testing Framework — Apache 2.0</span>
+      <span>Built with the developer community in mind</span>
+    </div>
+  </div>
+</footer>
 
-    </main> <!-- .main-content -->
-    </div> <!-- .docs-layout -->
-
-    <script src="vendor/highlightjs/highlight.min.js"></script>
-    <script>if (typeof hljs !== 'undefined') hljs.highlightAll();</script>
-    <script src="script.js"></script>
+<script src="vendor/highlightjs/highlight.min.js"></script>
+<script>if (typeof hljs !== 'undefined') hljs.highlightAll();</script>
+<script src="script.js"></script>
 </body>
 </html>
