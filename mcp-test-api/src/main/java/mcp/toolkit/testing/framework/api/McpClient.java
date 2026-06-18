@@ -190,9 +190,10 @@ public final class McpClient implements AutoCloseable {
     public static final class Builder {
 
         private final String serverUrl;
-        private String sseEndpointPath = McpClientConfig.DEFAULT_SSE_PATH;
+        private String endpointPath = McpClientConfig.DEFAULT_SSE_PATH;
         private McpClientConfig config = McpClientConfig.defaults();
         private boolean initializeOnBuild = false;
+        private boolean useStreamableHttp = false;
 
         private Builder(String serverUrl) {
             this.serverUrl = serverUrl;
@@ -205,7 +206,32 @@ public final class McpClient implements AutoCloseable {
          * @return this builder
          */
         public Builder sseEndpoint(String path) {
-            this.sseEndpointPath = path;
+            this.endpointPath = path;
+            return this;
+        }
+
+        /**
+         * Configures the client to use Streamable HTTP transport with the
+         * default endpoint path ({@code /mcp}).
+         *
+         * @return this builder
+         */
+        public Builder streamableHttp() {
+            this.useStreamableHttp = true;
+            this.endpointPath = McpClientConfig.DEFAULT_MCP_PATH;
+            return this;
+        }
+
+        /**
+         * Configures the client to use Streamable HTTP transport with the
+         * given endpoint path.
+         *
+         * @param path Streamable HTTP endpoint path relative to the server URL
+         * @return this builder
+         */
+        public Builder streamableHttp(String path) {
+            this.useStreamableHttp = true;
+            this.endpointPath = path;
             return this;
         }
 
@@ -238,7 +264,7 @@ public final class McpClient implements AutoCloseable {
          * @return ready-to-use MCP client
          */
         public McpClient build() {
-            McpTestClient delegate = new McpTestClient(serverUrl, sseEndpointPath);
+            McpTestClient delegate = new McpTestClient(serverUrl, endpointPath, useStreamableHttp);
             McpClient client = new McpClient(delegate);
             if (initializeOnBuild) {
                 client.initialize();

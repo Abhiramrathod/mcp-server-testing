@@ -9,6 +9,7 @@ import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
 import mcp.toolkit.testing.framework.transport.McpSseTransport;
+import mcp.toolkit.testing.framework.transport.McpStreamableHttpTransport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -55,12 +56,26 @@ public final class McpTestClientUtils {
     public static ClientComponents buildComponents(ObjectMapper objectMapper, String protocolVersion,
                                                    String baseUrl, String sseEndpointPath,
                                                    McpInitializationGuard initGuard) {
-        ResolvedEndpoints endpoints = resolveEndpoints(baseUrl, sseEndpointPath);
+        return buildComponents(objectMapper, protocolVersion, baseUrl, sseEndpointPath, initGuard, false);
+    }
+
+    public static ClientComponents buildComponents(ObjectMapper objectMapper, String protocolVersion,
+                                                   String baseUrl, String endpointPath,
+                                                   McpInitializationGuard initGuard,
+                                                   boolean useStreamableHttp) {
+        ResolvedEndpoints endpoints = resolveEndpoints(baseUrl, endpointPath);
         McpJsonCodec jsonCodec = new McpJsonCodec(objectMapper);
         AtomicLong idSequence = new AtomicLong(1);
-        McpTransport transport = new McpSseTransport(
-                endpoints.sseEndpointUri(), endpoints.baseUri(),
-                protocolVersion, McpTestClientConstants.Defaults.TIMEOUT, jsonCodec);
+        McpTransport transport;
+        if (useStreamableHttp) {
+            transport = new McpStreamableHttpTransport(
+                    endpoints.sseEndpointUri(), protocolVersion,
+                    McpTestClientConstants.Defaults.TIMEOUT, jsonCodec);
+        } else {
+            transport = new McpSseTransport(
+                    endpoints.sseEndpointUri(), endpoints.baseUri(),
+                    protocolVersion, McpTestClientConstants.Defaults.TIMEOUT, jsonCodec);
+        }
         McpRpcClient rpcClient = new McpRpcClient(transport, idSequence, jsonCodec);
         return new ClientComponents(transport, jsonCodec, rpcClient,
                 new McpToolDirectory(initGuard, rpcClient, jsonCodec),

@@ -35,20 +35,26 @@ public class McpTestClient implements AutoCloseable {
     private volatile JsonNode initializeResult;
 
     public McpTestClient(String baseUrl) {
-        this(baseUrl, McpTestClientConstants.Endpoints.SSE);
+        this(baseUrl, McpTestClientConstants.Endpoints.SSE, false);
     }
 
     public McpTestClient(String baseUrl, String sseEndpointPath) {
-        this(new ObjectMapper(), McpTestClientConstants.Defaults.PROTOCOL_VERSION, baseUrl, sseEndpointPath);
+        this(baseUrl, sseEndpointPath, false);
+    }
+
+    public McpTestClient(String baseUrl, String endpointPath, boolean useStreamableHttp) {
+        this(new ObjectMapper(), McpTestClientConstants.Defaults.PROTOCOL_VERSION,
+                baseUrl, endpointPath, useStreamableHttp);
     }
 
     private McpTestClient(ObjectMapper objectMapper, String protocolVersion,
-                          String baseUrl, String sseEndpointPath) {
+                          String baseUrl, String endpointPath, boolean useStreamableHttp) {
         this.objectMapper = McpValidation.requireNonNull(objectMapper, "objectMapper");
         this.protocolVersion = McpTestClientUtils.resolveProtocolVersion(protocolVersion);
         this.initGuard = new McpInitializationGuard(this::ensureInitialized);
         ClientComponents components = buildComponents(
-                this.objectMapper, this.protocolVersion, baseUrl, sseEndpointPath, this.initGuard);
+                this.objectMapper, this.protocolVersion, baseUrl, endpointPath,
+                this.initGuard, useStreamableHttp);
         this.transport = components.transport();
         this.jsonCodec = components.jsonCodec();
         this.rpcClient = components.rpcClient();

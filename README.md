@@ -16,6 +16,7 @@ A **production-grade** Java testing framework for Model Context Protocol (MCP) s
 - 📊 **Performance Monitoring** - Built-in latency tracking and percentiles
 - 🔒 **Complete Abstraction** - Internal details never leak to your code
 - 🔧 **Extensible** - Custom transport implementations supported
+- 🌐 **Streamable HTTP** - Alternative transport without persistent SSE connections
 
 ## 🚀 Quick Start
 
@@ -94,6 +95,24 @@ McpClientConfig config = McpClientConfig.builder()
 
 Pass it to the client with `.config(config)` when building the `McpClient`.
 
+### Transport Selection
+
+By default the client uses **SSE** (Server-Sent Events) transport. For servers that support it, you can use **Streamable HTTP** transport which sends each request as a standalone HTTP POST without a persistent SSE connection:
+
+```java
+McpClient client = McpClient.connectTo("http://localhost:8080")
+        .streamableHttp()
+        .build();
+```
+
+To use a custom endpoint path (default: `/mcp`):
+
+```java
+McpClient client = McpClient.connectTo("http://localhost:8080")
+        .streamableHttp("/api/mcp")
+        .build();
+```
+
 ## 🧰 Build, tests and Javadocs
 
 Build the multi-module project with Maven (from repo root):
@@ -149,7 +168,7 @@ long p99 = client.exchanges().latencyPercentile(McpMethod.TOOLS_CALL, 99);
 ```
 mcp-test-api (Public)
   └── mcp-test-client (Internal)
-        └── mcp-test-transport (SSE)
+        └── mcp-test-transport (SSE / Streamable HTTP)
               ├── mcp-test-interfaces
               └── mcp-test-core
 ```
@@ -162,7 +181,7 @@ mcp-test-api (Public)
 |--------|---------|-----------|
 | `mcp-test-api` | Public-facing API | **Import this** |
 | `mcp-test-client` | Internal RPC implementation | Internal |
-| `mcp-test-transport` | SSE transport layer | Internal |
+| `mcp-test-transport` | SSE and Streamable HTTP transport layer | Internal |
 | `mcp-test-interfaces` | Core interfaces | Internal |
 | `mcp-test-core` | Shared utilities | Internal |
 | `mcp-test-examples` | Usage examples | Reference |

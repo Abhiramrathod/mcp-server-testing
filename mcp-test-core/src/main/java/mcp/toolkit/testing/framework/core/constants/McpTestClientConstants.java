@@ -16,6 +16,7 @@ public final class McpTestClientConstants {
     public static final class Endpoints {
         public static final String SSE = "/sse";
         public static final String MESSAGE = "/mcp/message";
+        public static final String MCP = "/mcp";
         private Endpoints() {}
     }
 

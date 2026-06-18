@@ -28,6 +28,9 @@ public final class McpClientConfig {
     /** Default SSE endpoint path. */
     public static final String DEFAULT_SSE_PATH = "/sse";
 
+    /** Default Streamable HTTP endpoint path. */
+    public static final String DEFAULT_MCP_PATH = "/mcp";
+
     private final Duration timeout;
     private final String protocolVersion;
 
