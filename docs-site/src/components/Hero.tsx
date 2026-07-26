@@ -1,4 +1,5 @@
 import { useTypewriter } from '../hooks/useTypewriter'
+import Logo from './Logo'
 
 function TypeLine({ text, speed = 25, delay = 0 }: { text: string; speed?: number; delay?: number }) {
   const { displayed, done } = useTypewriter(text, speed, delay)
@@ -13,6 +14,18 @@ function TypeLine({ text, speed = 25, delay = 0 }: { text: string; speed?: numbe
 export default function Hero() {
   return (
     <section className="pt-16 pb-8 section-content">
+      <div className="flex items-center gap-3 mb-6 fade-in fade-in-1">
+        <Logo size={36} />
+        <div>
+          <h1 className="text-lg font-bold" style={{ color: 'var(--text)', lineHeight: 1.2 }}>
+            <span style={{ color: 'var(--accent)' }}>mcp</span>-test
+          </h1>
+          <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
+            MCP Testing Framework
+          </p>
+        </div>
+      </div>
+
       <div className="output-block">
         <p className="text-xs mb-4" style={{ color: 'var(--text-dim)' }}>
           <span className="cmd">#</span>{' '}

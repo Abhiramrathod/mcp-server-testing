@@ -1,4 +1,5 @@
 import { Github } from 'lucide-react'
+import Logo from './Logo'
 
 export default function Footer() {
   return (
@@ -6,7 +7,7 @@ export default function Footer() {
       <div className="status-bar">
         <span className="flex items-center gap-1.5" style={{ color: 'var(--accent)' }}>
           <span className="glow-dot" />
-          mcp-test
+          <Logo size={12} />
         </span>
         <span style={{ color: 'var(--text-dim)' }}>v1.0.15</span>
         <span style={{ color: 'var(--border-light)' }}>|</span>

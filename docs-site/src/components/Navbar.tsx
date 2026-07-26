@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from '../hooks/useTheme'
+import Logo from './Logo'
 
 const links = [
   { label: 'features', href: '#features' },
@@ -24,8 +25,7 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50" style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
       <div className="max-w-720px mx-auto flex items-center justify-between h-12 px-5">
         <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center gap-2 text-xs font-medium" style={{ color: 'var(--text)' }}>
-          <span style={{ color: 'var(--accent)' }}>~</span>
-          <span>/mcp-test</span>
+          <Logo size={18} showText />
         </button>
 
         <div className="hidden md:flex items-center gap-0.5">
