@@ -74,7 +74,7 @@ public class MyMcpTest {
 
 ## 📖 Documentation
 
-**Full Documentation**: [https://abhiramrathod.github.io/mcp-testing/](https://abhiramrathod.github.io/mcp-testing/)
+**Full Documentation**: [https://testmcp.pages.dev/](https://testmcp.pages.dev/)]
 
 ## ⚙️ Configuration
 
