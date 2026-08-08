@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTheme } from '../hooks/useTheme'
 import Logo from './Logo'
 
@@ -10,7 +11,6 @@ const links = [
   { label: 'flow', href: '#flow' },
   { label: 'docs', href: '#docs' },
   { label: 'api-ref', href: '#api-ref' },
-  { label: 'junit5', href: '#junit' },
   { label: 'examples', href: '#examples' },
   { label: 'releases', href: '#releases' },
 ]
@@ -42,6 +42,14 @@ export default function Navbar() {
               {l.label}
             </button>
           ))}
+          <Link to="/unit-testing"
+            className="px-2.5 py-1 rounded text-xs transition-colors"
+            style={{ color: 'var(--text-dim)', textDecoration: 'none' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-dim)' }}
+          >
+            junit5
+          </Link>
 
           <button onClick={toggle} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             className="ml-2 px-2.5 py-1 rounded text-xs transition-all font-medium"
@@ -74,6 +82,12 @@ export default function Navbar() {
                 $ cd {l.label}
               </button>
             ))}
+            <Link to="/unit-testing" onClick={() => setOpen(false)}
+              className="block w-full text-left text-xs py-1.5"
+              style={{ color: 'var(--text-dim)', textDecoration: 'none' }}
+            >
+              $ cd junit5
+            </Link>
             <button onClick={toggle} className="block w-full text-left text-xs py-1.5" style={{ color: 'var(--accent)' }}>
               $ {theme === 'dark' ? '☀︎ light' : '☾ dark'} mode
             </button>

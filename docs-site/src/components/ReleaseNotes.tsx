@@ -200,23 +200,31 @@ export default function ReleaseNotes() {
 
           {!loading && !error && releases.length > 0 && (
             <>
-              {/* Version selector */}
-              <div className="flex flex-wrap gap-1 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
-                {releases.map((r, i) => (
-                  <button key={r.id} onClick={() => setSelected(i)}
-                    className="px-2.5 py-1 rounded text-xs transition-all font-mono"
-                    style={{
-                      background: selected === i ? 'var(--accent-dim)' : 'transparent',
-                      color: selected === i ? 'var(--accent)' : 'var(--text-dim)',
-                      border: selected === i ? '1px solid var(--accent-glow)' : '1px solid transparent',
-                    }}
-                  >
-                    {r.tag_name}
-                    {i === 0 && !r.prerelease && (
-                      <span style={{ marginLeft: '4px', color: 'var(--accent)', fontSize: '9px' }}>●</span>
-                    )}
-                  </button>
-                ))}
+              {/* Version selector dropdown */}
+              <div className="flex items-center gap-3 mb-4 pb-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                <span style={{ color: 'var(--text-dim2)', fontSize: '10px', flexShrink: 0 }}>$ version</span>
+                <select
+                  value={selected}
+                  onChange={e => setSelected(Number(e.target.value))}
+                  className="font-mono text-xs px-2 py-1 rounded"
+                  style={{
+                    background: 'var(--bg-surface)',
+                    color: 'var(--accent)',
+                    border: '1px solid var(--accent-glow)',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    minWidth: '140px',
+                  }}
+                >
+                  {releases.map((r, i) => (
+                    <option key={r.id} value={i} style={{ background: 'var(--bg-surface)', color: 'var(--text)' }}>
+                      {r.tag_name}{i === 0 && !r.prerelease ? '  ← latest' : ''}{r.prerelease ? '  (pre)' : ''}
+                    </option>
+                  ))}
+                </select>
+                <span style={{ color: 'var(--text-dim2)', fontSize: '10px' }}>
+                  {releases.length} release{releases.length !== 1 ? 's' : ''} total
+                </span>
               </div>
 
               {/* Release header */}

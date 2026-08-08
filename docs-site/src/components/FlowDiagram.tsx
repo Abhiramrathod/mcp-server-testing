@@ -166,12 +166,12 @@ function ModuleGraph() {
   const [hovered, setHovered] = useState<string | null>(null)
 
   const modules = [
-    { id: 'mcp-test-api', label: 'mcp-test-api', tag: 'PUBLIC', color: '#5fffa7', x: 300, y: 30, deps: ['mcp-test-client'] },
-    { id: 'mcp-test-junit', label: 'mcp-test-junit', tag: 'PUBLIC', color: '#f87171', x: 80, y: 30, deps: ['mcp-test-api'] },
-    { id: 'mcp-test-client', label: 'mcp-test-client', tag: 'INTERNAL', color: '#60a5fa', x: 300, y: 130, deps: ['mcp-test-transport', 'mcp-test-core'] },
-    { id: 'mcp-test-transport', label: 'mcp-test-transport', tag: 'INTERNAL', color: '#a78bfa', x: 180, y: 230, deps: ['mcp-test-interfaces', 'mcp-test-core'] },
-    { id: 'mcp-test-interfaces', label: 'mcp-test-interfaces', tag: 'SPI', color: '#fbbf24', x: 80, y: 330, deps: [] },
-    { id: 'mcp-test-core', label: 'mcp-test-core', tag: 'INTERNAL', color: '#34d399', x: 420, y: 230, deps: [] },
+    { id: 'mcp-test-api',       label: 'mcp-test-api',       tag: 'PUBLIC',   color: '#5fffa7', x: 220, y: 20,  deps: ['mcp-test-client'] },
+    { id: 'mcp-test-client',    label: 'mcp-test-client',    tag: 'INTERNAL', color: '#60a5fa', x: 220, y: 110, deps: ['mcp-test-transport', 'mcp-test-core'] },
+    { id: 'mcp-test-transport', label: 'mcp-test-transport', tag: 'INTERNAL', color: '#a78bfa', x: 100, y: 210, deps: ['mcp-test-interfaces', 'mcp-test-core'] },
+    { id: 'mcp-test-interfaces',label: 'mcp-test-interfaces',tag: 'SPI',      color: '#fbbf24', x: 20,  y: 310, deps: [] },
+    { id: 'mcp-test-core',      label: 'mcp-test-core',      tag: 'INTERNAL', color: '#34d399', x: 340, y: 210, deps: [] },
+    { id: 'mcp-test-junit',     label: 'mcp-test-junit',     tag: 'OPTIONAL', color: '#f87171', x: 390, y: 20,  deps: ['mcp-test-api'] },
   ]
 
   const nodeW = 150, nodeH = 36
@@ -194,7 +194,7 @@ function ModuleGraph() {
     <div className="font-mono text-xs">
       <p className="mb-3" style={{ color: dim }}>$ mvn dependency:tree — hover a module to highlight dependencies</p>
       <div className="overflow-x-auto">
-        <svg width="600" height="390" style={{ display: 'block', margin: '0 auto' }}>
+        <svg width="580" height="370" style={{ display: 'block', margin: '0 auto' }}>
           <defs>
             {modules.map(m => (
               <marker key={m.id} id={`arrow-${m.id}`} markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
@@ -207,12 +207,13 @@ function ModuleGraph() {
             const f = getCenter(from), t = getCenter(to)
             const fromM = modules.find(x => x.id === from)!
             const highlighted = !hovered || hovered === from || hovered === to
+            const isOptional = from === 'mcp-test-junit'
             return (
               <line key={`${from}-${to}`}
                 x1={f.x} y1={f.y} x2={t.x} y2={t.y}
                 stroke={highlighted ? `${fromM.color}60` : `${fromM.color}15`}
                 strokeWidth={highlighted ? 1.5 : 1}
-                strokeDasharray="4 3"
+                strokeDasharray={isOptional ? '3 4' : '4 3'}
                 markerEnd={`url(#arrow-${from})`}
                 style={{ transition: 'all 0.3s ease' }}
               />
@@ -238,7 +239,7 @@ function ModuleGraph() {
         </svg>
       </div>
       <p className="mt-2 text-center" style={{ color: dim2, fontSize: '10px' }}>
-        └── import only <span style={{ color: accent }}>mcp-test-api</span> — all others are transitive
+        └── import only <span style={{ color: accent }}>mcp-test-api</span> — all others are transitive · <span style={{ color: '#f87171' }}>mcp-test-junit</span> is optional (unit testing)
       </p>
     </div>
   )
