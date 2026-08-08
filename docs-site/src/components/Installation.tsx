@@ -9,10 +9,21 @@ const deps = {
   maven: `<dependency>
   <groupId>io.github.abhiramrathod</groupId>
   <artifactId>mcp-test-api</artifactId>
-  <version>1.0.15</version>
+  <version>1.0.38</version>
+  <scope>test</scope>
+</dependency>
+
+<!-- Optional: JUnit 5 testkit (embedded server + @McpServerTest) -->
+<dependency>
+  <groupId>io.github.abhiramrathod</groupId>
+  <artifactId>mcp-test-junit</artifactId>
+  <version>1.0.38</version>
   <scope>test</scope>
 </dependency>`,
-  gradle: `testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.15'`,
+  gradle: `testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.38'
+
+// Optional: JUnit 5 testkit (embedded server + @McpServerTest)
+testImplementation 'io.github.abhiramrathod:mcp-test-junit:1.0.38'`,
 }
 
 const firstTest = `import mcp.toolkit.testing.framework.api.*;

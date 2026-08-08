@@ -5,6 +5,9 @@ import Installation from './components/Installation'
 import Modules from './components/Modules'
 import Docs from './components/Docs'
 import Architecture from './components/Architecture'
+import FlowDiagram from './components/FlowDiagram'
+import ApiRef from './components/ApiRef'
+import JUnitTestkit from './components/JUnitTestkit'
 import Examples from './components/Examples'
 import Footer from './components/Footer'
 
@@ -21,9 +24,15 @@ export default function App() {
         <div className="divider" />
         <Modules />
         <div className="divider" />
+        <Architecture />
+        <div className="divider" />
+        <FlowDiagram />
+        <div className="divider" />
         <Docs />
         <div className="divider" />
-        <Architecture />
+        <ApiRef />
+        <div className="divider" />
+        <JUnitTestkit />
         <div className="divider" />
         <Examples />
       </main>

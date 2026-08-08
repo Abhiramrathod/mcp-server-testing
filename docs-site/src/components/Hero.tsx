@@ -29,7 +29,7 @@ export default function Hero() {
       <div className="output-block">
         <p className="text-xs mb-4" style={{ color: 'var(--text-dim)' }}>
           <span className="cmd">#</span>{' '}
-          <TypeLine text="mcp-test — MCP Testing Framework v1.0.15" speed={20} delay={100} />
+          <TypeLine text="mcp-test — MCP Testing Framework v1.0.38" speed={20} delay={100} />
         </p>
 
         <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>

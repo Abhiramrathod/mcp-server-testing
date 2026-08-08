@@ -2,6 +2,7 @@ import Reveal from './Reveal'
 
 const layers = [
   { label: 'PUBLIC', name: 'mcp-test-api', color: '#5fffa7', desc: 'Public API — fluent builders, domain models, assertions.' },
+  { label: 'JUNIT5', name: 'mcp-test-junit', color: '#f87171', desc: '@McpServerTest annotation, McpTestServer (embedded), McpResponses helpers.' },
   { label: 'INTERNAL', name: 'mcp-test-client', color: '#60a5fa', desc: 'RPC orchestration, initialization, exchange tracking.' },
   { label: 'TRANSPORT', name: 'mcp-test-transport', color: '#a78bfa', desc: 'SSE + Streamable HTTP via McpTransport SPI.' },
   { label: 'CORE', name: 'mcp-test-interfaces / core', color: '#fbbf24', desc: 'SPI contract, JSON codec, constants, validation.' },

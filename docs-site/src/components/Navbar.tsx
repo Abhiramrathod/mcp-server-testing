@@ -6,8 +6,11 @@ const links = [
   { label: 'features', href: '#features' },
   { label: 'install', href: '#installation' },
   { label: 'modules', href: '#components' },
-  { label: 'docs', href: '#docs' },
   { label: 'arch', href: '#architecture' },
+  { label: 'flow', href: '#flow' },
+  { label: 'docs', href: '#docs' },
+  { label: 'api-ref', href: '#api-ref' },
+  { label: 'junit5', href: '#junit' },
   { label: 'examples', href: '#examples' },
 ]
 

@@ -44,6 +44,7 @@ export const modules: Module[] = [
   { name: 'mcp-test-core', tag: 'Internal', tagColor: 'bg-emerald-500', coords: 'io.github.abhiramrathod:mcp-test-core', desc: 'Shared utilities.', details: 'JSON codec (McpJsonCodec), constants, and validation helpers.' },
   { name: 'mcp-test-interfaces', tag: 'SPI', tagColor: 'bg-amber-500', coords: 'io.github.abhiramrathod:mcp-test-interfaces', desc: 'Core interfaces.', details: 'The McpTransport SPI for custom transport implementations.' },
   { name: 'mcp-test-examples', tag: 'Ref', tagColor: 'bg-cyan-500', desc: 'Example tests.', details: 'Tools, resources, prompts, performance, and full integration with bundled DummyMcpServer. Run: mvn -pl mcp-test-examples test' },
+  { name: 'mcp-test-junit', tag: 'Public', tagColor: 'bg-rose-500', coords: 'io.github.abhiramrathod:mcp-test-junit', desc: 'JUnit 5 testkit — embedded server + annotations.', details: '@McpServerTest annotation, McpServerExtension, McpTestServer (embedded in-process server), McpResponses helpers, Transport enum (SSE / STREAMABLE_HTTP).' },
 ]
 
 export const docSections: DocSection[] = [
@@ -108,6 +109,60 @@ client.tools().callTool("calculator", args)
 long p99 = client.exchanges()
     .latencyPercentile(McpMethod.TOOLS_CALL, 99);`,
   },
+  {
+    icon: 'Server', title: 'Server Info', desc: 'Inspect the connected server name, version, protocol version, and advertised capabilities.',
+    lang: 'java', code: `McpServerInfo info = client.serverInfo();
+System.out.println(info.name() + " " + info.version());
+System.out.println(info.protocolVersion());
+
+info.supportsTools();      // true / false
+info.supportsResources();
+info.supportsPrompts();
+info.supportsCapability("logging");`,
+  },
+  {
+    icon: 'TerminalSquare', title: 'Completions', desc: 'Request argument completions for prompts and resource templates via completion/complete.',
+    lang: 'java', code: `// Prompt argument completion
+McpCompletion c1 = client.prompts()
+    .completePromptArgument("translate", "language", "E");
+c1.hasSuggestions(); // true
+c1.values();         // ["English", ...]
+
+// Resource template argument completion
+McpCompletion c2 = client.resources()
+    .completeResourceTemplateArgument("file:///{path}", "path", "a");
+c2.values();         // ["a.txt", ...]`,
+  },
+  {
+    icon: 'FlaskConical', title: 'JUnit 5 Testkit', desc: 'Spin up an embedded MCP server and get an injected McpClient with a single annotation.',
+    lang: 'java', code: `@McpServerTest(transport = Transport.STREAMABLE_HTTP)
+class MyMcpTest {
+
+    @BeforeAll
+    static void configure(McpTestServer server) {
+        server.addTool("echo", "Echoes input", args ->
+                McpResponses.toolText(args.path("message").asText()));
+    }
+
+    @Test
+    void echoWorks(McpClient client) {
+        McpToolResult result = client.tools()
+                .callTool("echo", Map.of("message", "hello"))
+                .assertSuccess();
+        assertEquals("hello", result.firstText());
+    }
+}`,
+  },
+  {
+    icon: 'FolderOpen', title: 'Resource Templates', desc: 'List resource templates and read resources matched by URI template patterns.',
+    lang: 'java', code: `List<McpResourceTemplate> templates =
+    client.resources().listResourceTemplates();
+// e.g. uriTemplate = "file:///{path}"
+
+McpResourceContent content =
+    client.resources().readResource("file:///docs/readme.txt")
+        .assertNotEmpty();`,
+  },
 ]
 
 export const examples: Example[] = [
@@ -117,4 +172,6 @@ export const examples: Example[] = [
   { icon: 'MessageSquare', title: 'Prompts Testing', desc: 'Retrieve prompts, inspect arguments, validate responses.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/PromptsClientTest.java' },
   { icon: 'LineChart', title: 'Performance Monitoring', desc: 'Track exchanges, compute percentiles, assert on latency.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ExchangeTrackingTest.java' },
   { icon: 'CheckCheck', title: 'Full Integration', desc: 'End-to-end workflow covering tools, resources, prompts, performance.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ComprehensiveIntegrationTest.java' },
+  { icon: 'PlayCircle', title: 'JUnit 5 SSE Integration', desc: 'Embedded server + @McpServerTest annotation over SSE transport.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-junit/src/test/java/mcp/toolkit/testing/junit/annotation/McpServerTestSseIntegrationTest.java' },
+  { icon: 'Radio', title: 'JUnit 5 Streamable HTTP Integration', desc: 'Embedded server with resource templates, completions, and Streamable HTTP transport.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-junit/src/test/java/mcp/toolkit/testing/junit/annotation/McpServerTestStreamableIntegrationTest.java' },
 ]
