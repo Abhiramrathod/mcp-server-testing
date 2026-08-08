@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange.svg)](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 
-📚 [Documentation](https://abhiramrathod.github.io/mcp-testing/) | 📦 [Maven Central](https://central.sonatype.com/artifact/io.github.abhiramrathod/mcp-test-api) | 🐛 [Issues](https://github.com/Abhiramrathod/mcp-testing/issues) | 💬 [Discussions](https://github.com/Abhiramrathod/mcp-testing/discussions)
+📚 [Documentation](https://testmcp.pages.dev/) | 📦 [Maven Central](https://central.sonatype.com/artifact/io.github.abhiramrathod/mcp-test-api) | 🐛 [Issues](https://github.com/Abhiramrathod/mcp-testing/issues) | 💬 [Discussions](https://github.com/Abhiramrathod/mcp-testing/discussions)
 
 A **production-grade** Java testing framework for Model Context Protocol (MCP) servers with type-safe APIs, fluent assertions, and comprehensive monitoring.
 
