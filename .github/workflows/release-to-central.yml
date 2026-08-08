@@ -1,19 +1,16 @@
-name: CI and Release to Maven Central
+name: Release to Maven Central
 
 on:
   push:
-    branches: [ master, main ]
-  pull_request:
-    branches: [ master, main ]
-  workflow_dispatch: {}
+    tags: [ 'v*' ]
 
 permissions:
-  contents: write
+  contents: read
   packages: write
   id-token: write
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,60 +26,19 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Build and Test (CI)
-        run: mvn clean verify -B
-
-      - name: Bump version and create tag
-        id: version_bump
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set version from tag
+        id: version
         run: |
-          CURRENT_VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | tr -d '[:space:]')
-          echo "Current version: $CURRENT_VERSION"
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-
-          # Keep bumping until we find a version whose tag doesn't exist yet
-          NEW_VERSION=""
-          while true; do
-            PATCH=$((PATCH + 1))
-            CANDIDATE="${MAJOR}.${MINOR}.${PATCH}"
-            if ! git rev-parse "v$CANDIDATE" >/dev/null 2>&1; then
-              NEW_VERSION="$CANDIDATE"
-              break
-            fi
-            echo "Tag v$CANDIDATE already exists, bumping further..."
-          done
-
-          echo "New version: $NEW_VERSION"
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "New patch: $PATCH"
-
+          TAG="${GITHUB_REF#refs/tags/}"
+          NEW_VERSION="${TAG#v}"
+          echo "Releasing version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           mvn versions:set -DnewVersion="$NEW_VERSION" -DgenerateBackupPoms=false -B
 
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pom.xml */pom.xml
-          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
-          git push
-
-          git tag "v$NEW_VERSION"
-          git push origin "v$NEW_VERSION"
-          echo "Created and pushed tag v$NEW_VERSION"
-
-      - name: Determine if release is needed
-        id: release_check
-        run: |
-          if [ "${{ github.event_name }}" = "push" ] && { [ "${{ github.ref }}" = "refs/heads/master" ] || [ "${{ github.ref }}" = "refs/heads/main" ]; } && [[ ! "${{ github.event.head_commit.message }}" =~ "\[skip ci\]" ]]; then
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "Release is enabled."
-          else
-            echo "should_release=false" >> $GITHUB_OUTPUT
-            echo "Release is skipped."
-          fi
+      - name: Build and Test
+        run: mvn clean verify -B
 
       - name: Import GPG private key
-        if: steps.release_check.outputs.should_release == 'true'
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
@@ -97,29 +53,18 @@ jobs:
           gpg --list-secret-keys --keyid-format LONG || true
 
       - name: Export GPG passphrase to environment for Maven
-        if: steps.release_check.outputs.should_release == 'true'
         run: |
           echo "Exporting GPG_PASSPHRASE to environment (masked)"
           echo "GPG_PASSPHRASE=${{ secrets.GPG_PASSPHRASE }}" >> $GITHUB_ENV
 
       - name: Enable GPG loopback pinentry (required for non-interactive signing)
-        if: steps.release_check.outputs.should_release == 'true'
         run: |
           mkdir -p ~/.gnupg
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
           gpgconf --kill gpg-agent || true
           sleep 1
 
-      - name: Debug GPG setup
-        if: steps.release_check.outputs.should_release == 'true'
-        run: |
-          echo "GPG version:"; gpg --version
-          echo "List secret keys:"; gpg --list-secret-keys --keyid-format LONG || true
-          echo "GPG home:"; gpgconf --list-dirs
-          echo "GPG_PASSPHRASE present:"; if [ -z "$GPG_PASSPHRASE" ]; then echo "(empty)"; else echo "(set)"; fi
-
       - name: Cache Maven local repository
-        if: steps.release_check.outputs.should_release == 'true'
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
@@ -128,7 +73,6 @@ jobs:
             mvn-repo-${{ runner.os }}-
 
       - name: Write Maven settings with OSSRH credentials
-        if: steps.release_check.outputs.should_release == 'true'
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
@@ -152,20 +96,7 @@ jobs:
           echo "  </servers>" >> ~/.m2/settings.xml
           echo "</settings>" >> ~/.m2/settings.xml
 
-      - name: Show generated Maven settings (servers)
-        if: steps.release_check.outputs.should_release == 'true'
-        run: |
-          echo "--- ~/.m2/settings.xml ---"
-          if [ -f ~/.m2/settings.xml ]; then
-            sed -n '1,200p' ~/.m2/settings.xml || true
-            echo "--- grep for ossrh entries ---"
-            grep -n "<id>ossrh</id>" -n ~/.m2/settings.xml || true
-          else
-            echo "~/.m2/settings.xml not found"
-          fi
-
       - name: Build artifacts and install to local Maven repository
-        if: steps.release_check.outputs.should_release == 'true'
         run: |
           # Build modules and install artifacts (including sources + javadoc JARs)
           # into the local Maven repository. Source and javadoc plugins are configured
@@ -173,7 +104,6 @@ jobs:
           mvn -B -DskipTests -Dgpg.skip=true clean install
 
       - name: Verify POM files exist
-        if: steps.release_check.outputs.should_release == 'true'
         run: |
           set -euo pipefail
           MODULES="mcp-test-interfaces mcp-test-core mcp-test-transport mcp-test-client mcp-test-api mcp-test-examples mcpTesting"
@@ -187,7 +117,6 @@ jobs:
           done
 
       - name: Sign artifacts in local Maven repository with GPG
-        if: steps.release_check.outputs.should_release == 'true'
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
@@ -208,7 +137,6 @@ jobs:
           done
 
       - name: Publish GPG public key
-        if: steps.release_check.outputs.should_release == 'true'
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
         run: |
@@ -236,7 +164,6 @@ jobs:
           echo "✅ Public key upload attempted to multiple keyservers"
 
       - name: Generate checksum files
-        if: steps.release_check.outputs.should_release == 'true'
         run: |
           set -euo pipefail
           REPO="${HOME}/.m2/repository/io/github/abhiramrathod"
@@ -247,7 +174,6 @@ jobs:
           done
 
       - name: Assemble deployment bundle from local Maven repository
-        if: steps.release_check.outputs.should_release == 'true'
         run: |
           set -euo pipefail
           rm -rf central-bundle.zip bundle || true
@@ -278,9 +204,8 @@ jobs:
           zip -r ../central-bundle.zip io
           cd ..
 
-      - name: Upload bundle to Sonatype Central Publisher (AUTOMATIC)
+      - name: Upload bundle to Sonatype Central Publisher
         id: upload_bundle
-        if: steps.release_check.outputs.should_release == 'true'
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
@@ -325,7 +250,6 @@ jobs:
           echo "Upload failed (HTTP $http). Body: $body"; exit 1
 
       - name: Poll deployment status until published
-        if: steps.release_check.outputs.should_release == 'true'
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
@@ -382,5 +306,3 @@ jobs:
             sleep $sleep_seconds
           done
           echo "Timed out waiting for publish after $attempts attempts"; exit 1
-
-
