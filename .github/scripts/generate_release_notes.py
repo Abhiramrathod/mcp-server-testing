@@ -29,24 +29,16 @@ from datetime import datetime, timezone
 # ---------------------------------------------------------------------------
 
 SECTION_DEFINITIONS = OrderedDict([
-    # (section title, emoji prefix, list of commit types)
-    ("New Features", "features", [
-        "feat", "feature", "add", "implement", "introduce", "enable", "support"]),
-    ("Bug Fixes", "fix", [
-        "fix", "bugfix", "hotfix", "patch", "repair", "resolve", "correct"]),
-    ("Performance Improvements", "perf", [
-        "perf", "performance", "optimize", "optimization", "speed"]),
-    ("Documentation", "docs", [
-        "docs", "documentation", "doc", "readme"]),
-    ("Dependencies", "deps", [
-        "deps", "dependencies", "dependency", "bump", "upgrade", "chore(deps)"]),
-    ("Testing", "test", [
-        "test", "tests", "testing", "spec", "integration-test"]),
-    ("Refactoring", "refactor", [
-        "refactor", "refactoring", "reorganize", "simplify", "cleanup", "clean"]),
-    ("CI & Build", "ci", [
-        "ci", "build", "workflow", "actions", "pipeline"]),
-    ("Other Changes", "other", ["chore", "style", "revert", "misc"]),
+    # key: section title, value: (icon, list of commit types)
+    ("New Features",            ("features", ["feat", "feature", "add", "implement", "introduce", "enable", "support"])),
+    ("Bug Fixes",               ("fix",      ["fix", "bugfix", "hotfix", "patch", "repair", "resolve", "correct"])),
+    ("Performance Improvements",("perf",     ["perf", "performance", "optimize", "optimization", "speed"])),
+    ("Documentation",           ("docs",     ["docs", "documentation", "doc", "readme"])),
+    ("Dependencies",            ("deps",     ["deps", "dependencies", "dependency", "bump", "upgrade", "chore(deps)"])),
+    ("Testing",                 ("test",     ["test", "tests", "testing", "spec", "integration-test"])),
+    ("Refactoring",             ("refactor", ["refactor", "refactoring", "reorganize", "simplify", "cleanup", "clean"])),
+    ("CI & Build",              ("ci",       ["ci", "build", "workflow", "actions", "pipeline"])),
+    ("Other Changes",           ("other",    ["chore", "style", "revert", "misc"])),
 ])
 
 # Matches e.g. "feat(core)!: add x", "fix: y", "docs(readme): z"
@@ -184,7 +176,7 @@ def render_markdown(current_ref, prev_tag, repo, grouped, authors, stats, breaki
     lines.append("## What's Changed")
     lines.append("")
 
-    for section, icon, _types in SECTION_DEFINITIONS.values():
+    for section, (icon, _types) in SECTION_DEFINITIONS.items():
         entries = grouped.get(section, [])
         if not entries:
             continue
