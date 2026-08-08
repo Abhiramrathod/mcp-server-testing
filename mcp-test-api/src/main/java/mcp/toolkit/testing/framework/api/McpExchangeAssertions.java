@@ -3,6 +3,8 @@ package mcp.toolkit.testing.framework.api;
 import mcp.toolkit.testing.framework.api.model.McpExchangeSummary;
 import mcp.toolkit.testing.framework.client.rpc.RpcExchange;
 import mcp.toolkit.testing.framework.client.rpc.RpcExchangeTracker;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -212,6 +214,16 @@ public final class McpExchangeAssertions {
      */
     public void clear() {
         tracker.clear();
+    }
+
+    /**
+     * Exports all recorded exchanges as a JSON array, suitable for reporting or
+     * persisting test telemetry.
+     *
+     * @return a JSON array of exchange objects
+     */
+    public JsonNode export() {
+        return tracker.export(new ObjectMapper());
     }
 
     // ── Assertions ───────────────────────────────────────────────────────

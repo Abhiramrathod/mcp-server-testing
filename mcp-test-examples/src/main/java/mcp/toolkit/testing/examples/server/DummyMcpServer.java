@@ -24,6 +24,12 @@ public class DummyMcpServer {
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<String, OutputStream> sseClients = new ConcurrentHashMap<>();
 
+    /**
+     * Creates a server bound to the given port.
+     *
+     * @param port port to bind to; {@code 0} selects an ephemeral port
+     * @throws IOException if the server cannot bind to the port
+     */
     public DummyMcpServer(int port) throws IOException {
         server = HttpServer.create(new InetSocketAddress(port), 0);
         server.setExecutor(Executors.newFixedThreadPool(4));
@@ -32,11 +38,13 @@ public class DummyMcpServer {
         server.createContext("/message", this::handleMessage);
     }
 
+    /** Starts the server so it begins accepting connections. */
     public void start() {
         server.start();
         System.out.println("Dummy MCP Server started on port " + server.getAddress().getPort());
     }
 
+    /** Stops the server and releases its resources. */
     public void stop() {
         server.stop(0);
     }
@@ -295,6 +303,12 @@ public class DummyMcpServer {
         }
     }
 
+    /**
+     * Entry point; starts a dummy MCP server on port {@code 8080}.
+     *
+     * @param args command-line arguments (ignored)
+     * @throws IOException if the server cannot bind to port {@code 8080}
+     */
     public static void main(String[] args) throws IOException {
         DummyMcpServer server = new DummyMcpServer(8080);
         server.start();

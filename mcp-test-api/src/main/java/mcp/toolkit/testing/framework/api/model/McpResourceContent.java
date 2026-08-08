@@ -6,6 +6,10 @@ import java.util.List;
 
 /**
  * Content returned after reading an MCP resource.
+ *
+ * @param uri      URI of the resource that was read
+ * @param contents list of content items returned by the server
+ * @param raw      raw JSON result as returned by the server
  */
 public record McpResourceContent(String uri, List<ContentItem> contents, JsonNode raw) {
 
@@ -57,6 +61,11 @@ public record McpResourceContent(String uri, List<ContentItem> contents, JsonNod
 
     /**
      * A single content item within a resource read response.
+     *
+     * @param uri      URI of the resource the item belongs to
+     * @param mimeType MIME type of the item content, when known (may be {@code null})
+     * @param text     text content of the item
+     * @param raw      raw JSON item as returned by the server
      */
     public record ContentItem(String uri, String mimeType, String text, JsonNode raw) {}
 }

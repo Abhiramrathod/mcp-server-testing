@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.abhiramrathod</groupId>
+        <artifactId>mcpTesting</artifactId>
+        <version>1.0.38</version>
+    </parent>
+
+    <artifactId>mcp-test-junit</artifactId>
+    <name>MCP Test JUnit</name>
+    <description>JUnit 5 testkit: embedded MCP server extension and annotations for MCP server testing</description>
+
+    <properties>
+        <maven.deploy.skip>false</maven.deploy.skip>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.abhiramrathod</groupId>
+            <artifactId>mcp-test-api</artifactId>
+        </dependency>
+
+        <!-- JUnit 5 extension API (compile scope: the extension implements JUnit interfaces) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.0</version>
+        </dependency>
+
+        <!-- JUnit 5 engine for the module's own tests -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>net.nicoulaj.maven.plugins</groupId>
+                <artifactId>checksum-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
