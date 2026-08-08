@@ -1,5 +1,6 @@
 package mcp.toolkit.testing.framework.api;
 
+import mcp.toolkit.testing.framework.api.model.McpCompletion;
 import mcp.toolkit.testing.framework.api.model.McpPrompt;
 import mcp.toolkit.testing.framework.api.model.McpPromptResult;
 import mcp.toolkit.testing.framework.client.prompts.McpPromptDirectory;
@@ -24,18 +25,15 @@ public final class PromptsClient {
     }
 
     /**
-     * Returns all prompts registered on the server.
+     * Returns all prompts registered on the server, following pagination
+     * ({@code nextCursor}) transparently.
      *
      * @return list of prompt definitions
      */
     public List<McpPrompt> listPrompts() {
-        JsonNode result = promptDirectory.listPrompts();
-        JsonNode promptsArray = result.path("prompts");
         List<McpPrompt> prompts = new ArrayList<>();
-        if (promptsArray.isArray()) {
-            for (JsonNode node : promptsArray) {
-                prompts.add(toMcpPrompt(node));
-            }
+        for (JsonNode node : promptDirectory.allPrompts()) {
+            prompts.add(toMcpPrompt(node));
         }
         return List.copyOf(prompts);
     }
@@ -60,6 +58,34 @@ public final class PromptsClient {
     public McpPromptResult getPrompt(String name, Object args) {
         JsonNode raw = promptDirectory.getPrompt(name, args);
         return toMcpPromptResult(raw);
+    }
+
+    /**
+     * Requests completions for a prompt argument ({@code completion/complete}).
+     *
+     * @param promptName   the prompt name
+     * @param argumentName the argument name
+     * @param value        the partial value being completed
+     * @return typed completion result
+     */
+    public McpCompletion completePromptArgument(String promptName, String argumentName, String value) {
+        return completePromptArgument(promptName, argumentName, value, null);
+    }
+
+    /**
+     * Requests completions for a prompt argument ({@code completion/complete})
+     * with optional context arguments.
+     *
+     * @param promptName       the prompt name
+     * @param argumentName     the argument name
+     * @param value            the partial value being completed
+     * @param contextArguments values of other arguments used for context; may be {@code null}
+     * @return typed completion result
+     */
+    public McpCompletion completePromptArgument(String promptName, String argumentName, String value,
+                                                Object contextArguments) {
+        JsonNode raw = promptDirectory.completePromptArgument(promptName, argumentName, value, contextArguments);
+        return toMcpCompletion(raw);
     }
 
     private static McpPrompt toMcpPrompt(JsonNode node) {
@@ -103,5 +129,20 @@ public final class PromptsClient {
                 messages,
                 raw
         );
+    }
+
+    private static McpCompletion toMcpCompletion(JsonNode raw) {
+        JsonNode completion = raw.path("completion");
+        List<String> values = new ArrayList<>();
+        JsonNode valuesArray = completion.path("values");
+        if (valuesArray.isArray()) {
+            for (JsonNode value : valuesArray) {
+                values.add(value.asText());
+            }
+        }
+        Integer total = completion.path("total").isMissingNode() || completion.path("total").isNull()
+                ? null : completion.path("total").asInt();
+        boolean hasMore = completion.path("hasMore").asBoolean(false);
+        return new McpCompletion(List.copyOf(values), total, hasMore);
     }
 }

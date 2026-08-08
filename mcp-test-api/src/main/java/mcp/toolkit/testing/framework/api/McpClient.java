@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Public entry point for testing MCP servers.
@@ -114,6 +115,70 @@ public final class McpClient implements AutoCloseable {
     }
 
     /**
+     * Sends an MCP {@code ping} request, verifying that the server is reachable and
+     * the session is alive.
+     *
+     * <p>Triggers initialization if not already done.
+     */
+    public void ping() {
+        if (!delegate.isInitialized()) {
+            delegate.initialize();
+        }
+        delegate.ping();
+    }
+
+    /**
+     * Controls server log verbosity via {@code logging/setLevel}.
+     *
+     * <p>Levels follow RFC 5424 syslog severities. Triggers initialization if not already done.
+     *
+     * @param level level such as {@code "debug"}, {@code "info"} or {@code "warning"}
+     */
+    public void setLogLevel(String level) {
+        if (!delegate.isInitialized()) {
+            delegate.initialize();
+        }
+        delegate.setLogLevel(level);
+    }
+
+    /**
+     * Sends {@code notifications/cancelled} for a previously issued request
+     * (MCP cancellation support).
+     *
+     * @param requestId id of the request to cancel
+     * @param reason    optional reason; may be {@code null}
+     */
+    public void cancelRequest(long requestId, String reason) {
+        delegate.cancelRequest(requestId, reason);
+    }
+
+    /**
+     * Registers a listener for server-initiated JSON-RPC messages (requests and
+     * notifications), e.g. {@code roots/list}, {@code sampling/createMessage},
+     * {@code notifications/message} and {@code notifications/progress}.
+     *
+     * <p>Triggers initialization if not already done.
+     *
+     * @param listener consumer of server messages; may be {@code null} to clear
+     */
+    public void onServerMessage(Consumer<JsonNode> listener) {
+        if (!delegate.isInitialized()) {
+            delegate.initialize();
+        }
+        delegate.onServerMessage(listener);
+    }
+
+    /**
+     * Registers a callback invoked when an HTTP session is terminated by the server and a
+     * fresh {@code initialize} handshake is required.
+     *
+     * @param handler re-initialization handler; may be {@code null} to clear
+     */
+    public void setSessionExpiredHandler(Runnable handler) {
+        delegate.setSessionExpiredHandler(handler);
+    }
+
+    /**
      * Closes the connection and releases all resources.
      */
     @Override
@@ -211,6 +276,19 @@ public final class McpClient implements AutoCloseable {
         }
 
         /**
+         * Explicitly selects the SSE (Server-Sent Events) transport with the
+         * default endpoint path ({@code /sse}). This is the default transport,
+         * so this call is optional.
+         *
+         * @return this builder
+         */
+        public Builder sse() {
+            this.useStreamableHttp = false;
+            this.endpointPath = McpClientConfig.DEFAULT_SSE_PATH;
+            return this;
+        }
+
+        /**
          * Configures the client to use Streamable HTTP transport with the
          * default endpoint path ({@code /mcp}).
          *
@@ -264,7 +342,8 @@ public final class McpClient implements AutoCloseable {
          * @return ready-to-use MCP client
          */
         public McpClient build() {
-            McpTestClient delegate = new McpTestClient(serverUrl, endpointPath, useStreamableHttp);
+            McpTestClient delegate = new McpTestClient(serverUrl, endpointPath, useStreamableHttp,
+                    config.objectMapper(), config.protocolVersion(), config.timeout(), config.headers());
             McpClient client = new McpClient(delegate);
             if (initializeOnBuild) {
                 client.initialize();

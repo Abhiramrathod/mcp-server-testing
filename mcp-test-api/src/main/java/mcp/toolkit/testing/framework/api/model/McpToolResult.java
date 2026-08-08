@@ -6,6 +6,10 @@ import java.util.List;
 
 /**
  * Result returned after invoking an MCP tool.
+ *
+ * @param content list of content items returned by the tool
+ * @param isError whether the tool reported an error
+ * @param raw     raw JSON result as returned by the server
  */
 public record McpToolResult(List<ContentItem> content, boolean isError, JsonNode raw) {
 
@@ -69,6 +73,10 @@ public record McpToolResult(List<ContentItem> content, boolean isError, JsonNode
 
     /**
      * A single content item within a tool result.
+     *
+     * @param type type of the content item, e.g. {@code "text"}
+     * @param text text content of the item
+     * @param raw  raw JSON item as returned by the server
      */
     public record ContentItem(String type, String text, JsonNode raw) {}
 }

@@ -11,16 +11,21 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
- * {@link McpTransport} implementation using Server-Sent Events (SSE).
+ * {@link McpTransport} implementation using the legacy HTTP+SSE transport
+ * (protocol version 2024-11-05).
  */
 public class McpSseTransport implements McpTransport {
 
@@ -29,6 +34,7 @@ public class McpSseTransport implements McpTransport {
     private final String protocolVersion;
     private final Duration timeout;
     private final McpJsonCodec jsonCodec;
+    private final Map<String, String> headers;
 
     private final ConcurrentHashMap<Long, CompletableFuture<JsonNode>> pendingRequests = new ConcurrentHashMap<>();
     private final Object connectLock = new Object();
@@ -36,20 +42,50 @@ public class McpSseTransport implements McpTransport {
     private volatile URI messageEndpointUri;
     private volatile boolean connected;
     private volatile boolean closed;
+    private volatile Consumer<JsonNode> serverMessageListener;
 
     private HttpClient httpClient;
     private CompletableFuture<HttpResponse<Stream<String>>> sseConnectionFuture;
 
+    /**
+     * Creates an SSE transport with no extra HTTP headers.
+     *
+     * @param sseEndpointUri  URI of the {@code /sse} endpoint
+     * @param baseUri         base URI used to resolve the message endpoint
+     * @param protocolVersion MCP protocol version to advertise
+     * @param timeout         timeout for connection and RPC calls
+     * @param jsonCodec       codec used to parse JSON messages
+     */
     public McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
                            Duration timeout, McpJsonCodec jsonCodec) {
+        this(sseEndpointUri, baseUri, protocolVersion, timeout, jsonCodec, Collections.emptyMap());
+    }
+
+    /**
+     * Creates an SSE transport with custom HTTP headers.
+     *
+     * @param sseEndpointUri  URI of the {@code /sse} endpoint
+     * @param baseUri         base URI used to resolve the message endpoint
+     * @param protocolVersion MCP protocol version to advertise
+     * @param timeout         timeout for connection and RPC calls
+     * @param jsonCodec       codec used to parse JSON messages
+     * @param headers         extra HTTP headers sent on every request
+     */
+    public McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
+                           Duration timeout, McpJsonCodec jsonCodec, Map<String, String> headers) {
         this.sseEndpointUri = McpValidation.requireNonNull(sseEndpointUri, "sseEndpointUri");
         this.baseUri = McpValidation.requireNonNull(baseUri, "baseUri");
         this.messageEndpointUri = this.baseUri.resolve(McpTestClientConstants.Endpoints.MESSAGE);
         this.protocolVersion = McpValidation.requireNonNull(protocolVersion, "protocolVersion");
         this.timeout = timeout == null ? McpTestClientConstants.Defaults.TIMEOUT : timeout;
         this.jsonCodec = McpValidation.requireNonNull(jsonCodec, "jsonCodec");
+        this.headers = headers == null ? Collections.emptyMap() : Map.copyOf(headers);
     }
 
+    /**
+     * Opens the SSE stream and waits for the server's {@code endpoint} event
+     * before marking the transport connected.
+     */
     @Override
     public void connect() {
         if (connected) return;
@@ -58,8 +94,11 @@ public class McpSseTransport implements McpTransport {
             if (closed) throw new IllegalStateException("McpSseTransport is closed");
 
             httpClient = HttpClient.newBuilder().connectTimeout(timeout).build();
-            HttpRequest sseRequest = HttpRequest.newBuilder()
-                    .uri(sseEndpointUri).header("Accept", "text/event-stream").GET().build();
+            HttpRequest.Builder sseBuilder = HttpRequest.newBuilder()
+                    .uri(sseEndpointUri)
+                    .header(McpTestClientConstants.Headers.ACCEPT, McpTestClientConstants.Headers.CONTENT_TYPE_SSE);
+            applyHeaders(sseBuilder);
+            HttpRequest sseRequest = sseBuilder.GET().build();
 
             CountDownLatch connectLatch = new CountDownLatch(1);
             final Exception[] connectError = {null};
@@ -96,6 +135,7 @@ public class McpSseTransport implements McpTransport {
         }
     }
 
+    /** POSTs the request and waits for the SSE response matched by {@code requestId}. */
     @Override
     public JsonNode sendRequest(String payload, long requestId) {
         requireConnected();
@@ -117,14 +157,27 @@ public class McpSseTransport implements McpTransport {
         }
     }
 
+    /** POSTs the notification without waiting for a response. */
     @Override
     public void sendNotification(String payload) {
         requireConnected();
         postMessage(payload);
     }
 
+    /** Stores the listener invoked for server-initiated SSE messages. */
+    @Override
+    public void setServerMessageListener(Consumer<JsonNode> listener) {
+        this.serverMessageListener = listener;
+    }
+
+    /**
+     * Returns whether the transport is connected and not closed.
+     *
+     * @return {@code true} if connected
+     */
     public boolean isConnected() { return connected && !closed; }
 
+    /** Closes the SSE stream and fails all pending requests. */
     @Override
     public void close() {
         if (closed) return;
@@ -135,14 +188,15 @@ public class McpSseTransport implements McpTransport {
     }
 
     private void postMessage(String payload) {
-        HttpRequest postRequest = HttpRequest.newBuilder()
+        HttpRequest.Builder postBuilder = HttpRequest.newBuilder()
                 .uri(messageEndpointUri)
-                .header("Content-Type", "application/json")
-                .header("Accept", "text/event-stream")
+                .header(McpTestClientConstants.Headers.CONTENT_TYPE, McpTestClientConstants.Headers.CONTENT_TYPE_JSON)
+                .header(McpTestClientConstants.Headers.ACCEPT, McpTestClientConstants.Headers.CONTENT_TYPE_SSE)
                 .header(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION, protocolVersion)
                 .POST(HttpRequest.BodyPublishers.ofString(payload))
-                .timeout(timeout)
-                .build();
+                .timeout(timeout);
+        applyHeaders(postBuilder);
+        HttpRequest postRequest = postBuilder.build();
         try {
             HttpResponse<String> response = httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 400) {
@@ -158,22 +212,10 @@ public class McpSseTransport implements McpTransport {
     }
 
     private void processSseStream(Stream<String> lines) {
-        final String[] currentEvent = {null};
-        final StringBuilder currentData = new StringBuilder();
         try {
-            lines.takeWhile(line -> !closed).forEach(line -> {
-                if (line.startsWith("event:")) {
-                    currentEvent[0] = line.substring(6).trim();
-                } else if (line.startsWith("data:")) {
-                    if (currentData.length() > 0) currentData.append('\n');
-                    currentData.append(line.substring(5).trim());
-                } else if (line.isBlank() && currentEvent[0] != null) {
-                    handleEvent(currentEvent[0], currentData.toString());
-                    currentEvent[0] = null;
-                    currentData.setLength(0);
-                }
-            });
+            SseEventDecoder.decode(lines, this::handleEvent);
         } catch (Exception ignored) {
+            // stream failures are handled below
         } finally {
             if (!closed) {
                 connected = false;
@@ -185,24 +227,53 @@ public class McpSseTransport implements McpTransport {
     private void handleEvent(String eventType, String data) {
         if (data == null || data.isBlank()) return;
         switch (eventType) {
-            case McpTestClientConstants.SseEvents.ENDPOINT -> messageEndpointUri = baseUri.resolve(data);
-            case McpTestClientConstants.SseEvents.MESSAGE -> {
-                JsonNode response = jsonCodec.parseJson(data);
-                if (response != null && response.has("id")) {
-                    long id = response.get("id").asLong(-1);
-                    if (id >= 0) {
-                        CompletableFuture<JsonNode> future = pendingRequests.remove(id);
-                        if (future != null) future.complete(response);
-                    }
+            case McpTestClientConstants.SseEvents.ENDPOINT ->
+                    messageEndpointUri = baseUri.resolve(data.trim());
+            case McpTestClientConstants.SseEvents.MESSAGE -> dispatchMessage(jsonCodec.parseJsonOrThrow(data));
+            default -> {
+                // non-standard event type with JSON payload; forward as a server message
+                JsonNode parsed = jsonCodec.parseJson(data);
+                if (parsed != null) {
+                    dispatchToListener(parsed);
                 }
             }
-            default -> {}
+        }
+    }
+
+    private void dispatchMessage(JsonNode message) {
+        if (message == null) return;
+        if (message.has("id")) {
+            long id = message.get("id").asLong(-1);
+            if (id >= 0) {
+                CompletableFuture<JsonNode> future = pendingRequests.remove(id);
+                if (future != null) {
+                    future.complete(message);
+                    return;
+                }
+            }
+            // a server-initiated request with an unknown id
+            dispatchToListener(message);
+            return;
+        }
+        dispatchToListener(message);
+    }
+
+    private void dispatchToListener(JsonNode message) {
+        Consumer<JsonNode> listener = serverMessageListener;
+        if (listener != null) {
+            listener.accept(message);
         }
     }
 
     private void failAllPending(Exception cause) {
         pendingRequests.forEach((id, future) -> future.completeExceptionally(cause));
         pendingRequests.clear();
+    }
+
+    private void applyHeaders(HttpRequest.Builder builder) {
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            builder.header(entry.getKey(), entry.getValue());
+        }
     }
 
     private void requireConnected() {

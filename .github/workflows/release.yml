@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn -B package -DskipTests
+
+      - name: Generate detailed release notes
+        id: release_notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: python .github/scripts/generate_release_notes.py
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            mcp-test-interfaces/target/mcp-test-interfaces-*.jar
+            mcp-test-core/target/mcp-test-core-*.jar
+            mcp-test-transport/target/mcp-test-transport-*.jar
+            mcp-test-client/target/mcp-test-client-*.jar
+            mcp-test-api/target/mcp-test-api-*.jar
+            mcp-test-junit/target/mcp-test-junit-*.jar

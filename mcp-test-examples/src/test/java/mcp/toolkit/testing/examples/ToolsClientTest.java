@@ -3,8 +3,10 @@ package mcp.toolkit.testing.examples;
 import mcp.toolkit.testing.framework.api.McpClient;
 import mcp.toolkit.testing.framework.api.model.McpTool;
 import mcp.toolkit.testing.framework.api.model.McpToolResult;
-import mcp.toolkit.testing.examples.server.DummyMcpServer;
-import org.junit.jupiter.api.*;
+import mcp.toolkit.testing.junit.annotation.McpServerTest;
+import mcp.toolkit.testing.junit.server.McpTestServer;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
@@ -12,71 +14,54 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Example tests demonstrating tool discovery and invocation.
+ * Example tests demonstrating tool discovery and invocation using the embedded
+ * {@code @McpServerTest} testkit.
  */
+@McpServerTest
 class ToolsClientTest {
 
-    private static DummyMcpServer server;
-    private static McpClient client;
-
     @BeforeAll
-    static void startServer() throws Exception {
-        server = new DummyMcpServer(8081);
-        server.start();
-        Thread.sleep(500);
-        
-        client = McpClient.connectTo("http://localhost:8081")
-                .initializeOnBuild()
-                .build();
-    }
-
-    @AfterAll
-    static void stopServer() {
-        if (client != null) {
-            client.close();
-        }
-        if (server != null) {
-            server.stop();
-        }
+    static void configure(McpTestServer server) {
+        ExampleServerFixtures.configure(server);
     }
 
     @Test
-    void testListTools() {
+    void testListTools(McpClient client) {
         List<McpTool> tools = client.tools().listTools();
-        
+
         assertNotNull(tools);
         assertEquals(2, tools.size());
-        
-        McpTool calculator = tools.get(0);
+
+        McpTool calculator = findTool(tools, "calculator");
         assertEquals("calculator", calculator.name());
         assertEquals("Performs basic arithmetic operations", calculator.description());
-        
-        McpTool greet = tools.get(1);
+
+        McpTool greet = findTool(tools, "greet");
         assertEquals("greet", greet.name());
         assertEquals("Generates a greeting message", greet.description());
     }
 
     @Test
-    void testCallCalculatorAdd() {
+    void testCallCalculatorAdd(McpClient client) {
         McpToolResult result = client.tools()
                 .callTool("calculator", Map.of("operation", "add", "a", 5, "b", 3))
                 .assertSuccess();
-        
+
         assertFalse(result.isError());
         assertEquals("8.0", result.firstText());
     }
 
     @Test
-    void testCallCalculatorMultiply() {
+    void testCallCalculatorMultiply(McpClient client) {
         McpToolResult result = client.tools()
                 .callTool("calculator", Map.of("operation", "multiply", "a", 4, "b", 7))
                 .assertSuccess();
-        
+
         assertEquals("28.0", result.firstText());
     }
 
     @Test
-    void testCallGreetTool() {
+    void testCallGreetTool(McpClient client) {
         client.tools()
                 .callTool("greet", Map.of("name", "Alice"))
                 .assertSuccess()
@@ -84,21 +69,28 @@ class ToolsClientTest {
     }
 
     @Test
-    void testCallGreetDefault() {
+    void testCallGreetDefault(McpClient client) {
         McpToolResult result = client.tools()
                 .callTool("greet", Map.of())
                 .assertSuccess();
-        
+
         assertEquals("Hello, World!", result.firstText());
     }
 
     @Test
-    void testToolInputSchema() {
+    void testToolInputSchema(McpClient client) {
         List<McpTool> tools = client.tools().listTools();
-        McpTool calculator = tools.get(0);
-        
+        McpTool calculator = findTool(tools, "calculator");
+
         assertNotNull(calculator.inputSchema());
         assertEquals("object", calculator.inputSchema().path("type").asText());
         assertTrue(calculator.inputSchema().has("properties"));
+    }
+
+    private static McpTool findTool(List<McpTool> tools, String name) {
+        return tools.stream()
+                .filter(t -> t.name().equals(name))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Tool not found: " + name));
     }
 }

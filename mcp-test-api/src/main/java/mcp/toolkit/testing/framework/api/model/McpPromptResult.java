@@ -6,6 +6,10 @@ import java.util.List;
 
 /**
  * The rendered result of retrieving an MCP prompt by name.
+ *
+ * @param description optional description of the prompt result
+ * @param messages    list of messages in the rendered prompt
+ * @param raw         raw JSON result as returned by the server
  */
 public record McpPromptResult(String description, List<PromptMessage> messages, JsonNode raw) {
 
@@ -56,6 +60,10 @@ public record McpPromptResult(String description, List<PromptMessage> messages, 
 
     /**
      * A single message within a prompt result.
+     *
+     * @param role  role of the message, e.g. {@code "user"} or {@code "assistant"}
+     * @param text  text content of the message
+     * @param raw   raw JSON message as returned by the server
      */
     public record PromptMessage(String role, String text, JsonNode raw) {}
 }
