@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Check, Copy, ArrowLeft } from 'lucide-react'
-import { useMavenVersion } from '../hooks/useMavenVersion'
+import { useLatestVersion } from '../hooks/useLatestVersion'
 import { useTheme } from '../hooks/useTheme'
 import Logo from '../components/Logo'
 
@@ -284,7 +284,7 @@ function PageNavbar() {
 
 export default function UnitTesting() {
   const [active, setActive] = useState(0)
-  const version = useMavenVersion()
+  const version = useLatestVersion()
   const t = tabs[active]
 
   return (
@@ -348,7 +348,7 @@ export default function UnitTesting() {
                 ))}
               </div>
 
-              <div key={active} className="fade-in fade-in-1">
+              <div key={active}>
                 <p className="text-xs font-bold font-mono mb-1" style={{ color: 'var(--accent)' }}>{t.label}</p>
                 <p className="text-xs mb-3" style={{ color: 'var(--text-dim2)' }}>{t.desc}</p>
 
