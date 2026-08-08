@@ -181,3 +181,166 @@ pre {
   border: 1px solid var(--border) !important;
   border-radius: 3px !important;
 }
+
+/* ── Flow Diagram ─────────────────────────────────────────────────────────── */
+.flow-node {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid;
+  min-width: 80px;
+  text-align: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.node-pulse {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: glowPulse 1.5s ease-in-out infinite;
+}
+
+.flow-arrow-line {
+  height: 1.5px;
+  width: 100%;
+  animation: flowSlide 1.4s ease-in-out infinite;
+}
+
+.flow-arrow-head {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+
+.sse-persistent-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 3px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.sse-stream-line {
+  height: 2px;
+  width: 40px;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, #a78bfa, #60a5fa, #a78bfa);
+  background-size: 200% 100%;
+  animation: streamFlow 2s linear infinite;
+  border-radius: 1px;
+}
+
+.flow-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px 8px;
+  border-radius: 3px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.lifecycle-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+  animation: glowPulse 0.8s ease-in-out infinite;
+}
+
+/* ── HLD Architecture Diagram ─────────────────────────────────────────────── */
+.hld-diagram {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 560px) {
+  .hld-diagram {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hld-layers {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hld-flow-line {
+  position: absolute;
+  left: 7px;
+  top: 12px;
+  bottom: 12px;
+  width: 1px;
+  background: linear-gradient(180deg, #5fffa720, #60a5fa20, #a78bfa20, #fbbf2420, #34d39920);
+  z-index: 0;
+}
+
+.hld-layer {
+  position: relative;
+  z-index: 1;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid;
+  cursor: default;
+  animation: fadeSlideIn 0.5s ease-out both;
+}
+
+.hld-layer-side {
+  margin-left: 20px;
+}
+
+.hld-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: box-shadow 0.25s ease;
+}
+
+.hld-connector {
+  position: absolute;
+  left: 7px;
+  bottom: -7px;
+  width: 1px;
+  height: 7px;
+  border-left: 1px dashed;
+  z-index: 2;
+}
+
+.hld-detail {
+  position: sticky;
+  top: 80px;
+}
+
+.hld-detail-inner {
+  padding: 10px;
+  border-radius: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  min-height: 80px;
+}
+
+/* ── Keyframes ────────────────────────────────────────────────────────────── */
+@keyframes flowSlide {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+@keyframes streamFlow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}

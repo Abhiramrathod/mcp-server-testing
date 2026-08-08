@@ -1,47 +1,171 @@
+import { useState } from 'react'
 import Reveal from './Reveal'
 
+const accent = 'var(--accent)'
+const dim = 'var(--text-dim)'
+const dim2 = 'var(--text-dim2)'
+const border = 'var(--border)'
+
 const layers = [
-  { label: 'PUBLIC', name: 'mcp-test-api', color: '#5fffa7', desc: 'Public API — fluent builders, domain models, assertions.' },
-  { label: 'JUNIT5', name: 'mcp-test-junit', color: '#f87171', desc: '@McpServerTest annotation, McpTestServer (embedded), McpResponses helpers.' },
-  { label: 'INTERNAL', name: 'mcp-test-client', color: '#60a5fa', desc: 'RPC orchestration, initialization, exchange tracking.' },
-  { label: 'TRANSPORT', name: 'mcp-test-transport', color: '#a78bfa', desc: 'SSE + Streamable HTTP via McpTransport SPI.' },
-  { label: 'CORE', name: 'mcp-test-interfaces / core', color: '#fbbf24', desc: 'SPI contract, JSON codec, constants, validation.' },
+  {
+    id: 'user',
+    label: 'Your Test Code',
+    sublabel: 'JUnit 5 / TestNG',
+    color: '#5fffa7',
+    tag: 'USER',
+    desc: 'Write tests using the fluent McpClient API. Import only mcp-test-api.',
+  },
+  {
+    id: 'api',
+    label: 'mcp-test-api',
+    sublabel: 'Public API Layer',
+    color: '#5fffa7',
+    tag: 'PUBLIC',
+    desc: 'McpClient · ToolsClient · ResourcesClient · PromptsClient · McpExchangeAssertions · Domain models',
+  },
+  {
+    id: 'junit',
+    label: 'mcp-test-junit',
+    sublabel: 'JUnit 5 Extension',
+    color: '#f87171',
+    tag: 'OPTIONAL',
+    desc: '@McpServerTest · McpServerExtension · McpTestServer (embedded) · McpResponses helpers',
+  },
+  {
+    id: 'client',
+    label: 'mcp-test-client',
+    sublabel: 'RPC Orchestration',
+    color: '#60a5fa',
+    tag: 'INTERNAL',
+    desc: 'McpTestClient · McpRpcClient · RpcExchangeTracker · McpInitializationGuard · Directory impls',
+  },
+  {
+    id: 'transport',
+    label: 'mcp-test-transport',
+    sublabel: 'Transport Layer',
+    color: '#a78bfa',
+    tag: 'INTERNAL',
+    desc: 'McpSseTransport · McpStreamableHttpTransport · SseEventDecoder · McpTransport SPI',
+  },
+  {
+    id: 'foundation',
+    label: 'mcp-test-interfaces + mcp-test-core',
+    sublabel: 'Foundation',
+    color: '#fbbf24',
+    tag: 'SPI / CORE',
+    desc: 'McpTransport interface · McpJsonCodec · McpValidation · Constants · McpSessionExpiredException',
+  },
+  {
+    id: 'server',
+    label: 'MCP Server',
+    sublabel: 'Your Application Under Test',
+    color: '#34d399',
+    tag: 'EXTERNAL',
+    desc: 'Any MCP-compliant server. Supports SSE (2024-11-05) and Streamable HTTP (2025-03-26) protocols.',
+  },
 ]
 
 export default function Architecture() {
+  const [hovered, setHovered] = useState<string | null>(null)
+
   return (
     <section id="architecture" className="py-8 section-content">
       <Reveal>
         <div className="output-block">
-          <p className="text-xs mb-3" style={{ color: 'var(--text-dim)' }}>
+          <p className="text-xs mb-3" style={{ color: dim }}>
             <span className="cmd">#</span> architecture
           </p>
-          <p className="text-xs mb-3" style={{ color: 'var(--text-dim2)' }}>$ tree --deps --charset=ascii</p>
+          <p className="text-xs mb-5" style={{ color: dim2 }}>$ hld — high-level design · hover a layer for details</p>
 
-          <div className="font-mono">
-            <p className="text-xs" style={{ color: 'var(--accent)' }}>.</p>
-            {layers.map((l, i) => (
-              <div key={l.name} className={`fade-in fade-in-${Math.min(i + 1, 6)} ml-4 py-1`}>
-                <div className="flex items-start gap-2">
-                  <span className="text-xs shrink-0" style={{ color: 'var(--text-dim)' }}>
-                    {i < layers.length - 1 ? '├──' : '└──'}
-                  </span>
-                  <div className="min-w-0">
+          <div className="hld-diagram">
+            {/* Left: stacked layer boxes */}
+            <div className="hld-layers">
+              {layers.map((l, i) => {
+                const isActive = hovered === l.id
+                const isJunit = l.id === 'junit'
+                return (
+                  <div key={l.id}
+                    className={`hld-layer${isJunit ? ' hld-layer-side' : ''}`}
+                    style={{
+                      borderColor: isActive ? l.color : `${l.color}30`,
+                      background: isActive ? `${l.color}10` : `${l.color}05`,
+                      transform: isActive ? 'translateX(4px)' : 'none',
+                      transition: 'all 0.25s ease',
+                      animationDelay: `${i * 80}ms`,
+                    }}
+                    onMouseEnter={() => setHovered(l.id)}
+                    onMouseLeave={() => setHovered(null)}
+                  >
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium" style={{ color: 'var(--accent)' }}>{l.name}</span>
-                      <span className="tag" style={{ background: `${l.color}15`, color: l.color, border: `1px solid ${l.color}20` }}>
-                        {l.label}
-                      </span>
+                      {/* animated dot */}
+                      <div className="hld-dot" style={{ background: l.color, boxShadow: isActive ? `0 0 8px ${l.color}` : 'none' }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span style={{ color: l.color, fontWeight: 600, fontSize: '11px' }}>{l.label}</span>
+                          <span className="tag" style={{ background: `${l.color}15`, color: l.color, border: `1px solid ${l.color}20` }}>
+                            {l.tag}
+                          </span>
+                        </div>
+                        <p style={{ color: dim2, fontSize: '9px', marginTop: '1px' }}>{l.sublabel}</p>
+                      </div>
                     </div>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{l.desc}</p>
+
+                    {/* connector arrow between layers (not after last) */}
+                    {i < layers.length - 1 && !isJunit && l.id !== 'api' && (
+                      <div className="hld-connector" style={{ borderColor: `${l.color}20` }} />
+                    )}
                   </div>
-                </div>
+                )
+              })}
+
+              {/* vertical flow line */}
+              <div className="hld-flow-line" />
+            </div>
+
+            {/* Right: detail panel */}
+            <div className="hld-detail">
+              <div className="hld-detail-inner" style={{
+                opacity: hovered ? 1 : 0,
+                transform: hovered ? 'translateY(0)' : 'translateY(6px)',
+                transition: 'all 0.25s ease',
+              }}>
+                {hovered && (() => {
+                  const l = layers.find(x => x.id === hovered)!
+                  return (
+                    <>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: l.color, flexShrink: 0 }} />
+                        <span style={{ color: l.color, fontWeight: 600, fontSize: '11px' }}>{l.label}</span>
+                      </div>
+                      <p style={{ color: dim, fontSize: '10px', lineHeight: 1.7 }}>{l.desc}</p>
+                    </>
+                  )
+                })()}
+                {!hovered && (
+                  <p style={{ color: dim2, fontSize: '10px' }}>← hover a layer</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Transport protocol badges */}
+          <div className="flex flex-wrap gap-2 mt-5 pt-4" style={{ borderTop: `1px solid ${border}` }}>
+            {[
+              { label: 'SSE Transport', sub: 'protocol: 2024-11-05', color: '#a78bfa' },
+              { label: 'Streamable HTTP', sub: 'protocol: 2025-03-26', color: '#60a5fa' },
+              { label: 'Custom Transport', sub: 'implement McpTransport SPI', color: '#fbbf24' },
+            ].map(b => (
+              <div key={b.label} className="flex items-center gap-1.5 px-2 py-1 rounded"
+                style={{ background: `${b.color}08`, border: `1px solid ${b.color}25` }}>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: b.color }} />
+                <span style={{ color: b.color, fontSize: '10px', fontWeight: 600 }}>{b.label}</span>
+                <span style={{ color: dim2, fontSize: '9px' }}>{b.sub}</span>
               </div>
             ))}
           </div>
 
-          <p className="text-xs mt-4 fade-in fade-in-5" style={{ color: 'var(--text-dim)' }}>
-            <span style={{ color: 'var(--text-dim)' }}>└──</span> Import only <span style={{ color: 'var(--accent)' }}>mcp-test-api</span> — all others are transitive.
+          <p className="text-xs mt-3 fade-in fade-in-5" style={{ color: dim2 }}>
+            └── import only <span style={{ color: accent }}>mcp-test-api</span> — all others are transitive · optionally add <span style={{ color: '#f87171' }}>mcp-test-junit</span>
           </p>
         </div>
       </Reveal>
