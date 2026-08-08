@@ -12,6 +12,7 @@ const links = [
   { label: 'api-ref', href: '#api-ref' },
   { label: 'junit5', href: '#junit' },
   { label: 'examples', href: '#examples' },
+  { label: 'releases', href: '#releases' },
 ]
 
 export default function Navbar() {

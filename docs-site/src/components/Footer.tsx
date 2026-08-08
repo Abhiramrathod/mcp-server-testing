@@ -1,7 +1,9 @@
 import { Github } from 'lucide-react'
 import Logo from './Logo'
+import { useMavenVersion } from '../hooks/useMavenVersion'
 
 export default function Footer() {
+  const version = useMavenVersion()
   return (
     <>
       <div className="status-bar">
@@ -9,7 +11,7 @@ export default function Footer() {
           <span className="glow-dot" />
           <Logo size={12} />
         </span>
-        <span style={{ color: 'var(--text-dim)' }}>v1.0.15</span>
+        <span style={{ color: 'var(--text-dim)' }}>v{version}</span>
         <span style={{ color: 'var(--border-light)' }}>|</span>
         <span className="hidden sm:inline" style={{ color: 'var(--text-dim2)' }}>Java 17+</span>
         <span style={{ color: 'var(--border-light)' }}>|</span>

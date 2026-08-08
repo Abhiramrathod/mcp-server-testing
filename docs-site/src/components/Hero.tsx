@@ -1,4 +1,5 @@
 import { useTypewriter } from '../hooks/useTypewriter'
+import { useMavenVersion } from '../hooks/useMavenVersion'
 import Logo from './Logo'
 
 function TypeLine({ text, speed = 25, delay = 0 }: { text: string; speed?: number; delay?: number }) {
@@ -12,6 +13,7 @@ function TypeLine({ text, speed = 25, delay = 0 }: { text: string; speed?: numbe
 }
 
 export default function Hero() {
+  const version = useMavenVersion()
   return (
     <section className="pt-16 pb-8 section-content">
       <div className="flex items-center gap-3 mb-6 fade-in fade-in-1">
@@ -29,7 +31,7 @@ export default function Hero() {
       <div className="output-block">
         <p className="text-xs mb-4" style={{ color: 'var(--text-dim)' }}>
           <span className="cmd">#</span>{' '}
-          <TypeLine text="mcp-test — MCP Testing Framework v1.0.38" speed={20} delay={100} />
+          <TypeLine text={`mcp-test — MCP Testing Framework v${version}`} speed={20} delay={100} />
         </p>
 
         <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>

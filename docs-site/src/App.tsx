@@ -9,6 +9,7 @@ import FlowDiagram from './components/FlowDiagram'
 import ApiRef from './components/ApiRef'
 import JUnitTestkit from './components/JUnitTestkit'
 import Examples from './components/Examples'
+import ReleaseNotes from './components/ReleaseNotes'
 import Footer from './components/Footer'
 
 export default function App() {
@@ -35,6 +36,8 @@ export default function App() {
         <JUnitTestkit />
         <div className="divider" />
         <Examples />
+        <div className="divider" />
+        <ReleaseNotes />
       </main>
       <Footer />
     </>

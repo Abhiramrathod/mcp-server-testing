@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Check, Copy } from 'lucide-react'
+import { useMavenVersion } from '../hooks/useMavenVersion'
 import Reveal from './Reveal'
 
 function Code({ code }: { code: string }) {
@@ -191,6 +192,7 @@ McpTestServer.builder()
 
 export default function JUnitTestkit() {
   const [active, setActive] = useState(0)
+  const version = useMavenVersion()
   const t = tabs[active]
 
   return (
@@ -200,12 +202,24 @@ export default function JUnitTestkit() {
           <p className="text-xs mb-3" style={{ color: 'var(--text-dim)' }}>
             <span className="cmd">#</span> junit5-testkit
           </p>
-          <p className="text-xs mb-4" style={{ color: 'var(--text-dim2)' }}>$ man mcp-test-junit — embedded server + annotations</p>
+          <p className="text-xs mb-4" style={{ color: 'var(--text-dim2)' }}>$ man mcp-test-junit — unit testing with an embedded mock server</p>
+
+          {/* Unit vs Integration callout */}
+          <div className="mb-4 grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="px-3 py-2 rounded" style={{ background: '#f8717108', border: '1px solid #f8717130' }}>
+              <p style={{ color: '#f87171', fontWeight: 600, marginBottom: '3px' }}>mcp-test-junit — Unit Testing</p>
+              <p style={{ color: 'var(--text-dim2)', lineHeight: 1.6 }}>Embedded in-process mock server. Register fake handlers, test client logic in isolation. No real server, no network. Fast and deterministic.</p>
+            </div>
+            <div className="px-3 py-2 rounded" style={{ background: '#5fffa708', border: '1px solid #5fffa720' }}>
+              <p style={{ color: '#5fffa7', fontWeight: 600, marginBottom: '3px' }}>mcp-test-api — Integration Testing</p>
+              <p style={{ color: 'var(--text-dim2)', lineHeight: 1.6 }}>Real MCP server running externally. McpClient connects over the network and tests actual end-to-end behaviour of your server.</p>
+            </div>
+          </div>
 
           {/* Dependency note */}
           <div className="mb-4 px-3 py-2 rounded text-xs" style={{ background: 'var(--accent-dim)', border: '1px solid var(--accent-glow)', color: 'var(--text-dim)' }}>
             <span style={{ color: 'var(--accent)' }}>import</span>
-            {' '}io.github.abhiramrathod:<span style={{ color: 'var(--accent)' }}>mcp-test-junit</span>:1.0.38
+            {' '}io.github.abhiramrathod:<span style={{ color: 'var(--accent)' }}>mcp-test-junit</span>:{version}
             <span style={{ color: 'var(--text-dim2)' }}> — separate artifact, not transitive from mcp-test-api</span>
           </div>
 

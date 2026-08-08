@@ -3,13 +3,14 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Check, Copy } from 'lucide-react'
 import { useTypewriter } from '../hooks/useTypewriter'
+import { useMavenVersion } from '../hooks/useMavenVersion'
 import Reveal from './Reveal'
 
-const deps = {
+const deps = (version: string) => ({
   maven: `<dependency>
   <groupId>io.github.abhiramrathod</groupId>
   <artifactId>mcp-test-api</artifactId>
-  <version>1.0.38</version>
+  <version>${version}</version>
   <scope>test</scope>
 </dependency>
 
@@ -17,14 +18,14 @@ const deps = {
 <dependency>
   <groupId>io.github.abhiramrathod</groupId>
   <artifactId>mcp-test-junit</artifactId>
-  <version>1.0.38</version>
+  <version>${version}</version>
   <scope>test</scope>
 </dependency>`,
-  gradle: `testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.38'
+  gradle: `testImplementation 'io.github.abhiramrathod:mcp-test-api:${version}'
 
 // Optional: JUnit 5 testkit (embedded server + @McpServerTest)
-testImplementation 'io.github.abhiramrathod:mcp-test-junit:1.0.38'`,
-}
+testImplementation 'io.github.abhiramrathod:mcp-test-junit:${version}'`,
+})
 
 const firstTest = `import mcp.toolkit.testing.framework.api.*;
 
@@ -104,6 +105,7 @@ function TypeLine({ text, speed = 20, delay = 0 }: { text: string; speed?: numbe
 export default function Installation() {
   const [tab, setTab] = useState<'maven' | 'gradle'>('maven')
   const [mode, setMode] = useState<'client' | 'junit5'>('client')
+  const version = useMavenVersion()
 
   return (
     <section id="installation" className="py-8 section-content">
@@ -129,13 +131,25 @@ export default function Installation() {
           </div>
 
           <div className="fade-in fade-in-2 mb-4">
-            <Code code={deps[tab]} lang={tab === 'maven' ? 'xml' : 'gradle'} />
+            <Code code={deps(version)[tab]} lang={tab === 'maven' ? 'xml' : 'gradle'} />
           </div>
 
           <p className="text-xs mb-2 mt-5 fade-in fade-in-3" style={{ color: 'var(--text-dim)' }}>
             <span className="cmd">#</span>{' '}
             <TypeLine text="your first test" speed={15} delay={200} />
           </p>
+
+          {/* when to use callout */}
+          <div className="fade-in fade-in-3 mb-3 grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="px-3 py-2 rounded" style={{ background: '#5fffa708', border: '1px solid #5fffa720' }}>
+              <p style={{ color: '#5fffa7', fontWeight: 600, marginBottom: '2px' }}>Integration Test</p>
+              <p style={{ color: 'var(--text-dim2)' }}>Real MCP server running. Test actual end-to-end behaviour over the network.</p>
+            </div>
+            <div className="px-3 py-2 rounded" style={{ background: '#f8717108', border: '1px solid #f8717120' }}>
+              <p style={{ color: '#f87171', fontWeight: 600, marginBottom: '2px' }}>Unit Test</p>
+              <p style={{ color: 'var(--text-dim2)' }}>Embedded mock server. Test client logic in isolation — no real server needed.</p>
+            </div>
+          </div>
 
           {/* quickstart mode tabs */}
           <div className="fade-in fade-in-3 flex gap-2 mb-3">
@@ -144,36 +158,49 @@ export default function Installation() {
                 className="px-2.5 py-1 rounded text-xs transition-all"
                 style={{ background: mode === m ? 'var(--accent-dim)' : 'transparent', color: mode === m ? 'var(--accent)' : 'var(--text-dim)', border: mode === m ? '1px solid var(--accent-glow)' : '1px solid transparent' }}
               >
-                {m === 'client' ? 'McpClient (external server)' : '@McpServerTest (embedded)'}
+                {m === 'client' ? 'Integration Test — McpClient' : 'Unit Test — @McpServerTest'}
               </button>
             ))}
           </div>
 
           {mode === 'client' && (
             <div className="fade-in fade-in-1">
-              <p className="text-xs mb-2" style={{ color: 'var(--text-dim2)' }}>
-                <span style={{ color: 'var(--text-dim)' }}>$</span> cat MyFirstTest.java — connect to a running MCP server
+              <p className="text-xs mb-1" style={{ color: 'var(--text-dim2)' }}>
+                <span style={{ color: 'var(--text-dim)' }}>$</span> cat MyFirstIntegrationTest.java
               </p>
+              <p className="text-xs mb-2" style={{ color: 'var(--text-dim2)' }}>// Use when you have a real MCP server running and want to test its actual behaviour.</p>
               <Code code={firstTest} lang="java" />
-              <p className="text-xs mt-2" style={{ color: 'var(--text-dim2)' }}>└── manage the client lifecycle yourself — call <span style={{ color: 'var(--accent)' }}>client.close()</span> when done.</p>
+              <div className="mt-3 space-y-1">
+                {[
+                  { k: 'Requires a live server', v: 'point McpClient.connectTo() at your running MCP server URL' },
+                  { k: 'Tests real behaviour', v: 'exercises actual tool/resource/prompt handlers end-to-end' },
+                  { k: 'Manage lifecycle', v: 'call client.close() when done, or use try-with-resources' },
+                  { k: 'Dependency', v: 'mcp-test-api only' },
+                ].map(({ k, v }) => (
+                  <p key={k} className="text-xs" style={{ color: 'var(--text-dim2)' }}>
+                    <span style={{ color: '#5fffa7' }}>✦ {k}</span> — {v}
+                  </p>
+                ))}
+              </div>
             </div>
           )}
 
           {mode === 'junit5' && (
             <div className="fade-in fade-in-1">
-              <p className="text-xs mb-2" style={{ color: 'var(--text-dim2)' }}>
-                <span style={{ color: 'var(--text-dim)' }}>$</span> cat MyFirstJUnitTest.java — embedded server, zero boilerplate
+              <p className="text-xs mb-1" style={{ color: 'var(--text-dim2)' }}>
+                <span style={{ color: 'var(--text-dim)' }}>$</span> cat MyFirstUnitTest.java
               </p>
+              <p className="text-xs mb-2" style={{ color: 'var(--text-dim2)' }}>// Use when you want to test client logic in isolation with a controlled mock server — no real server needed.</p>
               <Code code={junitFirstTest} lang="java" />
               <div className="mt-3 space-y-1">
                 {[
-                  { k: 'No server to run', v: 'embedded server starts/stops automatically with the test class' },
-                  { k: 'No client setup', v: 'McpClient is injected per test, already initialized' },
-                  { k: 'No client.close()', v: 'framework closes the client after each @Test automatically' },
-                  { k: 'Requires', v: 'mcp-test-junit artifact (not transitive from mcp-test-api)' },
+                  { k: 'No real server needed', v: 'embedded in-process server starts/stops automatically with the test class' },
+                  { k: 'Controlled responses', v: 'register fake handlers via McpResponses — deterministic, no network' },
+                  { k: 'Zero boilerplate', v: 'McpClient injected per test, already initialized, closed automatically' },
+                  { k: 'Dependency', v: 'mcp-test-junit (separate artifact, not transitive from mcp-test-api)' },
                 ].map(({ k, v }) => (
                   <p key={k} className="text-xs" style={{ color: 'var(--text-dim2)' }}>
-                    <span style={{ color: 'var(--accent)' }}>✦ {k}</span> — {v}
+                    <span style={{ color: '#f87171' }}>✦ {k}</span> — {v}
                   </p>
                 ))}
               </div>

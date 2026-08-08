@@ -44,7 +44,7 @@ export const modules: Module[] = [
   { name: 'mcp-test-core', tag: 'Internal', tagColor: 'bg-emerald-500', coords: 'io.github.abhiramrathod:mcp-test-core', desc: 'Shared utilities.', details: 'JSON codec (McpJsonCodec), constants, and validation helpers.' },
   { name: 'mcp-test-interfaces', tag: 'SPI', tagColor: 'bg-amber-500', coords: 'io.github.abhiramrathod:mcp-test-interfaces', desc: 'Core interfaces.', details: 'The McpTransport SPI for custom transport implementations.' },
   { name: 'mcp-test-examples', tag: 'Ref', tagColor: 'bg-cyan-500', desc: 'Example tests.', details: 'Tools, resources, prompts, performance, and full integration with bundled DummyMcpServer. Run: mvn -pl mcp-test-examples test' },
-  { name: 'mcp-test-junit', tag: 'Public', tagColor: 'bg-rose-500', coords: 'io.github.abhiramrathod:mcp-test-junit', desc: 'JUnit 5 testkit — embedded server + annotations.', details: '@McpServerTest annotation, McpServerExtension, McpTestServer (embedded in-process server), McpResponses helpers, Transport enum (SSE / STREAMABLE_HTTP).' },
+  { name: 'mcp-test-junit', tag: 'Public', tagColor: 'bg-rose-500', coords: 'io.github.abhiramrathod:mcp-test-junit', desc: 'Unit testing — embedded mock server + JUnit 5 annotations.', details: 'Use for unit testing MCP client logic in isolation. @McpServerTest starts an embedded in-process server; register fake tool/resource/prompt handlers via McpResponses; McpClient is injected and managed automatically. No real server or network needed.' },
 ]
 
 export const docSections: DocSection[] = [
@@ -134,7 +134,7 @@ McpCompletion c2 = client.resources()
 c2.values();         // ["a.txt", ...]`,
   },
   {
-    icon: 'FlaskConical', title: 'JUnit 5 Testkit', desc: 'Spin up an embedded MCP server and get an injected McpClient with a single annotation.',
+    icon: 'FlaskConical', title: 'JUnit 5 Testkit', desc: 'Unit testing: spin up an embedded mock server in-process. No real server needed — register fake handlers and test client logic in isolation.',
     lang: 'java', code: `@McpServerTest(transport = Transport.STREAMABLE_HTTP)
 class MyMcpTest {
 
