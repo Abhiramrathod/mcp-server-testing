@@ -78,7 +78,7 @@ const blocks: Block[] = [
 ]
 
 export default function ApiReferencePage() {
-  const javadocsHref = `${window.location.origin}${window.location.pathname.replace(/\/+$/, '')}/javadoc/index.html`
+  const javadocsHref = `${window.location.origin}${window.location.pathname.replace(/\/+$/, '')}/javadoc/apidocs/index.html`
   return <DocLayout page={{
     meta: {
       path: '/api-reference',
