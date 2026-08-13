@@ -38,6 +38,7 @@ public class McpSseTransport implements McpTransport {
 
     private final ConcurrentHashMap<Long, CompletableFuture<JsonNode>> pendingRequests = new ConcurrentHashMap<>();
     private final Object connectLock = new Object();
+    private final CountDownLatch endpointLatch = new CountDownLatch(1);
 
     private volatile URI messageEndpointUri;
     private volatile boolean connected;
@@ -131,6 +132,16 @@ public class McpSseTransport implements McpTransport {
             if (connectError[0] != null) {
                 throw new IllegalStateException("Failed to establish SSE stream to " + sseEndpointUri, connectError[0]);
             }
+            // The server's endpoint event carries the message POST path. Wait for
+            // it so requests are never sent to the default /mcp/message path.
+            try {
+                if (!endpointLatch.await(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
+                    throw new IllegalStateException("Timed out waiting for SSE endpoint event from " + sseEndpointUri);
+                }
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while waiting for SSE endpoint event", ex);
+            }
             connected = true;
         }
     }
@@ -217,6 +228,7 @@ public class McpSseTransport implements McpTransport {
         } catch (Exception ignored) {
             // stream failures are handled below
         } finally {
+            endpointLatch.countDown();
             if (!closed) {
                 connected = false;
                 failAllPending(new IllegalStateException("SSE connection closed unexpectedly"));
@@ -227,8 +239,10 @@ public class McpSseTransport implements McpTransport {
     private void handleEvent(String eventType, String data) {
         if (data == null || data.isBlank()) return;
         switch (eventType) {
-            case McpTestClientConstants.SseEvents.ENDPOINT ->
-                    messageEndpointUri = baseUri.resolve(data.trim());
+            case McpTestClientConstants.SseEvents.ENDPOINT -> {
+                messageEndpointUri = baseUri.resolve(data.trim());
+                endpointLatch.countDown();
+            }
             case McpTestClientConstants.SseEvents.MESSAGE -> dispatchMessage(jsonCodec.parseJsonOrThrow(data));
             default -> {
                 // non-standard event type with JSON payload; forward as a server message
