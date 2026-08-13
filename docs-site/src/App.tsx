@@ -9,9 +9,9 @@ import Architecture from './components/Architecture'
 import FlowDiagram from './components/FlowDiagram'
 import ApiRef from './components/ApiRef'
 import Examples from './components/Examples'
-import ReleaseNotes from './components/ReleaseNotes'
 import Footer from './components/Footer'
-import UnitTesting from './pages/UnitTesting'
+import IntegrationTesting from './pages/IntegrationTesting'
+import UpcomingRelease from './pages/UpcomingRelease'
 
 function MainPage() {
   return (
@@ -35,8 +35,6 @@ function MainPage() {
         <ApiRef />
         <div className="divider" />
         <Examples />
-        <div className="divider" />
-        <ReleaseNotes />
       </main>
       <Footer />
     </>
@@ -47,7 +45,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<MainPage />} />
-      <Route path="/unit-testing" element={<UnitTesting />} />
+      <Route path="/integration-testing" element={<IntegrationTesting />} />
+      <Route path="/upcoming-release" element={<UpcomingRelease />} />
     </Routes>
   )
 }

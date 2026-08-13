@@ -1,11 +1,7 @@
 package mcp.toolkit.testing.examples;
 
-import mcp.toolkit.testing.framework.api.McpClient;
 import mcp.toolkit.testing.framework.api.model.McpTool;
 import mcp.toolkit.testing.framework.api.model.McpToolResult;
-import mcp.toolkit.testing.junit.annotation.McpServerTest;
-import mcp.toolkit.testing.junit.server.McpTestServer;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,19 +10,13 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Example tests demonstrating tool discovery and invocation using the embedded
- * {@code @McpServerTest} testkit.
+ * Example tests demonstrating tool discovery and invocation against a real,
+ * running MCP server.
  */
-@McpServerTest
-class ToolsClientTest {
-
-    @BeforeAll
-    static void configure(McpTestServer server) {
-        ExampleServerFixtures.configure(server);
-    }
+class ToolsClientTest extends RealMcpServerTestBase {
 
     @Test
-    void testListTools(McpClient client) {
+    void testListTools() {
         List<McpTool> tools = client.tools().listTools();
 
         assertNotNull(tools);
@@ -42,7 +32,7 @@ class ToolsClientTest {
     }
 
     @Test
-    void testCallCalculatorAdd(McpClient client) {
+    void testCallCalculatorAdd() {
         McpToolResult result = client.tools()
                 .callTool("calculator", Map.of("operation", "add", "a", 5, "b", 3))
                 .assertSuccess();
@@ -52,7 +42,7 @@ class ToolsClientTest {
     }
 
     @Test
-    void testCallCalculatorMultiply(McpClient client) {
+    void testCallCalculatorMultiply() {
         McpToolResult result = client.tools()
                 .callTool("calculator", Map.of("operation", "multiply", "a", 4, "b", 7))
                 .assertSuccess();
@@ -61,7 +51,7 @@ class ToolsClientTest {
     }
 
     @Test
-    void testCallGreetTool(McpClient client) {
+    void testCallGreetTool() {
         client.tools()
                 .callTool("greet", Map.of("name", "Alice"))
                 .assertSuccess()
@@ -69,7 +59,7 @@ class ToolsClientTest {
     }
 
     @Test
-    void testCallGreetDefault(McpClient client) {
+    void testCallGreetDefault() {
         McpToolResult result = client.tools()
                 .callTool("greet", Map.of())
                 .assertSuccess();
@@ -78,7 +68,7 @@ class ToolsClientTest {
     }
 
     @Test
-    void testToolInputSchema(McpClient client) {
+    void testToolInputSchema() {
         List<McpTool> tools = client.tools().listTools();
         McpTool calculator = findTool(tools, "calculator");
 

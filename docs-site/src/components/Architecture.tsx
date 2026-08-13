@@ -53,23 +53,14 @@ const mainLayers = [
     sublabel: 'Your Application Under Test',
     color: '#34d399',
     tag: 'EXTERNAL',
-    desc: 'Any MCP-compliant server. Supports SSE (2024-11-05) and Streamable HTTP (2025-03-26) protocols.',
+    desc: 'Any MCP-compliant server. Supports SSE (2024-11-05), Streamable HTTP (2025-03-26) and the stateless protocol (2026-07-28).',
   },
 ]
-
-const junitLayer = {
-  id: 'junit',
-  label: 'mcp-test-junit',
-  sublabel: 'Unit tests — embedded mock server',
-  color: '#f87171',
-  tag: 'OPTIONAL',
-  desc: 'Add only for unit testing. Starts an embedded in-process MCP server. @McpServerTest · McpTestServer · McpResponses. No real server needed.',
-}
 
 export default function Architecture() {
   const [hovered, setHovered] = useState<string | null>(null)
 
-  const allLayers = [...mainLayers, junitLayer]
+  const allLayers = mainLayers
 
   return (
     <section id="architecture" className="py-8 section-content">
@@ -114,43 +105,6 @@ export default function Architecture() {
                         <div className="hld-connector" style={{ borderColor: `${l.color}20` }} />
                       )}
                     </div>
-
-                    {/* junit branch — rendered inline after mcp-test-api */}
-                    {l.id === 'api' && (() => {
-                      const j = junitLayer
-                      const isJActive = hovered === j.id
-                      return (
-                        <div className="flex items-center gap-1 ml-4 my-1"
-                          onMouseEnter={() => setHovered(j.id)}
-                          onMouseLeave={() => setHovered(null)}
-                        >
-                          {/* branch line */}
-                          <div style={{ width: '16px', height: '1px', background: `${j.color}40`, flexShrink: 0 }} />
-                          <div
-                            className="hld-layer flex-1"
-                            style={{
-                              borderColor: isJActive ? j.color : `${j.color}30`,
-                              background: isJActive ? `${j.color}10` : `${j.color}05`,
-                              borderStyle: 'dashed',
-                              transform: isJActive ? 'translateX(4px)' : 'none',
-                              transition: 'all 0.25s ease',
-                              cursor: 'default',
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className="hld-dot" style={{ background: j.color, boxShadow: isJActive ? `0 0 8px ${j.color}` : 'none' }} />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span style={{ color: j.color, fontWeight: 600, fontSize: '11px' }}>{j.label}</span>
-                                  <span className="tag" style={{ background: `${j.color}15`, color: j.color, border: `1px solid ${j.color}20` }}>{j.tag}</span>
-                                </div>
-                                <p style={{ color: dim2, fontSize: '9px', marginTop: '1px' }}>{j.sublabel}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })()}
                   </div>
                 )
               })}
@@ -173,9 +127,6 @@ export default function Architecture() {
                       <div className="flex items-center gap-2 mb-2">
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: l.color, flexShrink: 0 }} />
                         <span style={{ color: l.color, fontWeight: 600, fontSize: '11px' }}>{l.label}</span>
-                        {l.id === 'junit' && (
-                          <span className="tag" style={{ background: '#f8717115', color: '#f87171', border: '1px solid #f8717120', fontSize: '9px' }}>unit testing only</span>
-                        )}
                       </div>
                       <p style={{ color: dim, fontSize: '10px', lineHeight: 1.7 }}>{l.desc}</p>
                     </>
@@ -193,6 +144,7 @@ export default function Architecture() {
             {[
               { label: 'SSE Transport', sub: 'protocol: 2024-11-05', color: '#a78bfa' },
               { label: 'Streamable HTTP', sub: 'protocol: 2025-03-26', color: '#60a5fa' },
+              { label: 'Stateless', sub: 'protocol: 2026-07-28+', color: '#fbbf24' },
               { label: 'Custom Transport', sub: 'implement McpTransport SPI', color: '#fbbf24' },
             ].map(b => (
               <div key={b.label} className="flex items-center gap-1.5 px-2 py-1 rounded"
@@ -206,7 +158,6 @@ export default function Architecture() {
 
           <p className="text-xs mt-3 fade-in fade-in-5" style={{ color: dim2 }}>
             └── import only <span style={{ color: accent }}>mcp-test-api</span> — all others are transitive
-            {' · '}<span style={{ color: '#f87171' }}>mcp-test-junit</span> is optional — add only for unit testing with an embedded server
           </p>
         </div>
       </Reveal>

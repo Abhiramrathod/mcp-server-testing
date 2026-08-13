@@ -1,11 +1,7 @@
 package mcp.toolkit.testing.examples;
 
-import mcp.toolkit.testing.framework.api.McpClient;
 import mcp.toolkit.testing.framework.api.model.McpResource;
 import mcp.toolkit.testing.framework.api.model.McpResourceContent;
-import mcp.toolkit.testing.junit.annotation.McpServerTest;
-import mcp.toolkit.testing.junit.server.McpTestServer;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -13,19 +9,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Example tests demonstrating resource listing and reading using the embedded
- * {@code @McpServerTest} testkit.
+ * Example tests demonstrating resource listing and reading against a real,
+ * running MCP server.
  */
-@McpServerTest
-class ResourcesClientTest {
-
-    @BeforeAll
-    static void configure(McpTestServer server) {
-        ExampleServerFixtures.configure(server);
-    }
+class ResourcesClientTest extends RealMcpServerTestBase {
 
     @Test
-    void testListResources(McpClient client) {
+    void testListResources() {
         List<McpResource> resources = client.resources().listResources();
 
         assertNotNull(resources);
@@ -43,7 +33,7 @@ class ResourcesClientTest {
     }
 
     @Test
-    void testReadConfigResource(McpClient client) {
+    void testReadConfigResource() {
         McpResourceContent content = client.resources()
                 .readResource("file:///data/config.json")
                 .assertNotEmpty();
@@ -57,7 +47,7 @@ class ResourcesClientTest {
     }
 
     @Test
-    void testReadReadmeResource(McpClient client) {
+    void testReadReadmeResource() {
         client.resources()
                 .readResource("file:///data/readme.txt")
                 .assertNotEmpty()
@@ -65,7 +55,7 @@ class ResourcesClientTest {
     }
 
     @Test
-    void testResourceContentItems(McpClient client) {
+    void testResourceContentItems() {
         McpResourceContent content = client.resources()
                 .readResource("file:///data/config.json")
                 .assertNotEmpty();

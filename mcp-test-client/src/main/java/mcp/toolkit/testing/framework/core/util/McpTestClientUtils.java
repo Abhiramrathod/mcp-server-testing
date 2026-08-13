@@ -164,7 +164,7 @@ public final class McpTestClientUtils {
                     endpoints.sseEndpointUri(), endpoints.baseUri(),
                     protocolVersion, timeout, jsonCodec, headers);
         }
-        McpRpcClient rpcClient = new McpRpcClient(transport, idSequence, jsonCodec);
+        McpRpcClient rpcClient = new McpRpcClient(transport, idSequence, jsonCodec, protocolVersion);
         return new ClientComponents(transport, jsonCodec, rpcClient,
                 new McpToolDirectory(initGuard, rpcClient, jsonCodec),
                 new McpResourceDirectory(initGuard, rpcClient, jsonCodec),

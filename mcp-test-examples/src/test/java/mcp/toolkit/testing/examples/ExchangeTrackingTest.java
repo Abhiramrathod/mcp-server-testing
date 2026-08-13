@@ -1,11 +1,7 @@
 package mcp.toolkit.testing.examples;
 
-import mcp.toolkit.testing.framework.api.McpClient;
 import mcp.toolkit.testing.framework.api.McpMethod;
 import mcp.toolkit.testing.framework.api.model.McpExchangeSummary;
-import mcp.toolkit.testing.junit.annotation.McpServerTest;
-import mcp.toolkit.testing.junit.server.McpTestServer;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,20 +10,14 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Example tests demonstrating exchange tracking and performance assertions using
- * the embedded {@code @McpServerTest} testkit. A fresh client is injected per
- * test, so exchanges are naturally isolated between tests.
+ * Example tests demonstrating exchange tracking and performance assertions
+ * against a real, running MCP server. A fresh client is created per test, so
+ * exchanges are naturally isolated between tests.
  */
-@McpServerTest
-class ExchangeTrackingTest {
-
-    @BeforeAll
-    static void configure(McpTestServer server) {
-        ExampleServerFixtures.configure(server);
-    }
+class ExchangeTrackingTest extends RealMcpServerTestBase {
 
     @Test
-    void testExchangeHistory(McpClient client) {
+    void testExchangeHistory() {
         client.tools().listTools();
         client.resources().listResources();
         client.prompts().listPrompts();
@@ -39,7 +29,7 @@ class ExchangeTrackingTest {
     }
 
     @Test
-    void testLastExchangeSuccess(McpClient client) {
+    void testLastExchangeSuccess() {
         client.tools().listTools();
 
         client.exchanges().assertLastSucceeded();
@@ -51,7 +41,7 @@ class ExchangeTrackingTest {
     }
 
     @Test
-    void testAverageLatency(McpClient client) {
+    void testAverageLatency() {
         for (int i = 0; i < 5; i++) {
             client.tools().listTools();
         }
@@ -63,7 +53,7 @@ class ExchangeTrackingTest {
     }
 
     @Test
-    void testLatencyPercentiles(McpClient client) {
+    void testLatencyPercentiles() {
         for (int i = 0; i < 10; i++) {
             client.tools().callTool("calculator", Map.of("operation", "add", "a", i, "b", 1));
         }
@@ -80,7 +70,7 @@ class ExchangeTrackingTest {
     }
 
     @Test
-    void testExchangesByMethod(McpClient client) {
+    void testExchangesByMethod() {
         client.tools().listTools();
         client.tools().listTools();
         client.resources().listResources();
@@ -93,7 +83,7 @@ class ExchangeTrackingTest {
     }
 
     @Test
-    void testSuccessRate(McpClient client) {
+    void testSuccessRate() {
         client.tools().listTools();
         client.resources().listResources();
         client.prompts().listPrompts();

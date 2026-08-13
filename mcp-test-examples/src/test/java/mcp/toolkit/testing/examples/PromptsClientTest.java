@@ -1,11 +1,7 @@
 package mcp.toolkit.testing.examples;
 
-import mcp.toolkit.testing.framework.api.McpClient;
 import mcp.toolkit.testing.framework.api.model.McpPrompt;
 import mcp.toolkit.testing.framework.api.model.McpPromptResult;
-import mcp.toolkit.testing.junit.annotation.McpServerTest;
-import mcp.toolkit.testing.junit.server.McpTestServer;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,19 +10,13 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Example tests demonstrating prompt listing and retrieval using the embedded
- * {@code @McpServerTest} testkit.
+ * Example tests demonstrating prompt listing and retrieval against a real,
+ * running MCP server.
  */
-@McpServerTest
-class PromptsClientTest {
-
-    @BeforeAll
-    static void configure(McpTestServer server) {
-        ExampleServerFixtures.configure(server);
-    }
+class PromptsClientTest extends RealMcpServerTestBase {
 
     @Test
-    void testListPrompts(McpClient client) {
+    void testListPrompts() {
         List<McpPrompt> prompts = client.prompts().listPrompts();
 
         assertNotNull(prompts);
@@ -43,7 +33,7 @@ class PromptsClientTest {
     }
 
     @Test
-    void testGetTranslatePrompt(McpClient client) {
+    void testGetTranslatePrompt() {
         McpPromptResult result = client.prompts()
                 .getPrompt("translate", Map.of("language", "Spanish", "text", "Hello"))
                 .assertNotEmpty();
@@ -58,7 +48,7 @@ class PromptsClientTest {
     }
 
     @Test
-    void testGetCodeReviewPrompt(McpClient client) {
+    void testGetCodeReviewPrompt() {
         client.prompts()
                 .getPrompt("code-review", Map.of("code", "public void test() {}"))
                 .assertNotEmpty()
@@ -66,7 +56,7 @@ class PromptsClientTest {
     }
 
     @Test
-    void testPromptUserMessage(McpClient client) {
+    void testPromptUserMessage() {
         McpPromptResult result = client.prompts()
                 .getPrompt("translate", Map.of("language", "French", "text", "Goodbye"))
                 .assertNotEmpty();
@@ -78,7 +68,7 @@ class PromptsClientTest {
     }
 
     @Test
-    void testPromptArguments(McpClient client) {
+    void testPromptArguments() {
         List<McpPrompt> prompts = client.prompts().listPrompts();
         McpPrompt translate = findPrompt(prompts, "translate");
 

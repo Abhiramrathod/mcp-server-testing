@@ -8,16 +8,21 @@ import mcp.toolkit.testing.framework.client.rpc.RpcExchangeTracker;
 import mcp.toolkit.testing.framework.client.tools.McpToolDirectory;
 import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
+import mcp.toolkit.testing.framework.core.util.McpProtocolVersions;
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import mcp.toolkit.testing.framework.core.util.McpTestClientUtils;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static mcp.toolkit.testing.framework.core.util.McpTestClientUtils.buildInitializeParams;
 import static mcp.toolkit.testing.framework.core.util.McpTestClientUtils.ClientComponents;
@@ -38,6 +43,7 @@ public class McpTestClient implements AutoCloseable {
 
     private volatile boolean initialized;
     private volatile JsonNode initializeResult;
+    private volatile boolean discoverAttempted;
 
     /**
      * Creates a client connected to the given server URL using the default
@@ -109,7 +115,8 @@ public class McpTestClient implements AutoCloseable {
     }
 
     /**
-     * Performs the MCP {@code initialize} handshake explicitly.
+     * Performs the MCP {@code initialize} handshake (legacy era) or the
+     * {@code server/discover} version probe (stateless era) explicitly.
      *
      * <p>This is optional — the client initializes lazily on first use. Call this
      * when you want initialization to happen at a known point.
@@ -119,6 +126,21 @@ public class McpTestClient implements AutoCloseable {
         synchronized (initLock) {
             if (initialized) return;
             transport.connect();
+            if (McpProtocolVersions.isStateless(protocolVersion)) {
+                if (!discoverAttempted) {
+                    discoverAttempted = true;
+                    try {
+                        initializeResult = rpcClient.callAndRequireResult(
+                                McpTestClientConstants.Methods.SERVER_DISCOVER,
+                                () -> jsonCodec.buildParams(p -> {}));
+                    } catch (Exception ignored) {
+                        // Stateless requests carry their protocol version per request,
+                        // so a missing server/discover implementation is not fatal.
+                    }
+                }
+                initialized = true;
+                return;
+            }
             JsonNode result = rpcClient.callAndRequireResult(
                     McpTestClientConstants.Methods.INITIALIZE,
                     () -> buildInitializeParams(jsonCodec, protocolVersion));
@@ -129,11 +151,63 @@ public class McpTestClient implements AutoCloseable {
     }
 
     /**
+     * Sends a {@code server/discover} request to learn the server's supported
+     * protocol versions, capabilities and identity (stateless era,
+     * 2026-07-28+). On legacy servers this falls back to the result of the
+     * {@code initialize} handshake.
+     *
+     * @return the raw discover (or initialize) result
+     */
+    public JsonNode discover() {
+        if (McpProtocolVersions.isStateless(protocolVersion)) {
+            return initGuard.withInitialized(() -> rpcClient.callAndRequireResult(
+                    McpTestClientConstants.Methods.SERVER_DISCOVER,
+                    () -> jsonCodec.buildParams(p -> {})));
+        }
+        initialize();
+        return initializeResult;
+    }
+
+    /**
+     * Opens a {@code subscriptions/listen} stream (stateless era) to receive
+     * opted-in server-to-client change notifications, e.g. tool or prompt list
+     * changes. Notifications are delivered to the listener registered via
+     * {@link #onServerMessage(Consumer)}. This is a no-op for legacy-era clients,
+     * which use the HTTP GET SSE stream instead.
+     *
+     * @param subscriptionTypes subscription type identifiers, e.g.
+     *                          {@code "toolsListChanged"}; an empty list subscribes
+     *                          to all supported types
+     */
+    public void startSubscriptions(List<String> subscriptionTypes) {
+        if (!McpProtocolVersions.isStateless(protocolVersion)) {
+            return;
+        }
+        initGuard.withInitialized(() -> rpcClient.callAndRequireResult(
+                McpTestClientConstants.Methods.SUBSCRIPTIONS_LISTEN, () -> {
+                    ObjectNode params = jsonCodec.buildParams(p -> {});
+                    if (subscriptionTypes != null && !subscriptionTypes.isEmpty()) {
+                        ArrayNode types = jsonCodec.metaObject(params)
+                                .putArray(McpTestClientConstants.Meta.SUBSCRIPTION_TYPES);
+                        subscriptionTypes.forEach(types::add);
+                    }
+                    return params;
+                }));
+    }
+
+    /**
      * Returns {@code true} if the MCP handshake has completed.
      *
      * @return whether the client is initialized
      */
     public boolean isInitialized() { return initialized; }
+
+    /**
+     * Returns the MCP protocol version advertised by this client.
+     *
+     * @return the protocol version string
+     */
+    public String protocolVersion() { return protocolVersion; }
 
     /**
      * Returns the raw result of the {@code initialize} handshake, or {@code null}
@@ -188,6 +262,64 @@ public class McpTestClient implements AutoCloseable {
     public JsonNode call(String method, Object params) {
         McpValidation.requireNonNull(method, "method");
         return initGuard.withInitialized(() -> rpcClient.callAndRequireResult(method, () -> jsonCodec.toJsonNode(params)));
+    }
+
+    /**
+     * Sends a low-level JSON-RPC request with a per-request log level. On the
+     * stateless era (2026-07-28+) the level is carried in
+     * {@code _meta["io.modelcontextprotocol/logLevel"]} on that single request;
+     * on legacy servers the level is ignored (use {@link #setLogLevel(String)}
+     * instead).
+     *
+     * @param method JSON-RPC method, e.g. {@code "tools/call"}
+     * @param params request parameters; may be {@code null}
+     * @param logLevel RFC 5424 level such as {@code "debug"} or {@code "info"}
+     * @return the response result
+     */
+    public JsonNode call(String method, Object params, String logLevel) {
+        McpValidation.requireNonNull(method, "method");
+        McpValidation.requireNonNull(logLevel, "logLevel");
+        return initGuard.withInitialized(() -> rpcClient.callAndRequireResult(method, () -> {
+            JsonNode base = jsonCodec.toJsonNode(params);
+            ObjectNode node = base instanceof ObjectNode o ? o.deepCopy() : jsonCodec.buildParams(p -> {});
+            jsonCodec.metaObject(node).put(McpTestClientConstants.Meta.LOG_LEVEL, logLevel);
+            return node;
+        }));
+    }
+
+    /**
+     * Sends a request and resolves stateless-era Multi Round-Trip Requests
+     * (MRTR) by retrying until the server returns a complete result. On each
+     * {@code input_required} interim result the {@code inputResponsesProvider}
+     * receives the server's {@code inputRequests} array and must return the
+     * value to send under {@code inputResponses}.
+     *
+     * @param method                 JSON-RPC method
+     * @param params                 request parameters; may be {@code null}
+     * @param inputResponsesProvider supplies {@code inputResponses} for the
+     *                               {@code inputRequests} array from the server
+     * @param maxRoundTrips          maximum number of request/input round trips
+     * @return the final, complete result
+     * @throws IllegalStateException if the server never returns a complete result
+     */
+    public JsonNode callWithInputResponses(String method, Object params,
+                                           Function<JsonNode, JsonNode> inputResponsesProvider,
+                                           int maxRoundTrips) {
+        McpValidation.requireNonNull(method, "method");
+        McpValidation.requireNonNull(inputResponsesProvider, "inputResponsesProvider");
+        return initGuard.withInitialized(() -> rpcClient.callWithInputResponses(
+                method, () -> jsonCodec.toJsonNode(params), inputResponsesProvider, maxRoundTrips));
+    }
+
+    /**
+     * Returns whether the given result is an MRTR interim result
+     * ({@code resultType == "input_required"}).
+     *
+     * @param result a request result; may be {@code null}
+     * @return {@code true} if the result requests additional input
+     */
+    public static boolean isInputRequired(JsonNode result) {
+        return McpRpcClient.isInputRequired(result);
     }
 
     /**

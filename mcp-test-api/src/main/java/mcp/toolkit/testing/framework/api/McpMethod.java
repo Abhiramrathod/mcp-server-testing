@@ -22,7 +22,12 @@ public enum McpMethod {
     PROMPTS_LIST("prompts/list"),
     PROMPTS_GET("prompts/get"),
     COMPLETION_COMPLETE("completion/complete"),
-    LOGGING_SET_LEVEL("logging/setLevel");
+    LOGGING_SET_LEVEL("logging/setLevel"),
+    SERVER_DISCOVER("server/discover"),
+    SUBSCRIPTIONS_LISTEN("subscriptions/listen"),
+    TASKS_GET("tasks/get"),
+    TASKS_UPDATE("tasks/update"),
+    TASKS_CANCEL("tasks/cancel");
 
     private final String value;
 

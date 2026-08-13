@@ -1,5 +1,6 @@
 package mcp.toolkit.testing.framework.core.codec;
 
+import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +38,19 @@ public final class McpJsonCodec {
         ObjectNode params = objectMapper.createObjectNode();
         paramsWriter.accept(params);
         return params;
+    }
+
+    /**
+     * Returns the {@code _meta} child of the given params node, creating it when
+     * absent. Field-name based, so it is safe for any {@code _meta} content
+     * regardless of JSON Pointer-sensitive characters.
+     *
+     * @param node params object node
+     * @return the {@code _meta} object, never {@code null}
+     */
+    public ObjectNode metaObject(ObjectNode node) {
+        JsonNode existing = node.get(McpTestClientConstants.Params.META);
+        return existing instanceof ObjectNode meta ? meta : node.putObject(McpTestClientConstants.Params.META);
     }
 
     /**

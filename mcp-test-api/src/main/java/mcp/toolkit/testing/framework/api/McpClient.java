@@ -2,12 +2,16 @@ package mcp.toolkit.testing.framework.api;
 
 import mcp.toolkit.testing.framework.McpTestClient;
 import mcp.toolkit.testing.framework.api.model.McpServerInfo;
+import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
+import mcp.toolkit.testing.framework.core.util.McpProtocolVersions;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Public entry point for testing MCP servers.
@@ -101,6 +105,53 @@ public final class McpClient implements AutoCloseable {
     }
 
     /**
+     * Returns the MCP protocol version advertised by this client.
+     *
+     * @return the protocol version, e.g. {@code "2026-07-28"}
+     */
+    public String protocolVersion() {
+        return delegate.protocolVersion();
+    }
+
+    /**
+     * Returns {@code true} when the client speaks the stateless protocol
+     * (2026-07-28 and later), {@code false} for the legacy session-based
+     * protocol (2024-11-05 through 2025-11-25).
+     *
+     * @return whether the stateless era is in use
+     */
+    public boolean isStateless() {
+        return McpProtocolVersions.isStateless(protocolVersion());
+    }
+
+    /**
+     * Sends a {@code server/discover} request to learn the server's supported
+     * protocol versions, capabilities and identity (stateless era, 2026-07-28+).
+     * On legacy servers this returns the {@code initialize} result instead.
+     *
+     * <p>Triggers initialization if not already done.
+     *
+     * @return the raw discover (or initialize) result
+     */
+    public JsonNode discover() {
+        return delegate.discover();
+    }
+
+    /**
+     * Opens a {@code subscriptions/listen} stream (stateless era) to receive
+     * opted-in server-to-client change notifications, delivered to the listener
+     * registered via {@link #onServerMessage(Consumer)}. This is a no-op for
+     * legacy-era clients, which use the HTTP GET SSE stream instead.
+     *
+     * @param subscriptionTypes subscription type identifiers, e.g.
+     *                          {@code "toolsListChanged"}; an empty list subscribes
+     *                          to all supported types
+     */
+    public void startSubscriptions(List<String> subscriptionTypes) {
+        delegate.startSubscriptions(subscriptionTypes);
+    }
+
+    /**
      * Returns typed information about the connected MCP server.
      *
      * <p>Triggers initialization if not already done.
@@ -118,6 +169,9 @@ public final class McpClient implements AutoCloseable {
      * Sends an MCP {@code ping} request, verifying that the server is reachable and
      * the session is alive.
      *
+     * <p>Legacy-era only: {@code ping} was removed from the stateless protocol
+     * (2026-07-28+), where requests are answered directly.
+     *
      * <p>Triggers initialization if not already done.
      */
     public void ping() {
@@ -128,9 +182,71 @@ public final class McpClient implements AutoCloseable {
     }
 
     /**
+     * Sends a low-level JSON-RPC request and returns the response result.
+     *
+     * <p>Triggers initialization if not already done.
+     *
+     * @param method JSON-RPC method, e.g. {@code "tools/call"}
+     * @param params request parameters; may be {@code null}
+     * @return the response result
+     */
+    public JsonNode call(String method, Object params) {
+        return delegate.call(method, params);
+    }
+
+    /**
+     * Sends a low-level JSON-RPC request with a per-request log level (stateless
+     * era, 2026-07-28+); the level is ignored by legacy servers.
+     *
+     * @param method JSON-RPC method, e.g. {@code "tools/call"}
+     * @param params request parameters; may be {@code null}
+     * @param logLevel RFC 5424 level such as {@code "debug"} or {@code "info"}
+     * @return the response result
+     */
+    public JsonNode call(String method, Object params, String logLevel) {
+        return delegate.call(method, params, logLevel);
+    }
+
+    /**
+     * Sends a request and resolves stateless-era Multi Round-Trip Requests
+     * (MRTR) by retrying until the server returns a complete result. On each
+     * {@code input_required} interim result the {@code inputResponsesProvider}
+     * receives the server's {@code inputRequests} array and must return the
+     * value to send under {@code inputResponses}.
+     *
+     * <p>Triggers initialization if not already done.
+     *
+     * @param method                 JSON-RPC method
+     * @param params                 request parameters; may be {@code null}
+     * @param inputResponsesProvider supplies {@code inputResponses} for the
+     *                               {@code inputRequests} array from the server
+     * @param maxRoundTrips          maximum number of request/input round trips
+     * @return the final, complete result
+     * @throws IllegalStateException if the server never returns a complete result
+     */
+    public JsonNode callWithInputResponses(String method, Object params,
+                                           Function<JsonNode, JsonNode> inputResponsesProvider,
+                                           int maxRoundTrips) {
+        return delegate.callWithInputResponses(method, params, inputResponsesProvider, maxRoundTrips);
+    }
+
+    /**
+     * Returns whether the given result is an MRTR interim result
+     * ({@code resultType == "input_required"}).
+     *
+     * @param result a request result; may be {@code null}
+     * @return {@code true} if the result requests additional input
+     */
+    public static boolean isInputRequired(JsonNode result) {
+        return McpTestClient.isInputRequired(result);
+    }
+
+    /**
      * Controls server log verbosity via {@code logging/setLevel}.
      *
-     * <p>Levels follow RFC 5424 syslog severities. Triggers initialization if not already done.
+     * <p>Levels follow RFC 5424 syslog severities. Legacy-era only: the stateless
+     * protocol (2026-07-28+) carries the level per request instead, via
+     * {@link #call(String, Object, String)}. Triggers initialization if not already done.
      *
      * @param level level such as {@code "debug"}, {@code "info"} or {@code "warning"}
      */
@@ -234,7 +350,23 @@ public final class McpClient implements AutoCloseable {
         JsonNode serverInfo = result.path("serverInfo");
         String name = serverInfo.path("name").asText(null);
         String version = serverInfo.path("version").asText(null);
+        if (name == null) {
+            // Stateless (2026-07-28+) servers identify themselves via _meta.
+            JsonNode metaServerInfo = result.path("_meta")
+                    .path(McpTestClientConstants.Meta.SERVER_INFO);
+            if (metaServerInfo.isObject()) {
+                name = metaServerInfo.path("name").asText(null);
+                version = metaServerInfo.path("version").asText(null);
+            }
+        }
         String protocolVersion = result.path("protocolVersion").asText(null);
+        if (protocolVersion == null) {
+            // Stateless server/discover returns a protocolVersions array.
+            JsonNode versions = result.path("protocolVersions");
+            if (versions.isArray() && !versions.isEmpty()) {
+                protocolVersion = versions.get(versions.size() - 1).asText(null);
+            }
+        }
 
         Set<String> capabilities = new HashSet<>();
         JsonNode caps = result.path("capabilities");

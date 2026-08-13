@@ -44,7 +44,6 @@ export const modules: Module[] = [
   { name: 'mcp-test-core', tag: 'Internal', tagColor: 'bg-emerald-500', coords: 'io.github.abhiramrathod:mcp-test-core', desc: 'Shared utilities.', details: 'JSON codec (McpJsonCodec), constants, and validation helpers.' },
   { name: 'mcp-test-interfaces', tag: 'SPI', tagColor: 'bg-amber-500', coords: 'io.github.abhiramrathod:mcp-test-interfaces', desc: 'Core interfaces.', details: 'The McpTransport SPI for custom transport implementations.' },
   { name: 'mcp-test-examples', tag: 'Ref', tagColor: 'bg-cyan-500', desc: 'Example tests.', details: 'Tools, resources, prompts, performance, and full integration with bundled DummyMcpServer. Run: mvn -pl mcp-test-examples test' },
-  { name: 'mcp-test-junit', tag: 'Public', tagColor: 'bg-rose-500', coords: 'io.github.abhiramrathod:mcp-test-junit', desc: 'Unit testing — embedded mock server + JUnit 5 annotations.', details: 'Use for unit testing MCP client logic in isolation. @McpServerTest starts an embedded in-process server; register fake tool/resource/prompt handlers via McpResponses; McpClient is injected and managed automatically. No real server or network needed.' },
 ]
 
 export const docSections: DocSection[] = [
@@ -134,24 +133,22 @@ McpCompletion c2 = client.resources()
 c2.values();         // ["a.txt", ...]`,
   },
   {
-    icon: 'FlaskConical', title: 'JUnit 5 Testkit', desc: 'Unit testing: spin up an embedded mock server in-process. No real server needed — register fake handlers and test client logic in isolation.',
-    lang: 'java', code: `@McpServerTest(transport = Transport.STREAMABLE_HTTP)
-class MyMcpTest {
-
-    @BeforeAll
-    static void configure(McpTestServer server) {
-        server.addTool("echo", "Echoes input", args ->
-                McpResponses.toolText(args.path("message").asText()));
-    }
+    icon: 'Server', title: 'Reference Server', desc: 'A real, running MCP server makes the tests meaningful. mcp-test-examples bundles DummyMcpServer (SSE transport) and a base class that starts it per test class.',
+    lang: 'java', code: `// RealMcpServerTestBase starts a real server per class
+// and gives every test a fresh, initialized McpClient.
+class MyMcpTest extends RealMcpServerTestBase {
 
     @Test
-    void echoWorks(McpClient client) {
+    void echoWorks() {
         McpToolResult result = client.tools()
                 .callTool("echo", Map.of("message", "hello"))
                 .assertSuccess();
         assertEquals("hello", result.firstText());
     }
-}`,
+}
+
+// Point the same tests at your own server:
+// -Dmcp.test.server.url=http://localhost:8080`,
   },
   {
     icon: 'FolderOpen', title: 'Resource Templates', desc: 'List resource templates and read resources matched by URI template patterns.',
@@ -172,6 +169,5 @@ export const examples: Example[] = [
   { icon: 'MessageSquare', title: 'Prompts Testing', desc: 'Retrieve prompts, inspect arguments, validate responses.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/PromptsClientTest.java' },
   { icon: 'LineChart', title: 'Performance Monitoring', desc: 'Track exchanges, compute percentiles, assert on latency.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ExchangeTrackingTest.java' },
   { icon: 'CheckCheck', title: 'Full Integration', desc: 'End-to-end workflow covering tools, resources, prompts, performance.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/ComprehensiveIntegrationTest.java' },
-  { icon: 'PlayCircle', title: 'JUnit 5 SSE Integration', desc: 'Embedded server + @McpServerTest annotation over SSE transport.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-junit/src/test/java/mcp/toolkit/testing/junit/annotation/McpServerTestSseIntegrationTest.java' },
-  { icon: 'Radio', title: 'JUnit 5 Streamable HTTP Integration', desc: 'Embedded server with resource templates, completions, and Streamable HTTP transport.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-junit/src/test/java/mcp/toolkit/testing/junit/annotation/McpServerTestStreamableIntegrationTest.java' },
+  { icon: 'Server', title: 'Reference Server + Test Base', desc: 'Bundled DummyMcpServer and the RealMcpServerTestBase used by all example tests.', url: 'https://github.com/Abhiramrathod/mcp-testing/tree/master/mcp-test-examples/src/test/java/mcp/toolkit/testing/examples/RealMcpServerTestBase.java' },
 ]

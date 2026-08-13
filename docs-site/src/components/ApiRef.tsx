@@ -57,10 +57,10 @@ const sections = [
   {
     name: 'McpClientConfig',
     tag: 'config',
-    desc: 'Controls how the client connects and authenticates. The most important options are timeout (how long to wait for each RPC call) and protocolVersion (must match what the server expects — use 2024-11-05 for SSE servers and 2025-03-26 for Streamable HTTP servers). Use header() to pass Authorization tokens or any other per-request HTTP headers.',
+    desc: 'Controls how the client connects and authenticates. The most important options are timeout (how long to wait for each RPC call) and protocolVersion (must match what the server expects — use 2024-11-05 for SSE servers, 2025-03-26 for legacy Streamable HTTP servers, and 2026-07-28 or later for the stateless protocol). Use header() to pass Authorization tokens or any other per-request HTTP headers.',
     methods: [
       { sig: 'Builder timeout(Duration timeout)', note: 'Request timeout for connection and RPC calls. Default: 10 s.' },
-      { sig: 'Builder protocolVersion(String version)', note: 'MCP protocol version advertised during initialize. Default: "2024-11-05".' },
+      { sig: 'Builder protocolVersion(String version)', note: 'MCP protocol version. Default: "2024-11-05" (legacy). "2026-07-28" selects the stateless protocol.' },
       { sig: 'Builder objectMapper(ObjectMapper mapper)', note: 'Custom Jackson ObjectMapper for JSON serialization.' },
       { sig: 'Builder header(String name, String value)', note: 'Adds a single HTTP header sent on every transport request.' },
       { sig: 'Builder headers(Map<String,String> headers)', note: 'Replaces all custom HTTP headers at once.' },
@@ -217,26 +217,30 @@ JsonNode report = client.exchanges().export();`,
   {
     name: 'McpServerInfo',
     tag: 'model',
-    desc: 'The typed result of the MCP initialize handshake. Use it to assert that the server advertises the correct name, version, and protocol version, and that it declares the capabilities your tests depend on (tools, resources, prompts, logging). Obtained via client.serverInfo() — triggers initialization if not already done.',
+    desc: 'Typed server information: name, version, protocol version, and advertised capabilities. Built from the initialize handshake result (legacy era) or the server/discover result (stateless era, 2026-07-28+). Obtained via client.serverInfo() — triggers initialization if not already done. Stateless clients can also call client.discover() for the raw result and client.isStateless() to check the era.',
     methods: [
-      { sig: 'String name()', note: 'Server name reported during initialization.' },
-      { sig: 'String version()', note: 'Server version reported during initialization.' },
-      { sig: 'String protocolVersion()', note: 'MCP protocol version negotiated during initialization.' },
+      { sig: 'String name()', note: 'Server name reported during initialization or discover.' },
+      { sig: 'String version()', note: 'Server version reported during initialization or discover.' },
+      { sig: 'String protocolVersion()', note: 'MCP protocol version negotiated (initialize) or highest supported (discover).' },
       { sig: 'Set<String> supportedCapabilities()', note: 'Capability names advertised by the server, e.g. "tools", "resources", "prompts".' },
       { sig: 'boolean supportsTools()', note: 'Shorthand for supportsCapability("tools").' },
       { sig: 'boolean supportsResources()', note: 'Shorthand for supportsCapability("resources").' },
       { sig: 'boolean supportsPrompts()', note: 'Shorthand for supportsCapability("prompts").' },
       { sig: 'boolean supportsCapability(String capability)', note: 'Returns true if the named capability is present.' },
-      { sig: 'JsonNode raw()', note: 'Raw JSON initialize result as returned by the server.' },
+      { sig: 'JsonNode raw()', note: 'Raw JSON result as returned by the server (initialize or discover).' },
     ],
     builderCode: `McpServerInfo info = client.serverInfo();
 info.name();                        // "my-mcp-server"
 info.version();                     // "1.2.0"
-info.protocolVersion();             // "2024-11-05"
+info.protocolVersion();             // "2026-07-28" (stateless era)
 info.supportsTools();               // true
 info.supportsResources();           // true
 info.supportsPrompts();             // false
-info.supportsCapability("logging"); // true / false`,
+info.supportsCapability("logging"); // true / false
+
+// Stateless helpers (2026-07-28+)
+client.isStateless();               // true
+client.discover().path("protocolVersions"); // supported versions`,
   },
 ]
 

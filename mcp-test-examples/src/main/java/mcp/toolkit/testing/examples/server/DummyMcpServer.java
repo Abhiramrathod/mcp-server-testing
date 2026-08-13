@@ -32,7 +32,7 @@ public class DummyMcpServer {
      */
     public DummyMcpServer(int port) throws IOException {
         server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.setExecutor(Executors.newFixedThreadPool(4));
+        server.setExecutor(Executors.newCachedThreadPool());
         
         server.createContext("/sse", this::handleSse);
         server.createContext("/message", this::handleMessage);
@@ -41,12 +41,22 @@ public class DummyMcpServer {
     /** Starts the server so it begins accepting connections. */
     public void start() {
         server.start();
-        System.out.println("Dummy MCP Server started on port " + server.getAddress().getPort());
+        System.out.println("Dummy MCP Server started on port " + port());
     }
 
     /** Stops the server and releases its resources. */
     public void stop() {
         server.stop(0);
+    }
+
+    /** Returns the bound port ({@code 0} selects an ephemeral port). */
+    public int port() {
+        return server.getAddress().getPort();
+    }
+
+    /** Returns the base URL clients connect to, e.g. {@code http://localhost:8080}. */
+    public String baseUrl() {
+        return "http://localhost:" + port();
     }
 
     private void handleSse(HttpExchange exchange) throws IOException {
@@ -62,12 +72,16 @@ public class DummyMcpServer {
         sendSseEvent(os, "endpoint", "/message");
         
         try {
-            while (!Thread.currentThread().isInterrupted() && !exchange.getHttpContext().getServer().getAddress().toString().isEmpty()) {
+            while (!Thread.currentThread().isInterrupted()) {
                 Thread.sleep(1000);
+                // Keep-alive comment: also detects a disconnected client so the
+                // handler thread can exit and be reused.
+                os.write(": keep-alive\n\n".getBytes(StandardCharsets.UTF_8));
+                os.flush();
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-        } catch (Exception e) {
+        } catch (IOException e) {
             // Client disconnected
         } finally {
             sseClients.remove(clientId);
@@ -107,6 +121,7 @@ public class DummyMcpServer {
         try {
             JsonNode result = switch (method) {
                 case "initialize" -> handleInitialize();
+                case "ping" -> mapper.createObjectNode();
                 case "tools/list" -> handleToolsList();
                 case "tools/call" -> handleToolsCall(params);
                 case "resources/list" -> handleResourcesList();

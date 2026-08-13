@@ -56,7 +56,7 @@ final class SseEventDecoder {
             // any other line is ignored per the standard
         });
         // flush any trailing unterminated event
-        if (data.length() > 0) {
+        if (!data.isEmpty()) {
             dispatch(eventType, data, onEvent);
         }
     }

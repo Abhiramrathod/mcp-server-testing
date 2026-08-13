@@ -3,6 +3,7 @@ package mcp.toolkit.testing.framework.transport;
 import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 import mcp.toolkit.testing.framework.core.exception.McpSessionExpiredException;
+import mcp.toolkit.testing.framework.core.util.McpProtocolVersions;
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -53,6 +54,7 @@ public class McpStreamableHttpTransport implements McpTransport {
     private final Duration timeout;
     private final McpJsonCodec jsonCodec;
     private final Map<String, String> headers;
+    private final boolean stateless;
     private final ConcurrentHashMap<Long, Thread> responseConsumers = new ConcurrentHashMap<>();
 
     private volatile HttpClient httpClient;
@@ -93,6 +95,7 @@ public class McpStreamableHttpTransport implements McpTransport {
         this.timeout = timeout == null ? McpTestClientConstants.Defaults.TIMEOUT : timeout;
         this.jsonCodec = McpValidation.requireNonNull(jsonCodec, "jsonCodec");
         this.headers = headers == null ? Collections.emptyMap() : Map.copyOf(headers);
+        this.stateless = McpProtocolVersions.isStateless(protocolVersion);
     }
 
     /** Creates the HTTP client and marks the transport connected. */
@@ -124,6 +127,10 @@ public class McpStreamableHttpTransport implements McpTransport {
         captureSessionId(responseHeaders);
 
         if (status == 404) {
+            if (stateless) {
+                throw new IllegalStateException(
+                        "Streamable HTTP request failed with status 404 for request id " + requestId);
+            }
             handleSessionExpired();
             throw new McpSessionExpiredException(
                     "Server terminated the session for request id " + requestId
@@ -193,6 +200,7 @@ public class McpStreamableHttpTransport implements McpTransport {
      * (HTTP 405) are handled gracefully.
      */
     public void startServerStream() {
+        if (stateless) return;
         if (closed || !serverStreamStarted.compareAndSet(false, true)) return;
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(endpointUri)
@@ -233,7 +241,7 @@ public class McpStreamableHttpTransport implements McpTransport {
         if (closed) return;
         closed = true;
         connected = false;
-        if (httpClient != null && sessionId != null) {
+        if (httpClient != null && !stateless && sessionId != null) {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
                     .uri(endpointUri)
                     .header(McpTestClientConstants.Headers.MCP_SESSION_ID, sessionId)
@@ -265,14 +273,30 @@ public class McpStreamableHttpTransport implements McpTransport {
                 .header(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION, protocolVersion)
                 .POST(HttpRequest.BodyPublishers.ofString(payload))
                 .timeout(timeout);
-        if (sessionId != null) {
+        if (stateless) {
+            applyStatelessHeaders(builder, payload);
+        } else if (sessionId != null) {
             builder.header(McpTestClientConstants.Headers.MCP_SESSION_ID, sessionId);
         }
         applyHeaders(builder);
         return builder.build();
     }
 
+    private void applyStatelessHeaders(HttpRequest.Builder builder, String payload) {
+        JsonNode node = jsonCodec.parseJson(payload);
+        if (node == null) return;
+        String method = node.path("method").asText();
+        if (!method.isBlank()) {
+            builder.header(McpTestClientConstants.Headers.MCP_METHOD, method);
+        }
+        String name = node.path("params").path("name").asText();
+        if (!name.isBlank()) {
+            builder.header(McpTestClientConstants.Headers.MCP_NAME, name);
+        }
+    }
+
     private void captureSessionId(HttpHeaders responseHeaders) {
+        if (stateless) return;
         String value = responseHeaders.firstValue(McpTestClientConstants.Headers.MCP_SESSION_ID).orElse(null);
         if (value != null && !value.isBlank()) {
             this.sessionId = value;

@@ -30,13 +30,6 @@
             <artifactId>mcp-test-api</artifactId>
         </dependency>
 
-        <!-- JUnit 5 testkit: embedded server + @McpServerTest extension -->
-        <dependency>
-            <groupId>io.github.abhiramrathod</groupId>
-            <artifactId>mcp-test-junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <!-- JUnit 5 for testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

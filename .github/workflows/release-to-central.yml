@@ -106,7 +106,7 @@ jobs:
       - name: Verify POM files exist
         run: |
           set -euo pipefail
-          MODULES="mcp-test-interfaces mcp-test-core mcp-test-transport mcp-test-client mcp-test-api mcp-test-junit mcpTesting"
+          MODULES="mcp-test-interfaces mcp-test-core mcp-test-transport mcp-test-client mcp-test-api mcpTesting"
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | grep -v "^\[" | tail -n 1)
           for mod in $MODULES; do
             pom_path="${HOME}/.m2/repository/io/github/abhiramrathod/$mod/$VERSION/$mod-$VERSION.pom"
@@ -185,7 +185,7 @@ jobs:
           mkdir -p bundle/io/github/abhiramrathod
           
           # Copy only the directories of the specific version being released
-          for module in mcp-test-interfaces mcp-test-core mcp-test-transport mcp-test-client mcp-test-api mcp-test-junit mcpTesting; do
+          for module in mcp-test-interfaces mcp-test-core mcp-test-transport mcp-test-client mcp-test-api mcpTesting; do
             src_dir="$HOME/.m2/repository/io/github/abhiramrathod/$module/$VERSION"
             if [ -d "$src_dir" ]; then
               echo "Copying $module version $VERSION"

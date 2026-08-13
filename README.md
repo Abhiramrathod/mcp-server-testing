@@ -81,7 +81,7 @@ public class MyMcpTest {
 MCP client configuration is available via `McpClientConfig`. Key options:
 
 - `timeout` (Duration) — request timeout applied to connections and RPC calls. Default: 10 seconds (`McpClientConfig.DEFAULT_TIMEOUT`).
-- `protocolVersion` (String) — MCP protocol version advertised during initialize handshake. Default: `2024-11-05` (`McpClientConfig.DEFAULT_PROTOCOL_VERSION`).
+- `protocolVersion` (String) — MCP protocol version the client speaks. Default: `2024-11-05` (legacy session era, backward compatible; `McpClientConfig.DEFAULT_PROTOCOL_VERSION`). Use `2026-07-28` for the stateless protocol — no `initialize` handshake, version negotiation via `server/discover`, results carry `resultType`/`ttlMs`/`cacheScope`, and change notifications flow over `subscriptions/listen`.
 - SSE path — the default Server-Sent Events endpoint path is `/sse` (`McpClientConfig.DEFAULT_SSE_PATH`).
 
 Create a config with the fluent builder:

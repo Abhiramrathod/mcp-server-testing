@@ -2,36 +2,27 @@ package mcp.toolkit.testing.examples;
 
 import mcp.toolkit.testing.framework.api.McpClient;
 import mcp.toolkit.testing.framework.api.model.McpServerInfo;
-import mcp.toolkit.testing.junit.annotation.McpServerTest;
-import mcp.toolkit.testing.junit.server.McpTestServer;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Basic example demonstrating MCP client initialization and server info retrieval
- * using the embedded {@code @McpServerTest} testkit.
+ * against a real, running MCP server.
  */
-@McpServerTest
-class BasicClientTest {
-
-    @BeforeAll
-    static void configure(McpTestServer server) {
-        ExampleServerFixtures.configure(server);
-    }
+class BasicClientTest extends RealMcpServerTestBase {
 
     @Test
-    void testClientInitialization(McpClient client) {
+    void testClientInitialization() {
         assertTrue(client.isInitialized(), "Client should be initialized");
     }
 
     @Test
-    void testServerInfo(McpClient client) {
+    void testServerInfo() {
         McpServerInfo info = client.serverInfo();
 
         assertNotNull(info, "Server info should not be null");
-        assertEquals("mcp-test-server", info.name());
+        assertEquals("dummy-mcp-server", info.name());
         assertEquals("1.0.0", info.version());
         assertEquals("2024-11-05", info.protocolVersion());
 
@@ -41,7 +32,7 @@ class BasicClientTest {
     }
 
     @Test
-    void testServerCapabilities(McpClient client) {
+    void testServerCapabilities() {
         McpServerInfo info = client.serverInfo();
 
         assertTrue(info.supportsTools(), "Server should support tools");

@@ -1,12 +1,8 @@
 package mcp.toolkit.testing.examples;
 
-import mcp.toolkit.testing.framework.api.McpClient;
 import mcp.toolkit.testing.framework.api.McpMethod;
 import mcp.toolkit.testing.framework.api.model.*;
 import com.fasterxml.jackson.databind.JsonNode;
-import mcp.toolkit.testing.junit.annotation.McpServerTest;
-import mcp.toolkit.testing.junit.server.McpTestServer;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -15,22 +11,16 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Comprehensive example demonstrating the full framework capability surface on
- * top of the embedded {@code @McpServerTest} testkit.
+ * Comprehensive example demonstrating the full framework capability surface
+ * against a real, running MCP server.
  */
-@McpServerTest
-class ComprehensiveIntegrationTest {
-
-    @BeforeAll
-    static void configure(McpTestServer server) {
-        ExampleServerFixtures.configure(server);
-    }
+class ComprehensiveIntegrationTest extends RealMcpServerTestBase {
 
     @Test
-    void testServerCapabilities(McpClient client) {
+    void testServerCapabilities() {
         McpServerInfo info = client.serverInfo();
 
-        assertEquals("mcp-test-server", info.name());
+        assertEquals("dummy-mcp-server", info.name());
         assertEquals("1.0.0", info.version());
         assertEquals("2024-11-05", info.protocolVersion());
 
@@ -40,7 +30,7 @@ class ComprehensiveIntegrationTest {
     }
 
     @Test
-    void testToolsWorkflow(McpClient client) {
+    void testToolsWorkflow() {
         List<McpTool> tools = client.tools().listTools();
         assertEquals(2, tools.size());
 
@@ -52,7 +42,7 @@ class ComprehensiveIntegrationTest {
     }
 
     @Test
-    void testResourcesWorkflow(McpClient client) {
+    void testResourcesWorkflow() {
         List<McpResource> resources = client.resources().listResources();
         assertEquals(2, resources.size());
 
@@ -64,7 +54,7 @@ class ComprehensiveIntegrationTest {
     }
 
     @Test
-    void testPromptsWorkflow(McpClient client) {
+    void testPromptsWorkflow() {
         List<McpPrompt> prompts = client.prompts().listPrompts();
         assertEquals(2, prompts.size());
 
@@ -76,7 +66,7 @@ class ComprehensiveIntegrationTest {
     }
 
     @Test
-    void testPingAndExchangeMetrics(McpClient client) {
+    void testPingAndExchangeMetrics() {
         for (int i = 0; i < 3; i++) {
             client.tools().listTools();
         }
@@ -92,7 +82,7 @@ class ComprehensiveIntegrationTest {
     }
 
     @Test
-    void testRawJsonAccess(McpClient client) {
+    void testRawJsonAccess() {
         List<McpTool> tools = client.tools().listTools();
         McpTool tool = tools.get(0);
 
@@ -102,7 +92,7 @@ class ComprehensiveIntegrationTest {
     }
 
     @Test
-    void testExchangeExport(McpClient client) {
+    void testExchangeExport() {
         client.tools().listTools();
 
         JsonNode exported = client.exchanges().export();

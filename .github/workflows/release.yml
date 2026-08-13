@@ -48,4 +48,3 @@ jobs:
             mcp-test-transport/target/mcp-test-transport-*.jar
             mcp-test-client/target/mcp-test-client-*.jar
             mcp-test-api/target/mcp-test-api-*.jar
-            mcp-test-junit/target/mcp-test-junit-*.jar
