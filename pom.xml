@@ -222,6 +222,8 @@
                     <format>ALL</format>
                     <prettyPrint>true</prettyPrint>
                     <nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
+                    <nvdValidForHours>24</nvdValidForHours>
+                    <dataDirectory>${user.home}/.m2/dependency-check-data</dataDirectory>
                 </configuration>
             </plugin>
 

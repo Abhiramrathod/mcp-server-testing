@@ -47,10 +47,16 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Run OWASP Dependency-Check
+      - name: Cache NVD database
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/dependency-check-data
+          key: dependency-check-data-${{ runner.os }}-v1
+
+      - name: Run OWASP Dependency-Check (aggregate)
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: mvn -B -ntp dependency-check:check
+        run: mvn -B -ntp -DskipTests package dependency-check:aggregate
 
       - name: Upload dependency-check report
         if: always()
