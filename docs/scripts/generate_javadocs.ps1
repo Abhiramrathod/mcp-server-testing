@@ -13,9 +13,9 @@ $ErrorActionPreference = 'Stop'
 
 # Resolve repository root (assumes this script lives in docs/scripts)
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-n$repoRoot = Resolve-Path (Join-Path $scriptDir '..\..')
+$repoRoot = Resolve-Path (Join-Path $scriptDir '..\..')
 
-nWrite-Host "Repository root: $repoRoot"
+Write-Host "Repository root: $repoRoot"
 
 # Verify Maven is available
 if (-not (Get-Command mvn -ErrorAction SilentlyContinue)) {
@@ -24,7 +24,7 @@ if (-not (Get-Command mvn -ErrorAction SilentlyContinue)) {
 }
 
 Push-Location $repoRoot
-ntry {
+try {
     Write-Host "Running: mvn -T 1C -DskipTests clean javadoc:aggregate"
     mvn -T 1C -DskipTests clean javadoc:aggregate
 } catch {
@@ -42,7 +42,7 @@ if (-not (Test-Path $src)) {
     exit 3
 }
 
-nif (-not (Test-Path $dest)) {
+if (-not (Test-Path $dest)) {
     Write-Host "Creating destination: $dest"
     New-Item -ItemType Directory -Path $dest -Force | Out-Null
 }

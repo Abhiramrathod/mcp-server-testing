@@ -1,4 +1,5 @@
 import DocLayout from '../layouts/DocLayout'
+import { Blocks } from '../components/Blocks'
 import type { Block } from '../lib/markdown'
 
 const blocks: Block[] = [
@@ -77,6 +78,7 @@ const blocks: Block[] = [
 ]
 
 export default function ApiReferencePage() {
+  const javadocsHref = `${window.location.origin}${window.location.pathname.replace(/\/+$/, '')}/javadoc/index.html`
   return <DocLayout page={{
     meta: {
       path: '/api-reference',
@@ -87,5 +89,24 @@ export default function ApiReferencePage() {
       editPath: 'docs-site/src/pages/ApiReference.tsx',
     },
     blocks,
+    custom: (
+      <div className="space-y-6">
+        <Blocks blocks={blocks} />
+        <div className="rounded-lg p-5" style={{ border: '1px solid var(--accent-glow)', background: 'var(--accent-dim)' }}>
+          <h2 className="text-base font-bold" style={{ color: 'var(--text)' }}>Javadocs</h2>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>
+            Generated API documentation for every public class in the framework, built from the same sources on every docs deploy.
+          </p>
+          <a href={javadocsHref} target="_blank" rel="noopener noreferrer"
+            className="inline-block mt-3 text-xs font-semibold no-underline transition-colors"
+            style={{ color: 'var(--accent)' }}
+            onMouseEnter={e => { e.currentTarget.style.textDecoration = 'underline' }}
+            onMouseLeave={e => { e.currentTarget.style.textDecoration = 'none' }}
+          >
+            Open generated Javadocs →
+          </a>
+        </div>
+      </div>
+    ),
   }} />
 }
