@@ -11,7 +11,7 @@ import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 import mcp.toolkit.testing.framework.core.util.McpProtocolVersions;
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import mcp.toolkit.testing.framework.core.util.McpTestClientUtils;
-import mcp.toolkit.testing.framework.interfaces.McpTransport;
+import mcp.toolkit.testing.framework.interfaces.TransportGateway;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -33,7 +33,7 @@ public class McpTestClient implements AutoCloseable {
     private final ObjectMapper objectMapper;
     private final String protocolVersion;
     private final McpInitializationGuard initGuard;
-    private final McpTransport transport;
+    private final TransportGateway transportGateway;
     private final McpJsonCodec jsonCodec;
     private final McpRpcClient rpcClient;
     private final McpToolDirectory toolDirectory;
@@ -101,14 +101,14 @@ public class McpTestClient implements AutoCloseable {
         ClientComponents components = buildComponents(
                 this.objectMapper, this.protocolVersion, baseUrl, endpointPath,
                 this.initGuard, useStreamableHttp, timeout, headers);
-        this.transport = components.transport();
+        this.transportGateway = TransportGateway.of(components.transport());
         this.jsonCodec = components.jsonCodec();
         this.rpcClient = components.rpcClient();
         this.toolDirectory = components.toolDirectory();
         this.resourceDirectory = components.resourceDirectory();
         this.promptDirectory = components.promptDirectory();
         this.rpcClient.setSessionReinitializer(() -> {
-            transport.clearSession();
+            transportGateway.clearSession().run();
             initialized = false;
             initialize();
         });
@@ -125,7 +125,7 @@ public class McpTestClient implements AutoCloseable {
         if (initialized) return;
         synchronized (initLock) {
             if (initialized) return;
-            transport.connect();
+            transportGateway.connect().run();
             if (McpProtocolVersions.isStateless(protocolVersion)) {
                 if (!discoverAttempted) {
                     discoverAttempted = true;
@@ -221,7 +221,7 @@ public class McpTestClient implements AutoCloseable {
      * Closes the transport and releases all resources.
      */
     @Override
-    public void close() { transport.close(); }
+    public void close() { transportGateway.close().run(); }
 
     /**
      * Returns the client for tool discovery and invocation.
@@ -363,7 +363,7 @@ public class McpTestClient implements AutoCloseable {
      * @param listener consumer of server messages; may be {@code null} to clear
      */
     public void onServerMessage(Consumer<JsonNode> listener) {
-        transport.setServerMessageListener(listener);
+        transportGateway.serverMessageListener().accept(listener);
     }
 
     /**
@@ -373,7 +373,7 @@ public class McpTestClient implements AutoCloseable {
      * @param handler re-initialization handler; may be {@code null} to clear
      */
     public void setSessionExpiredHandler(Runnable handler) {
-        transport.setSessionExpiredHandler(handler);
+        transportGateway.sessionExpiredHandler().accept(handler);
     }
 
     private void ensureInitialized() {

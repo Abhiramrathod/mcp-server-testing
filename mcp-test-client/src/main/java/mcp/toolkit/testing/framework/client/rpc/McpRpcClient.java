@@ -9,6 +9,7 @@ import mcp.toolkit.testing.framework.core.util.McpValidation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
+import mcp.toolkit.testing.framework.interfaces.TransportGateway;
 
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
@@ -20,7 +21,7 @@ public final class McpRpcClient {
     private static final String CLIENT_NAME = "mcp-test-client";
     private static final String CLIENT_VERSION = "1.0.0";
 
-    private final McpTransport transport;
+    private final TransportGateway transportGateway;
     private final AtomicLong idSequence;
     private final McpJsonCodec jsonCodec;
     private final String protocolVersion;
@@ -38,7 +39,7 @@ public final class McpRpcClient {
      */
     public McpRpcClient(McpTransport transport, AtomicLong idSequence, McpJsonCodec jsonCodec,
                         String protocolVersion) {
-        this.transport = McpValidation.requireNonNull(transport, "transport");
+        this.transportGateway = TransportGateway.of(McpValidation.requireNonNull(transport, "transport"));
         this.idSequence = McpValidation.requireNonNull(idSequence, "idSequence");
         this.jsonCodec = McpValidation.requireNonNull(jsonCodec, "jsonCodec");
         this.protocolVersion = McpValidation.requireNonNull(protocolVersion, "protocolVersion");
@@ -86,9 +87,9 @@ public final class McpRpcClient {
 
         JsonNode response;
         try {
-            response = transport.sendRequest(json, id);
+            response = transportGateway.sendRequest().apply(json, id);
         } catch (McpSessionExpiredException ex) {
-            transport.clearSession();
+            transportGateway.clearSession().run();
             Runnable reinitializer = sessionReinitializer;
             if (reinitializer != null && retriesLeft > 0) {
                 reinitializer.run();
@@ -165,7 +166,7 @@ public final class McpRpcClient {
      */
     public void sendNotification(String method, Supplier<JsonNode> paramsSupplier) {
         JsonNode params = paramsSupplier == null ? null : paramsSupplier.get();
-        transport.sendNotification(jsonCodec.toJson(buildRequest(method, null, params)));
+        transportGateway.sendNotification().accept(jsonCodec.toJson(buildRequest(method, null, params)));
     }
 
     private ObjectNode buildRequest(String method, Long id, JsonNode params) {

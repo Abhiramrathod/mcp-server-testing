@@ -1,15 +1,14 @@
 package mcp.toolkit.testing.framework.transport;
 
+import mcp.toolkit.testing.framework.interfaces.McpResponse;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
+import mcp.toolkit.testing.framework.interfaces.TransportChannel;
 import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -21,13 +20,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
  * {@link McpTransport} implementation using the legacy HTTP+SSE transport
  * (protocol version 2024-11-05).
  */
-public class McpSseTransport implements McpTransport {
+final class McpSseTransport implements McpTransport {
 
     private final URI sseEndpointUri;
     private final URI baseUri;
@@ -45,35 +45,22 @@ public class McpSseTransport implements McpTransport {
     private volatile boolean closed;
     private volatile Consumer<JsonNode> serverMessageListener;
 
-    private HttpClient httpClient;
-    private CompletableFuture<HttpResponse<Stream<String>>> sseConnectionFuture;
+    private final TransportChannel channel;
+    private CompletableFuture<McpResponse> sseConnectionFuture;
 
-    /**
-     * Creates an SSE transport with no extra HTTP headers.
-     *
-     * @param sseEndpointUri  URI of the {@code /sse} endpoint
-     * @param baseUri         base URI used to resolve the message endpoint
-     * @param protocolVersion MCP protocol version to advertise
-     * @param timeout         timeout for connection and RPC calls
-     * @param jsonCodec       codec used to parse JSON messages
-     */
-    public McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
-                           Duration timeout, McpJsonCodec jsonCodec) {
-        this(sseEndpointUri, baseUri, protocolVersion, timeout, jsonCodec, Collections.emptyMap());
+    McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
+                    Duration timeout, McpJsonCodec jsonCodec) {
+        this(sseEndpointUri, baseUri, protocolVersion, timeout, jsonCodec, Collections.emptyMap(), null);
     }
 
-    /**
-     * Creates an SSE transport with custom HTTP headers.
-     *
-     * @param sseEndpointUri  URI of the {@code /sse} endpoint
-     * @param baseUri         base URI used to resolve the message endpoint
-     * @param protocolVersion MCP protocol version to advertise
-     * @param timeout         timeout for connection and RPC calls
-     * @param jsonCodec       codec used to parse JSON messages
-     * @param headers         extra HTTP headers sent on every request
-     */
-    public McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
-                           Duration timeout, McpJsonCodec jsonCodec, Map<String, String> headers) {
+    McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
+                    Duration timeout, McpJsonCodec jsonCodec, Map<String, String> headers) {
+        this(sseEndpointUri, baseUri, protocolVersion, timeout, jsonCodec, headers, null);
+    }
+
+    McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
+                    Duration timeout, McpJsonCodec jsonCodec, Map<String, String> headers,
+                    TransportChannel channel) {
         this.sseEndpointUri = McpValidation.requireNonNull(sseEndpointUri, "sseEndpointUri");
         this.baseUri = McpValidation.requireNonNull(baseUri, "baseUri");
         this.messageEndpointUri = this.baseUri.resolve(McpTestClientConstants.Endpoints.MESSAGE);
@@ -81,6 +68,7 @@ public class McpSseTransport implements McpTransport {
         this.timeout = timeout == null ? McpTestClientConstants.Defaults.TIMEOUT : timeout;
         this.jsonCodec = McpValidation.requireNonNull(jsonCodec, "jsonCodec");
         this.headers = headers == null ? Collections.emptyMap() : Map.copyOf(headers);
+        this.channel = McpValidation.requireNonNull(channel, "channel");
     }
 
     /**
@@ -94,16 +82,13 @@ public class McpSseTransport implements McpTransport {
             if (connected) return;
             if (closed) throw new IllegalStateException("McpSseTransport is closed");
 
-            httpClient = HttpClient.newBuilder().connectTimeout(timeout).build();
-            HttpRequest.Builder sseBuilder = HttpRequest.newBuilder()
-                    .uri(sseEndpointUri)
-                    .header(McpTestClientConstants.Headers.ACCEPT, McpTestClientConstants.Headers.CONTENT_TYPE_SSE);
-            applyHeaders(sseBuilder);
-            HttpRequest sseRequest = sseBuilder.GET().build();
+            Map<String, String> sseHeaders = new LinkedHashMap<>();
+            sseHeaders.put(McpTestClientConstants.Headers.ACCEPT, McpTestClientConstants.Headers.CONTENT_TYPE_SSE);
+            sseHeaders.putAll(headers);
+            sseConnectionFuture = channel.openStream(sseEndpointUri, sseHeaders).get();
 
             CountDownLatch connectLatch = new CountDownLatch(1);
             final Exception[] connectError = {null};
-            sseConnectionFuture = httpClient.sendAsync(sseRequest, HttpResponse.BodyHandlers.ofLines());
 
             sseConnectionFuture.thenAcceptAsync(response -> {
                 if (response.statusCode() >= 400) {
@@ -113,7 +98,7 @@ public class McpSseTransport implements McpTransport {
                     return;
                 }
                 connectLatch.countDown();
-                processSseStream(response.body());
+                processSseStream(response.bodyLines());
             }).exceptionally(ex -> {
                 connectError[0] = ex instanceof Exception ? (Exception) ex : new IllegalStateException("SSE stream error", ex);
                 connectLatch.countDown();
@@ -199,26 +184,16 @@ public class McpSseTransport implements McpTransport {
     }
 
     private void postMessage(String payload) {
-        HttpRequest.Builder postBuilder = HttpRequest.newBuilder()
-                .uri(messageEndpointUri)
-                .header(McpTestClientConstants.Headers.CONTENT_TYPE, McpTestClientConstants.Headers.CONTENT_TYPE_JSON)
-                .header(McpTestClientConstants.Headers.ACCEPT, McpTestClientConstants.Headers.CONTENT_TYPE_SSE)
-                .header(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION, protocolVersion)
-                .POST(HttpRequest.BodyPublishers.ofString(payload))
-                .timeout(timeout);
-        applyHeaders(postBuilder);
-        HttpRequest postRequest = postBuilder.build();
-        try {
-            HttpResponse<String> response = httpClient.send(postRequest, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() >= 400) {
-                throw new IllegalStateException("MCP POST failed with status " + response.statusCode() + ": " + response.body());
-            }
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted during MCP POST", ex);
-        } catch (Exception ex) {
-            if (ex instanceof IllegalStateException) throw (IllegalStateException) ex;
-            throw new IllegalStateException("Failed to POST MCP message to " + messageEndpointUri, ex);
+        Map<String, String> requestHeaders = new LinkedHashMap<>();
+        requestHeaders.put(McpTestClientConstants.Headers.CONTENT_TYPE, McpTestClientConstants.Headers.CONTENT_TYPE_JSON);
+        requestHeaders.put(McpTestClientConstants.Headers.ACCEPT, McpTestClientConstants.Headers.CONTENT_TYPE_SSE);
+        requestHeaders.put(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION, protocolVersion);
+        requestHeaders.putAll(headers);
+        Function<String, McpResponse> poster =
+                channel.exchangeAsText(messageEndpointUri, requestHeaders);
+        McpResponse response = poster.apply(McpValidation.requireNonNull(payload, "payload"));
+        if (response.statusCode() >= 400) {
+            throw new IllegalStateException("MCP POST failed with status " + response.statusCode() + ": " + response.bodyAsText());
         }
     }
 
@@ -282,12 +257,6 @@ public class McpSseTransport implements McpTransport {
     private void failAllPending(Exception cause) {
         pendingRequests.forEach((id, future) -> future.completeExceptionally(cause));
         pendingRequests.clear();
-    }
-
-    private void applyHeaders(HttpRequest.Builder builder) {
-        for (Map.Entry<String, String> entry : headers.entrySet()) {
-            builder.header(entry.getKey(), entry.getValue());
-        }
     }
 
     private void requireConnected() {

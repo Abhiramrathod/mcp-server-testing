@@ -8,8 +8,7 @@ import mcp.toolkit.testing.framework.client.tools.McpToolDirectory;
 import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
-import mcp.toolkit.testing.framework.transport.McpSseTransport;
-import mcp.toolkit.testing.framework.transport.McpStreamableHttpTransport;
+import mcp.toolkit.testing.framework.transport.McpTransportFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -156,11 +155,11 @@ public final class McpTestClientUtils {
         AtomicLong idSequence = new AtomicLong(1);
         McpTransport transport;
         if (useStreamableHttp) {
-            transport = new McpStreamableHttpTransport(
+            transport = McpTransportFactory.streamable(
                     endpoints.sseEndpointUri(), protocolVersion,
                     timeout, jsonCodec, headers);
         } else {
-            transport = new McpSseTransport(
+            transport = McpTransportFactory.sse(
                     endpoints.sseEndpointUri(), endpoints.baseUri(),
                     protocolVersion, timeout, jsonCodec, headers);
         }

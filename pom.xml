@@ -6,7 +6,7 @@
 
     <groupId>io.github.abhiramrathod</groupId>
     <artifactId>mcpTesting</artifactId>
-    <version>1.0.38</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>MCP Testing Framework</name>

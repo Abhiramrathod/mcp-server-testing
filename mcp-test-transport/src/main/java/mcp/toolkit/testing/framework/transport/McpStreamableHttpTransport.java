@@ -5,17 +5,15 @@ import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 import mcp.toolkit.testing.framework.core.exception.McpSessionExpiredException;
 import mcp.toolkit.testing.framework.core.util.McpProtocolVersions;
 import mcp.toolkit.testing.framework.core.util.McpValidation;
+import mcp.toolkit.testing.framework.interfaces.McpResponse;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
+import mcp.toolkit.testing.framework.interfaces.TransportChannel;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpHeaders;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -25,6 +23,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,22 +33,20 @@ import java.util.stream.Stream;
  * {@link McpTransport} implementation using the Streamable HTTP transport
  * (protocol version 2025-03-26 and later).
  *
- * <p>Each JSON-RPC message is sent as its own HTTP POST to a single MCP endpoint. The
- * server may answer with either a single {@code application/json} object or an SSE
- * stream scoped to that request. The implementation:
+ * <p>Each JSON-RPC message is sent as its own POST to a single MCP endpoint. The
+ * server may answer with either a single JSON object or an SSE stream scoped to
+ * that request. The implementation:
  *
  * <ul>
  *   <li>accepts both {@code application/json} and {@code text/event-stream} responses,</li>
- *   <li>manages the {@code Mcp-Session-Id} header assigned during initialization,
- *       re-initializing transparently when the server terminates the session (HTTP 404),</li>
- *   <li>surfaces server-initiated requests and notifications
- *       (e.g. {@code roots/list}, {@code sampling/createMessage},
- *       {@code notifications/message}, {@code notifications/progress}) to registered
+ *   <li>manages the session id assigned during initialization, re-initializing
+ *       transparently when the server terminates the session (HTTP 404),</li>
+ *   <li>surfaces server-initiated requests and notifications to registered
  *       listeners, and</li>
- *   <li>optionally opens a {@code GET} SSE stream to receive server messages.</li>
+ *   <li>optionally opens a stream connection to receive server messages.</li>
  * </ul>
  */
-public class McpStreamableHttpTransport implements McpTransport {
+final class McpStreamableHttpTransport implements McpTransport {
 
     private final URI endpointUri;
     private final String protocolVersion;
@@ -57,7 +56,7 @@ public class McpStreamableHttpTransport implements McpTransport {
     private final boolean stateless;
     private final ConcurrentHashMap<Long, Thread> responseConsumers = new ConcurrentHashMap<>();
 
-    private volatile HttpClient httpClient;
+    private final TransportChannel channel;
     private volatile boolean connected;
     private volatile boolean closed;
     private volatile String sessionId;
@@ -65,45 +64,37 @@ public class McpStreamableHttpTransport implements McpTransport {
     private volatile Runnable sessionExpiredHandler;
     private final AtomicBoolean serverStreamStarted = new AtomicBoolean(false);
 
-    /**
-     * Creates a Streamable HTTP transport with no extra HTTP headers.
-     *
-     * @param endpointUri     MCP endpoint URI (default {@code /mcp})
-     * @param protocolVersion MCP protocol version to advertise
-     * @param timeout         timeout for connection and RPC calls
-     * @param jsonCodec       codec used to parse JSON messages
-     */
-    public McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
-                                      Duration timeout, McpJsonCodec jsonCodec) {
-        this(endpointUri, protocolVersion, timeout, jsonCodec, Collections.emptyMap());
+    private static final Predicate<String> IS_SSE_RESPONSE = value ->
+            value.toLowerCase().contains(McpTestClientConstants.Headers.CONTENT_TYPE_SSE);
+
+    McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
+                               Duration timeout, McpJsonCodec jsonCodec) {
+        this(endpointUri, protocolVersion, timeout, jsonCodec, Collections.emptyMap(), null);
     }
 
-    /**
-     * Creates a Streamable HTTP transport with custom HTTP headers.
-     *
-     * @param endpointUri     MCP endpoint URI (default {@code /mcp})
-     * @param protocolVersion MCP protocol version to advertise
-     * @param timeout         timeout for connection and RPC calls
-     * @param jsonCodec       codec used to parse JSON messages
-     * @param headers         extra HTTP headers sent on every request
-     */
-    public McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
-                                      Duration timeout, McpJsonCodec jsonCodec,
-                                      Map<String, String> headers) {
+    McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
+                               Duration timeout, McpJsonCodec jsonCodec,
+                               Map<String, String> headers) {
+        this(endpointUri, protocolVersion, timeout, jsonCodec, headers, null);
+    }
+
+    McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
+                               Duration timeout, McpJsonCodec jsonCodec,
+                               Map<String, String> headers, TransportChannel channel) {
         this.endpointUri = McpValidation.requireNonNull(endpointUri, "endpointUri");
         this.protocolVersion = McpValidation.requireNonNull(protocolVersion, "protocolVersion");
         this.timeout = timeout == null ? McpTestClientConstants.Defaults.TIMEOUT : timeout;
         this.jsonCodec = McpValidation.requireNonNull(jsonCodec, "jsonCodec");
         this.headers = headers == null ? Collections.emptyMap() : Map.copyOf(headers);
         this.stateless = McpProtocolVersions.isStateless(protocolVersion);
+        this.channel = McpValidation.requireNonNull(channel, "channel");
     }
 
-    /** Creates the HTTP client and marks the transport connected. */
+    /** Marks the transport connected. */
     @Override
     public void connect() {
         if (connected) return;
         if (closed) throw new IllegalStateException("McpStreamableHttpTransport is closed");
-        httpClient = HttpClient.newBuilder().connectTimeout(timeout).build();
         connected = true;
     }
 
@@ -111,20 +102,11 @@ public class McpStreamableHttpTransport implements McpTransport {
     @Override
     public JsonNode sendRequest(String payload, long requestId) {
         requireConnected();
-        HttpRequest request = buildPost(payload);
-        HttpResponse<Stream<String>> response;
-        try {
-            response = httpClient.send(request, HttpResponse.BodyHandlers.ofLines());
-        } catch (IOException ex) {
-            throw new IllegalStateException("Failed to send Streamable HTTP request to " + endpointUri, ex);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted during Streamable HTTP request", ex);
-        }
+        McpResponse response = channel.exchange(endpointUri, buildPostHeaders(payload))
+                .apply(McpValidation.requireNonNull(payload, "payload"));
 
         int status = response.statusCode();
-        HttpHeaders responseHeaders = response.headers();
-        captureSessionId(responseHeaders);
+        captureSessionId(response);
 
         if (status == 404) {
             if (stateless) {
@@ -143,35 +125,31 @@ public class McpStreamableHttpTransport implements McpTransport {
         }
         if (status >= 400) {
             throw new IllegalStateException(
-                    "Streamable HTTP request failed with status " + status + ": " + bodyOf(response.body()));
+                    "Streamable HTTP request failed with status " + status + ": " + response.bodyAsText());
         }
 
-        String contentType = responseHeaders.firstValue(McpTestClientConstants.Headers.CONTENT_TYPE)
-                .orElse(McpTestClientConstants.Headers.CONTENT_TYPE_JSON);
-        if (contentType.toLowerCase().contains(McpTestClientConstants.Headers.CONTENT_TYPE_SSE)) {
-            return awaitSseResponse(response.body(), requestId);
+        String contentType = response.header(McpTestClientConstants.Headers.CONTENT_TYPE);
+        if (contentType == null) {
+            contentType = McpTestClientConstants.Headers.CONTENT_TYPE_JSON;
         }
-        return awaitJsonResponse(response.body(), requestId);
+        if (IS_SSE_RESPONSE.test(contentType)) {
+            return awaitSseResponse(response.bodyLines(), requestId);
+        }
+        return awaitJsonResponse(response.bodyLines(), requestId);
     }
 
     /** Sends a POST notification without waiting for a response. */
     @Override
     public void sendNotification(String payload) {
         requireConnected();
-        HttpRequest request = buildPost(payload);
-        try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            captureSessionId(response.headers());
-            if (response.statusCode() >= 400) {
-                throw new IllegalStateException(
-                        "Streamable HTTP notification failed with status " + response.statusCode()
-                                + ": " + response.body());
-            }
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted during Streamable HTTP notification", ex);
-        } catch (IOException ex) {
-            throw new IllegalStateException("Failed to send Streamable HTTP notification to " + endpointUri, ex);
+        Function<String, McpResponse> notifier =
+                channel.exchangeAsText(endpointUri, buildPostHeaders(payload));
+        McpResponse response = notifier.apply(McpValidation.requireNonNull(payload, "payload"));
+        captureSessionId(response);
+        if (response.statusCode() >= 400) {
+            throw new IllegalStateException(
+                    "Streamable HTTP notification failed with status " + response.statusCode()
+                            + ": " + response.bodyAsText());
         }
     }
 
@@ -187,39 +165,39 @@ public class McpStreamableHttpTransport implements McpTransport {
         this.sessionExpiredHandler = handler;
     }
 
-    /** Clears the cached {@code Mcp-Session-Id}. */
+    /** Clears the cached session id. */
     @Override
     public void clearSession() {
         this.sessionId = null;
     }
 
     /**
-     * Opens a {@code GET} SSE stream to the MCP endpoint so the server can push
-     * requests and notifications to this client (Streamable HTTP, versions 2025-03-26
-     * through 2025-11-25). Servers that do not support a {@code GET} stream
-     * (HTTP 405) are handled gracefully.
+     * Opens a stream connection to the MCP endpoint so the server can push
+     * requests and notifications to this client (Streamable HTTP, versions
+     * 2025-03-26 through 2025-11-25). Servers that do not support a stream
+     * connection are handled gracefully.
      */
     public void startServerStream() {
         if (stateless) return;
         if (closed || !serverStreamStarted.compareAndSet(false, true)) return;
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(endpointUri)
-                .header(McpTestClientConstants.Headers.ACCEPT, McpTestClientConstants.Headers.CONTENT_TYPE_SSE)
-                .header(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION, protocolVersion)
-                .GET();
+        Map<String, String> streamHeaders = new LinkedHashMap<>();
+        streamHeaders.put(McpTestClientConstants.Headers.ACCEPT, McpTestClientConstants.Headers.CONTENT_TYPE_SSE);
+        streamHeaders.put(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION, protocolVersion);
         if (sessionId != null) {
-            builder.header(McpTestClientConstants.Headers.MCP_SESSION_ID, sessionId);
+            streamHeaders.put(McpTestClientConstants.Headers.MCP_SESSION_ID, sessionId);
         }
-        applyHeaders(builder);
+        streamHeaders.putAll(headers);
         try {
-            httpClient.sendAsync(builder.build(), HttpResponse.BodyHandlers.ofLines())
+            Supplier<CompletableFuture<McpResponse>> streamOpener =
+                    channel.openStream(endpointUri, streamHeaders);
+            streamOpener.get()
                     .thenAcceptAsync(response -> {
                         if (response.statusCode() >= 400) {
-                            // e.g. 405 Method Not Allowed: the server does not offer a GET stream
+                            // e.g. 405 Method Not Allowed: the server does not offer a stream connection
                             return;
                         }
                         try {
-                            SseEventDecoder.decode(response.body(), (event, data) -> {
+                            SseEventDecoder.decode(response.bodyLines(), (event, data) -> {
                                 JsonNode message = jsonCodec.parseJson(data);
                                 if (message != null) {
                                     dispatchToListener(message);
@@ -235,21 +213,19 @@ public class McpStreamableHttpTransport implements McpTransport {
         }
     }
 
-    /** Sends a best-effort DELETE to terminate the session and releases resources. */
+    /** Sends a best-effort request to terminate the session and releases resources. */
     @Override
     public void close() {
         if (closed) return;
         closed = true;
         connected = false;
-        if (httpClient != null && !stateless && sessionId != null) {
-            HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .uri(endpointUri)
-                    .header(McpTestClientConstants.Headers.MCP_SESSION_ID, sessionId)
-                    .header(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION, protocolVersion)
-                    .DELETE();
-            applyHeaders(builder);
+        if (channel != null && !stateless && sessionId != null) {
+            Map<String, String> deleteHeaders = new LinkedHashMap<>();
+            deleteHeaders.put(McpTestClientConstants.Headers.MCP_SESSION_ID, sessionId);
+            deleteHeaders.put(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION, protocolVersion);
+            deleteHeaders.putAll(headers);
             try {
-                httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+                channel.closeSession(endpointUri, deleteHeaders).run();
             } catch (Exception ignored) {
                 // best-effort session termination
             }
@@ -264,40 +240,37 @@ public class McpStreamableHttpTransport implements McpTransport {
      */
     public boolean isConnected() { return connected && !closed; }
 
-    private HttpRequest buildPost(String payload) {
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(endpointUri)
-                .header(McpTestClientConstants.Headers.CONTENT_TYPE, McpTestClientConstants.Headers.CONTENT_TYPE_JSON)
-                .header(McpTestClientConstants.Headers.ACCEPT,
-                        McpTestClientConstants.Headers.CONTENT_TYPE_JSON + ", " + McpTestClientConstants.Headers.CONTENT_TYPE_SSE)
-                .header(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION, protocolVersion)
-                .POST(HttpRequest.BodyPublishers.ofString(payload))
-                .timeout(timeout);
+    private Map<String, String> buildPostHeaders(String payload) {
+        Map<String, String> requestHeaders = new LinkedHashMap<>();
+        requestHeaders.put(McpTestClientConstants.Headers.CONTENT_TYPE, McpTestClientConstants.Headers.CONTENT_TYPE_JSON);
+        requestHeaders.put(McpTestClientConstants.Headers.ACCEPT,
+                McpTestClientConstants.Headers.CONTENT_TYPE_JSON + ", " + McpTestClientConstants.Headers.CONTENT_TYPE_SSE);
+        requestHeaders.put(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION, protocolVersion);
         if (stateless) {
-            applyStatelessHeaders(builder, payload);
+            applyStatelessHeaders(requestHeaders, payload);
         } else if (sessionId != null) {
-            builder.header(McpTestClientConstants.Headers.MCP_SESSION_ID, sessionId);
+            requestHeaders.put(McpTestClientConstants.Headers.MCP_SESSION_ID, sessionId);
         }
-        applyHeaders(builder);
-        return builder.build();
+        requestHeaders.putAll(headers);
+        return requestHeaders;
     }
 
-    private void applyStatelessHeaders(HttpRequest.Builder builder, String payload) {
+    private void applyStatelessHeaders(Map<String, String> requestHeaders, String payload) {
         JsonNode node = jsonCodec.parseJson(payload);
         if (node == null) return;
         String method = node.path("method").asText();
         if (!method.isBlank()) {
-            builder.header(McpTestClientConstants.Headers.MCP_METHOD, method);
+            requestHeaders.put(McpTestClientConstants.Headers.MCP_METHOD, method);
         }
         String name = node.path("params").path("name").asText();
         if (!name.isBlank()) {
-            builder.header(McpTestClientConstants.Headers.MCP_NAME, name);
+            requestHeaders.put(McpTestClientConstants.Headers.MCP_NAME, name);
         }
     }
 
-    private void captureSessionId(HttpHeaders responseHeaders) {
+    private void captureSessionId(McpResponse response) {
         if (stateless) return;
-        String value = responseHeaders.firstValue(McpTestClientConstants.Headers.MCP_SESSION_ID).orElse(null);
+        String value = response.header(McpTestClientConstants.Headers.MCP_SESSION_ID);
         if (value != null && !value.isBlank()) {
             this.sessionId = value;
         }
@@ -390,12 +363,6 @@ public class McpStreamableHttpTransport implements McpTransport {
         Consumer<JsonNode> listener = serverMessageListener;
         if (listener != null) {
             listener.accept(message);
-        }
-    }
-
-    private void applyHeaders(HttpRequest.Builder builder) {
-        for (Map.Entry<String, String> entry : headers.entrySet()) {
-            builder.header(entry.getKey(), entry.getValue());
         }
     }
 
