@@ -19,6 +19,7 @@
         <module>mcp-test-transport</module>
         <module>mcp-test-client</module>
         <module>mcp-test-api</module>
+        <module>mcp-test-codegen</module>
         <module>mcp-test-examples</module>
     </modules>
 
@@ -82,6 +83,11 @@
             <dependency>
                 <groupId>io.github.abhiramrathod</groupId>
                 <artifactId>mcp-test-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.abhiramrathod</groupId>
+                <artifactId>mcp-test-codegen</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

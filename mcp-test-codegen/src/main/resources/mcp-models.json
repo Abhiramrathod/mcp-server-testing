@@ -1,0 +1,391 @@
+{
+  "packageName": "mcp.toolkit.testing.framework.api.model",
+  "models": [
+    {
+      "name": "McpTool",
+      "doc": ["Describes a single MCP tool returned by the server."],
+      "imports": ["com.fasterxml.jackson.databind.JsonNode"],
+      "components": [
+        {"name": "name", "type": "String", "doc": "name of the tool"},
+        {"name": "description", "type": "String", "doc": "optional description of the tool"},
+        {"name": "inputSchema", "type": "JsonNode", "doc": "JSON Schema describing the tool's accepted arguments"}
+      ]
+    },
+    {
+      "name": "McpResourceTemplate",
+      "doc": ["Describes a single MCP resource template returned by the server."],
+      "imports": ["com.fasterxml.jackson.databind.JsonNode"],
+      "components": [
+        {"name": "uriTemplate", "type": "String", "doc": "URI template, e.g. {@code \"file:///data/{path}\"}"},
+        {"name": "name", "type": "String", "doc": "human-readable name of the template"},
+        {"name": "description", "type": "String", "doc": "optional description of the template"},
+        {"name": "mimeType", "type": "String", "doc": "MIME type of the template content, when known (may be {@code null})"},
+        {"name": "raw", "type": "JsonNode", "doc": "raw JSON definition as returned by the server"}
+      ]
+    },
+    {
+      "name": "McpResource",
+      "doc": ["Describes a single MCP resource returned by the server."],
+      "imports": ["com.fasterxml.jackson.databind.JsonNode"],
+      "components": [
+        {"name": "uri", "type": "String", "doc": "URI of the resource"},
+        {"name": "name", "type": "String", "doc": "human-readable name of the resource"},
+        {"name": "description", "type": "String", "doc": "optional description of the resource"},
+        {"name": "mimeType", "type": "String", "doc": "MIME type of the resource content, when known (may be {@code null})"},
+        {"name": "raw", "type": "JsonNode", "doc": "raw JSON definition as returned by the server"}
+      ]
+    },
+    {
+      "name": "McpPrompt",
+      "doc": ["Describes a single MCP prompt returned by the server."],
+      "imports": ["com.fasterxml.jackson.databind.JsonNode", "java.util.List"],
+      "components": [
+        {"name": "name", "type": "String", "doc": "name of the prompt"},
+        {"name": "description", "type": "String", "doc": "optional description of the prompt"},
+        {"name": "arguments", "type": "List<PromptArgument>", "doc": "arguments accepted by the prompt template"},
+        {"name": "raw", "type": "JsonNode", "doc": "raw JSON definition as returned by the server"}
+      ],
+      "compactConstructor": ["arguments = arguments == null ? List.of() : List.copyOf(arguments);"],
+      "nested": [
+        {
+          "kind": "record",
+          "name": "PromptArgument",
+          "doc": ["Describes a single argument accepted by a prompt template."],
+          "components": [
+            {"name": "name", "type": "String", "doc": "name of the argument"},
+            {"name": "description", "type": "String", "doc": "optional description of the argument"},
+            {"name": "required", "type": "boolean", "doc": "whether the argument must be provided"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "McpToolResult",
+      "doc": ["Result returned after invoking an MCP tool."],
+      "imports": ["com.fasterxml.jackson.databind.JsonNode", "java.util.List"],
+      "components": [
+        {"name": "content", "type": "List<ContentItem>", "doc": "list of content items returned by the tool"},
+        {"name": "isError", "type": "boolean", "doc": "whether the tool reported an error"},
+        {"name": "raw", "type": "JsonNode", "doc": "raw JSON result as returned by the server"}
+      ],
+      "compactConstructor": ["content = content == null ? List.of() : List.copyOf(content);"],
+      "methods": [
+        {
+          "name": "assertSuccess",
+          "doc": "Asserts that the tool did not report an error.",
+          "returnType": "McpToolResult",
+          "returns": "this result, for chaining",
+          "throwsDoc": "@throws AssertionError if {@link #isError()} is {@code true}",
+          "body": [
+            "if (isError) {",
+            "    throw new AssertionError(\"Expected tool result to succeed but isError=true. Content: \" + content);",
+            "}",
+            "return this;"
+          ]
+        },
+        {
+          "name": "assertError",
+          "doc": "Asserts that the tool reported an error.",
+          "returnType": "McpToolResult",
+          "returns": "this result, for chaining",
+          "throwsDoc": "@throws AssertionError if {@link #isError()} is {@code false}",
+          "body": [
+            "if (!isError) {",
+            "    throw new AssertionError(\"Expected tool result to be an error but isError=false.\");",
+            "}",
+            "return this;"
+          ]
+        },
+        {
+          "name": "assertTextContains",
+          "doc": "Asserts that {@link #firstText()} contains the given substring.",
+          "returnType": "McpToolResult",
+          "params": [
+            {"name": "expected", "type": "String", "doc": "substring expected in the first text content item"}
+          ],
+          "returns": "this result, for chaining",
+          "throwsDoc": "@throws AssertionError if the text does not contain the substring",
+          "body": [
+            "String text = firstText();",
+            "if (!text.contains(expected)) {",
+            "    throw new AssertionError(",
+            "            \"Expected tool result text to contain '\" + expected + \"' but was: '\" + text + \"'\");",
+            "}",
+            "return this;"
+          ]
+        },
+        {
+          "name": "firstText",
+          "doc": "Convenience method returning the text of the first text content item, or an empty string if none is present.",
+          "returnType": "String",
+          "body": [
+            "return content.stream()",
+            "        .filter(c -> \"text\".equals(c.type()))",
+            "        .map(ContentItem::text)",
+            "        .findFirst()",
+            "        .orElse(\"\");"
+          ]
+        }
+      ],
+      "nested": [
+        {
+          "kind": "record",
+          "name": "ContentItem",
+          "doc": ["A single content item within a tool result."],
+          "components": [
+            {"name": "type", "type": "String", "doc": "type of the content item, e.g. {@code \"text\"}"},
+            {"name": "text", "type": "String", "doc": "text content of the item"},
+            {"name": "raw", "type": "JsonNode", "doc": "raw JSON item as returned by the server"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "McpResourceContent",
+      "doc": ["Content returned after reading an MCP resource."],
+      "imports": ["com.fasterxml.jackson.databind.JsonNode", "java.util.List"],
+      "components": [
+        {"name": "uri", "type": "String", "doc": "URI of the resource that was read"},
+        {"name": "contents", "type": "List<ContentItem>", "doc": "list of content items returned by the server"},
+        {"name": "raw", "type": "JsonNode", "doc": "raw JSON result as returned by the server"}
+      ],
+      "compactConstructor": ["contents = contents == null ? List.of() : List.copyOf(contents);"],
+      "methods": [
+        {
+          "name": "assertNotEmpty",
+          "doc": "Asserts that the resource content is not empty.",
+          "returnType": "McpResourceContent",
+          "returns": "this result, for chaining",
+          "throwsDoc": "@throws AssertionError if no content items are present",
+          "body": [
+            "if (contents.isEmpty()) {",
+            "    throw new AssertionError(\"Expected resource content for '\" + uri + \"' to be non-empty.\");",
+            "}",
+            "return this;"
+          ]
+        },
+        {
+          "name": "assertTextContains",
+          "doc": "Asserts that {@link #firstText()} contains the given substring.",
+          "returnType": "McpResourceContent",
+          "params": [
+            {"name": "expected", "type": "String", "doc": "substring expected in the first text content item"}
+          ],
+          "returns": "this result, for chaining",
+          "throwsDoc": "@throws AssertionError if the text does not contain the substring",
+          "body": [
+            "String text = firstText();",
+            "if (!text.contains(expected)) {",
+            "    throw new AssertionError(",
+            "            \"Expected resource content for '\" + uri + \"' to contain '\" + expected",
+            "                    + \"' but was: '\" + text + \"'\");",
+            "}",
+            "return this;"
+          ]
+        },
+        {
+          "name": "firstText",
+          "doc": "Convenience method returning the text of the first text content item, or an empty string if none is present.",
+          "returnType": "String",
+          "body": [
+            "return contents.stream()",
+            "        .filter(c -> \"text\".equals(c.mimeType()) || c.text() != null)",
+            "        .map(ContentItem::text)",
+            "        .findFirst()",
+            "        .orElse(\"\");"
+          ]
+        }
+      ],
+      "nested": [
+        {
+          "kind": "record",
+          "name": "ContentItem",
+          "doc": ["A single content item within a resource read response."],
+          "components": [
+            {"name": "uri", "type": "String", "doc": "URI of the resource the item belongs to"},
+            {"name": "mimeType", "type": "String", "doc": "MIME type of the item content, when known (may be {@code null})"},
+            {"name": "text", "type": "String", "doc": "text content of the item"},
+            {"name": "raw", "type": "JsonNode", "doc": "raw JSON item as returned by the server"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "McpPromptResult",
+      "doc": ["The rendered result of retrieving an MCP prompt by name."],
+      "imports": ["com.fasterxml.jackson.databind.JsonNode", "java.util.List"],
+      "components": [
+        {"name": "description", "type": "String", "doc": "optional description of the prompt result"},
+        {"name": "messages", "type": "List<PromptMessage>", "doc": "list of messages in the rendered prompt"},
+        {"name": "raw", "type": "JsonNode", "doc": "raw JSON result as returned by the server"}
+      ],
+      "compactConstructor": ["messages = messages == null ? List.of() : List.copyOf(messages);"],
+      "methods": [
+        {
+          "name": "assertNotEmpty",
+          "doc": "Asserts that the prompt result contains at least one message.",
+          "returnType": "McpPromptResult",
+          "returns": "this result, for chaining",
+          "throwsDoc": "@throws AssertionError if no messages are present",
+          "body": [
+            "if (messages.isEmpty()) {",
+            "    throw new AssertionError(\"Expected prompt result to contain messages but it was empty.\");",
+            "}",
+            "return this;"
+          ]
+        },
+        {
+          "name": "assertUserTextContains",
+          "doc": "Asserts that {@link #firstUserText()} contains the given substring.",
+          "returnType": "McpPromptResult",
+          "params": [
+            {"name": "expected", "type": "String", "doc": "substring expected in the first user message"}
+          ],
+          "returns": "this result, for chaining",
+          "throwsDoc": "@throws AssertionError if the text does not contain the substring",
+          "body": [
+            "String text = firstUserText();",
+            "if (!text.contains(expected)) {",
+            "    throw new AssertionError(",
+            "            \"Expected prompt user text to contain '\" + expected + \"' but was: '\" + text + \"'\");",
+            "}",
+            "return this;"
+          ]
+        },
+        {
+          "name": "firstUserText",
+          "doc": "Convenience method returning the text of the first user message, or an empty string if none is present.",
+          "returnType": "String",
+          "body": [
+            "return messages.stream()",
+            "        .filter(m -> \"user\".equals(m.role()))",
+            "        .map(PromptMessage::text)",
+            "        .findFirst()",
+            "        .orElse(\"\");"
+          ]
+        }
+      ],
+      "nested": [
+        {
+          "kind": "record",
+          "name": "PromptMessage",
+          "doc": ["A single message within a prompt result."],
+          "components": [
+            {"name": "role", "type": "String", "doc": "role of the message, e.g. {@code \"user\"} or {@code \"assistant\"}"},
+            {"name": "text", "type": "String", "doc": "text content of the message"},
+            {"name": "raw", "type": "JsonNode", "doc": "raw JSON message as returned by the server"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "McpExchangeSummary",
+      "doc": [
+        "A user-facing summary of a single JSON-RPC request/response exchange.",
+        "",
+        "<p>Hides the internal {@code RpcExchange} type from library consumers."
+      ],
+      "imports": ["java.time.Duration"],
+      "components": [
+        {"name": "id", "type": "long", "doc": "unique identifier of the exchange"},
+        {"name": "method", "type": "String", "doc": "JSON-RPC method that was invoked"},
+        {"name": "status", "type": "Status", "doc": "outcome of the exchange"},
+        {"name": "latency", "type": "Duration", "doc": "round-trip duration, when recorded (may be {@code null})"},
+        {"name": "errorDetail", "type": "String", "doc": "human-readable error description, when the exchange failed (may be {@code null})"}
+      ],
+      "nested": [
+        {
+          "kind": "enum",
+          "name": "Status",
+          "values": ["SUCCESS", "ERROR", "TIMEOUT", "FAILED"]
+        }
+      ],
+      "methods": [
+        {
+          "name": "isSuccess",
+          "doc": "Returns {@code true} if the exchange completed successfully.",
+          "returnType": "boolean",
+          "returns": "whether {@link #status()} is {@link Status#SUCCESS}",
+          "body": ["return status == Status.SUCCESS;"]
+        }
+      ]
+    },
+    {
+      "name": "McpCompletion",
+      "doc": ["Result of an MCP {@code completion/complete} request."],
+      "imports": ["java.util.List"],
+      "components": [
+        {"name": "values", "type": "List<String>", "doc": "suggested completions"},
+        {"name": "total", "type": "Integer", "doc": "total number of completion options, when known (may be {@code null})"},
+        {"name": "hasMore", "type": "boolean", "doc": "whether there are additional completions beyond those listed"}
+      ],
+      "methods": [
+        {
+          "name": "hasSuggestions",
+          "doc": "Returns {@code true} if this completion carries at least one suggestion.",
+          "returnType": "boolean",
+          "returns": "whether {@link #values()} is non-empty",
+          "body": ["return values != null && !values.isEmpty();"]
+        }
+      ]
+    },
+    {
+      "name": "McpServerInfo",
+      "doc": [
+        "Typed view of the server information returned during the MCP initialize handshake.",
+        "",
+        "<p>Obtain via {@link mcp.toolkit.testing.framework.api.McpClient#serverInfo()}."
+      ],
+      "imports": [
+        "com.fasterxml.jackson.databind.JsonNode",
+        "java.util.Set",
+        "java.util.HashSet",
+        "java.util.Collections"
+      ],
+      "components": [
+        {"name": "name", "type": "String", "doc": "server name reported during initialization"},
+        {"name": "version", "type": "String", "doc": "server version reported during initialization"},
+        {"name": "protocolVersion", "type": "String", "doc": "MCP protocol version negotiated during initialization"},
+        {"name": "supportedCapabilities", "type": "Set<String>", "doc": "set of capability names advertised by the server"},
+        {"name": "raw", "type": "JsonNode", "doc": "raw JSON initialize result as returned by the server"}
+      ],
+      "compactConstructor": [
+        "supportedCapabilities = Collections.unmodifiableSet(",
+        "        supportedCapabilities == null ? new HashSet<>() : new HashSet<>(supportedCapabilities));"
+      ],
+      "methods": [
+        {
+          "name": "supportsCapability",
+          "doc": "Returns {@code true} if the server advertises the given capability.",
+          "returnType": "boolean",
+          "params": [
+            {"name": "capability", "type": "String", "doc": "capability name, e.g. {@code \"tools\"}"}
+          ],
+          "returns": "whether the capability is present in {@link #supportedCapabilities()}",
+          "body": ["return supportedCapabilities.contains(capability);"]
+        },
+        {
+          "name": "supportsTools",
+          "doc": "Returns {@code true} if the server advertises the {@code \"tools\"} capability.",
+          "returnType": "boolean",
+          "returns": "whether tools are supported",
+          "body": ["return supportsCapability(\"tools\");"]
+        },
+        {
+          "name": "supportsResources",
+          "doc": "Returns {@code true} if the server advertises the {@code \"resources\"} capability.",
+          "returnType": "boolean",
+          "returns": "whether resources are supported",
+          "body": ["return supportsCapability(\"resources\");"]
+        },
+        {
+          "name": "supportsPrompts",
+          "doc": "Returns {@code true} if the server advertises the {@code \"prompts\"} capability.",
+          "returnType": "boolean",
+          "returns": "whether prompts are supported",
+          "body": ["return supportsCapability(\"prompts\");"]
+        }
+      ]
+    }
+  ]
+}

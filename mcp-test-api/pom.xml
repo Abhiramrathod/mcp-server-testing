@@ -23,6 +23,11 @@
             <artifactId>mcp-test-client</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.abhiramrathod</groupId>
+            <artifactId>mcp-test-codegen</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.0</version>
@@ -32,6 +37,15 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!-- JDK 24+ disables implicit annotation processing by default;
+                         force it so McpModelProcessor runs and generates the model classes. -->
+                    <proc>full</proc>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>net.nicoulaj.maven.plugins</groupId>
                 <artifactId>checksum-maven-plugin</artifactId>
