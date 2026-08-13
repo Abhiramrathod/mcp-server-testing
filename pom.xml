@@ -223,6 +223,7 @@
                     <prettyPrint>true</prettyPrint>
                     <nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
                     <nvdValidForHours>24</nvdValidForHours>
+                    <nvdDatafeedUrl>https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz</nvdDatafeedUrl>
                     <dataDirectory>${user.home}/.m2/dependency-check-data</dataDirectory>
                 </configuration>
             </plugin>
