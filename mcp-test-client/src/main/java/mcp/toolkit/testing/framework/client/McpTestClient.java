@@ -1,4 +1,4 @@
-package mcp.toolkit.testing.framework;
+package mcp.toolkit.testing.framework.client;
 
 import mcp.toolkit.testing.framework.client.lifecycle.McpInitializationGuard;
 import mcp.toolkit.testing.framework.client.prompts.McpPromptDirectory;
@@ -10,7 +10,7 @@ import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 import mcp.toolkit.testing.framework.core.util.McpProtocolVersions;
 import mcp.toolkit.testing.framework.core.util.McpValidation;
-import mcp.toolkit.testing.framework.core.util.McpTestClientUtils;
+import mcp.toolkit.testing.framework.client.util.McpTestClientUtils;
 import mcp.toolkit.testing.framework.interfaces.TransportGateway;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static mcp.toolkit.testing.framework.core.util.McpTestClientUtils.buildInitializeParams;
-import static mcp.toolkit.testing.framework.core.util.McpTestClientUtils.ClientComponents;
-import static mcp.toolkit.testing.framework.core.util.McpTestClientUtils.buildComponents;
+import static mcp.toolkit.testing.framework.client.util.McpTestClientUtils.buildInitializeParams;
+import static mcp.toolkit.testing.framework.client.util.McpTestClientUtils.ClientComponents;
+import static mcp.toolkit.testing.framework.client.util.McpTestClientUtils.buildComponents;
 
 public class McpTestClient implements AutoCloseable {
 

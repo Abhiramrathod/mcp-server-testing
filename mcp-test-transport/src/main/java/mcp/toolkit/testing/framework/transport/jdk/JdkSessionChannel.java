@@ -1,8 +1,8 @@
-package mcp.toolkit.testing.framework.transport;
+package mcp.toolkit.testing.framework.transport.jdk;
 
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import mcp.toolkit.testing.framework.interfaces.McpTransportClient;
-import mcp.toolkit.testing.framework.interfaces.SessionChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.SessionChannel;
 
 import java.net.URI;
 import java.util.Map;
@@ -11,11 +11,11 @@ import java.util.Map;
  * {@link SessionChannel} variant for terminating server-side sessions, backed
  * by a {@link McpTransportClient}.
  */
-final class JdkSessionChannel implements SessionChannel {
+public final class JdkSessionChannel implements SessionChannel {
 
     private final McpTransportClient client;
 
-    JdkSessionChannel(McpTransportClient client) {
+    public JdkSessionChannel(McpTransportClient client) {
         this.client = McpValidation.requireNonNull(client, "client");
     }
 

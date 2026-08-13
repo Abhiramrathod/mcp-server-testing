@@ -1,4 +1,4 @@
-package mcp.toolkit.testing.framework.transport;
+package mcp.toolkit.testing.framework.transport.sse;
 
 import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
@@ -7,7 +7,7 @@ import mcp.toolkit.testing.framework.core.util.McpProtocolVersions;
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import mcp.toolkit.testing.framework.interfaces.McpResponse;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
-import mcp.toolkit.testing.framework.interfaces.TransportChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.TransportChannel;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.net.URI;
@@ -46,7 +46,7 @@ import java.util.stream.Stream;
  *   <li>optionally opens a stream connection to receive server messages.</li>
  * </ul>
  */
-final class McpStreamableHttpTransport implements McpTransport {
+public final class McpStreamableHttpTransport implements McpTransport {
 
     private final URI endpointUri;
     private final String protocolVersion;
@@ -67,20 +67,20 @@ final class McpStreamableHttpTransport implements McpTransport {
     private static final Predicate<String> IS_SSE_RESPONSE = value ->
             value.toLowerCase().contains(McpTestClientConstants.Headers.CONTENT_TYPE_SSE);
 
-    McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
-                               Duration timeout, McpJsonCodec jsonCodec) {
+    public McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
+                                      Duration timeout, McpJsonCodec jsonCodec) {
         this(endpointUri, protocolVersion, timeout, jsonCodec, Collections.emptyMap(), null);
     }
 
-    McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
-                               Duration timeout, McpJsonCodec jsonCodec,
-                               Map<String, String> headers) {
+    public McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
+                                      Duration timeout, McpJsonCodec jsonCodec,
+                                      Map<String, String> headers) {
         this(endpointUri, protocolVersion, timeout, jsonCodec, headers, null);
     }
 
-    McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
-                               Duration timeout, McpJsonCodec jsonCodec,
-                               Map<String, String> headers, TransportChannel channel) {
+    public McpStreamableHttpTransport(URI endpointUri, String protocolVersion,
+                                      Duration timeout, McpJsonCodec jsonCodec,
+                                      Map<String, String> headers, TransportChannel channel) {
         this.endpointUri = McpValidation.requireNonNull(endpointUri, "endpointUri");
         this.protocolVersion = McpValidation.requireNonNull(protocolVersion, "protocolVersion");
         this.timeout = timeout == null ? McpTestClientConstants.Defaults.TIMEOUT : timeout;

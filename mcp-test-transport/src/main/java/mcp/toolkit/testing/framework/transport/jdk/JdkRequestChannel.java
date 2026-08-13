@@ -1,9 +1,9 @@
-package mcp.toolkit.testing.framework.transport;
+package mcp.toolkit.testing.framework.transport.jdk;
 
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import mcp.toolkit.testing.framework.interfaces.McpResponse;
 import mcp.toolkit.testing.framework.interfaces.McpTransportClient;
-import mcp.toolkit.testing.framework.interfaces.RequestChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.RequestChannel;
 
 import java.net.URI;
 import java.util.Map;
@@ -16,11 +16,11 @@ import java.util.function.Function;
  * <p>The raw client calls are captured inside lambdas so callers only ever
  * invoke {@link Function#apply(Object)} and never see the exchange directly.
  */
-final class JdkRequestChannel implements RequestChannel {
+public final class JdkRequestChannel implements RequestChannel {
 
     private final McpTransportClient client;
 
-    JdkRequestChannel(McpTransportClient client) {
+    public JdkRequestChannel(McpTransportClient client) {
         this.client = McpValidation.requireNonNull(client, "client");
     }
 

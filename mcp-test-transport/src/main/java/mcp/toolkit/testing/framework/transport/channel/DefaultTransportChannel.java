@@ -1,11 +1,11 @@
-package mcp.toolkit.testing.framework.transport;
+package mcp.toolkit.testing.framework.transport.channel;
 
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import mcp.toolkit.testing.framework.interfaces.McpResponse;
-import mcp.toolkit.testing.framework.interfaces.RequestChannel;
-import mcp.toolkit.testing.framework.interfaces.SessionChannel;
-import mcp.toolkit.testing.framework.interfaces.StreamChannel;
-import mcp.toolkit.testing.framework.interfaces.TransportChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.RequestChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.SessionChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.StreamChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.TransportChannel;
 
 import java.net.URI;
 import java.util.Map;

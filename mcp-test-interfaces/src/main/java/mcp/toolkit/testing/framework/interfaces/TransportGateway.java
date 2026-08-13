@@ -1,5 +1,9 @@
 package mcp.toolkit.testing.framework.interfaces;
 
+import mcp.toolkit.testing.framework.interfaces.channel.ConnectionChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.ListenerChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.MessageChannel;
+
 /**
  * A single channel facade covering every operation a client performs through an
  * {@link McpTransport}.

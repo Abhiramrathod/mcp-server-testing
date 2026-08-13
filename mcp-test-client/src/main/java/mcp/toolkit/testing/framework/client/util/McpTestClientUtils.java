@@ -1,4 +1,4 @@
-package mcp.toolkit.testing.framework.core.util;
+package mcp.toolkit.testing.framework.client.util;
 
 import mcp.toolkit.testing.framework.client.lifecycle.McpInitializationGuard;
 import mcp.toolkit.testing.framework.client.prompts.McpPromptDirectory;

@@ -1,8 +1,11 @@
-package mcp.toolkit.testing.framework.transport;
+package mcp.toolkit.testing.framework.transport.channel;
 
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import mcp.toolkit.testing.framework.interfaces.McpTransportClient;
-import mcp.toolkit.testing.framework.interfaces.TransportChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.TransportChannel;
+import mcp.toolkit.testing.framework.transport.jdk.JdkRequestChannel;
+import mcp.toolkit.testing.framework.transport.jdk.JdkSessionChannel;
+import mcp.toolkit.testing.framework.transport.jdk.JdkStreamChannel;
 
 /**
  * Selects and assembles the concrete channel implementations that back a
@@ -12,7 +15,7 @@ import mcp.toolkit.testing.framework.interfaces.TransportChannel;
  * and cannot tell which channel variants were picked for request/response,
  * streaming and session exchanges.
  */
-final class TransportChannels {
+public final class TransportChannels {
 
     private TransportChannels() {}
 
@@ -23,7 +26,7 @@ final class TransportChannels {
      * @param client low-level client performing the raw calls
      * @return the assembled channel facade
      */
-    static TransportChannel around(McpTransportClient client) {
+    public static TransportChannel around(McpTransportClient client) {
         McpValidation.requireNonNull(client, "client");
         return new DefaultTransportChannel(
                 new JdkRequestChannel(client),

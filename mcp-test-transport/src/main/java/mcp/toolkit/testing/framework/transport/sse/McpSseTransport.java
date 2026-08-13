@@ -1,8 +1,8 @@
-package mcp.toolkit.testing.framework.transport;
+package mcp.toolkit.testing.framework.transport.sse;
 
 import mcp.toolkit.testing.framework.interfaces.McpResponse;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
-import mcp.toolkit.testing.framework.interfaces.TransportChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.TransportChannel;
 import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 import mcp.toolkit.testing.framework.core.util.McpValidation;
@@ -27,7 +27,7 @@ import java.util.stream.Stream;
  * {@link McpTransport} implementation using the legacy HTTP+SSE transport
  * (protocol version 2024-11-05).
  */
-final class McpSseTransport implements McpTransport {
+public final class McpSseTransport implements McpTransport {
 
     private final URI sseEndpointUri;
     private final URI baseUri;
@@ -48,19 +48,19 @@ final class McpSseTransport implements McpTransport {
     private final TransportChannel channel;
     private CompletableFuture<McpResponse> sseConnectionFuture;
 
-    McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
-                    Duration timeout, McpJsonCodec jsonCodec) {
+    public McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
+                           Duration timeout, McpJsonCodec jsonCodec) {
         this(sseEndpointUri, baseUri, protocolVersion, timeout, jsonCodec, Collections.emptyMap(), null);
     }
 
-    McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
-                    Duration timeout, McpJsonCodec jsonCodec, Map<String, String> headers) {
+    public McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
+                           Duration timeout, McpJsonCodec jsonCodec, Map<String, String> headers) {
         this(sseEndpointUri, baseUri, protocolVersion, timeout, jsonCodec, headers, null);
     }
 
-    McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
-                    Duration timeout, McpJsonCodec jsonCodec, Map<String, String> headers,
-                    TransportChannel channel) {
+    public McpSseTransport(URI sseEndpointUri, URI baseUri, String protocolVersion,
+                           Duration timeout, McpJsonCodec jsonCodec, Map<String, String> headers,
+                           TransportChannel channel) {
         this.sseEndpointUri = McpValidation.requireNonNull(sseEndpointUri, "sseEndpointUri");
         this.baseUri = McpValidation.requireNonNull(baseUri, "baseUri");
         this.messageEndpointUri = this.baseUri.resolve(McpTestClientConstants.Endpoints.MESSAGE);

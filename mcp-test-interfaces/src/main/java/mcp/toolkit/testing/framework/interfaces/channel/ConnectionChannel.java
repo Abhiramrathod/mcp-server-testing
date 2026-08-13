@@ -1,4 +1,4 @@
-package mcp.toolkit.testing.framework.interfaces;
+package mcp.toolkit.testing.framework.interfaces.channel;
 
 /**
  * Channel that manages the connection lifecycle of an MCP transport.

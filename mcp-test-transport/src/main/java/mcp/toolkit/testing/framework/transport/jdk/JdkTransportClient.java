@@ -1,4 +1,4 @@
-package mcp.toolkit.testing.framework.transport;
+package mcp.toolkit.testing.framework.transport.jdk;
 
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import mcp.toolkit.testing.framework.interfaces.McpResponse;
@@ -23,7 +23,7 @@ import java.util.stream.Stream;
  * connection is intentionally left without a request timeout because it is
  * expected to stay open for the lifetime of the session.
  */
-final class JdkTransportClient implements McpTransportClient {
+public final class JdkTransportClient implements McpTransportClient {
 
     private final HttpClient client;
     private final Duration timeout;
@@ -34,7 +34,7 @@ final class JdkTransportClient implements McpTransportClient {
      *
      * @param timeout connection and request timeout
      */
-    JdkTransportClient(Duration timeout) {
+    public JdkTransportClient(Duration timeout) {
         this.timeout = McpValidation.requireNonNull(timeout, "timeout");
         this.client = HttpClient.newBuilder().connectTimeout(timeout).build();
     }

@@ -1,4 +1,4 @@
-package mcp.toolkit.testing.framework;
+package mcp.toolkit.testing.framework.client;
 
 import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 

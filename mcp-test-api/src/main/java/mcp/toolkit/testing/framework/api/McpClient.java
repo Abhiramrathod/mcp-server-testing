@@ -1,6 +1,6 @@
 package mcp.toolkit.testing.framework.api;
 
-import mcp.toolkit.testing.framework.McpTestClient;
+import mcp.toolkit.testing.framework.client.McpTestClient;
 import mcp.toolkit.testing.framework.api.model.McpServerInfo;
 import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
 import mcp.toolkit.testing.framework.core.util.McpProtocolVersions;

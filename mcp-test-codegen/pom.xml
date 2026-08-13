@@ -15,7 +15,10 @@
     <description>Build-time generator for the framework's MCP model classes.</description>
 
     <properties>
-        <maven.deploy.skip>false</maven.deploy.skip>
+        <!-- Build-time-only generator; never published to Maven Central. -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.source.skip>true</maven.source.skip>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
     </properties>
 
     <dependencies>
@@ -27,6 +30,17 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!-- Never run annotation processing while compiling this module itself:
+                         its own META-INF/services/javax.annotation.processing.Processor entry
+                         is on the compile classpath and, with implicit processing enabled on
+                         JDK 17, javac tries to load McpModelProcessor before it is compiled. -->
+                    <proc>none</proc>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>net.nicoulaj.maven.plugins</groupId>
                 <artifactId>checksum-maven-plugin</artifactId>

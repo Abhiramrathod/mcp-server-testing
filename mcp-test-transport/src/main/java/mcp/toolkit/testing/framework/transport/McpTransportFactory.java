@@ -2,7 +2,11 @@ package mcp.toolkit.testing.framework.transport;
 
 import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
-import mcp.toolkit.testing.framework.interfaces.TransportChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.TransportChannel;
+import mcp.toolkit.testing.framework.transport.channel.TransportChannels;
+import mcp.toolkit.testing.framework.transport.jdk.JdkTransportClient;
+import mcp.toolkit.testing.framework.transport.sse.McpSseTransport;
+import mcp.toolkit.testing.framework.transport.sse.McpStreamableHttpTransport;
 
 import java.net.URI;
 import java.time.Duration;
@@ -13,8 +17,9 @@ import java.util.Map;
  * Creates the framework's MCP transports.
  *
  * <p>The concrete transport implementations and the channel/client stack behind
- * them are internal to this package; this factory is the intended entry point
- * for obtaining a {@link McpTransport}.
+ * them live in the {@code channel}, {@code jdk} and {@code sse} sub-packages of
+ * this module; this factory is the intended entry point for obtaining a
+ * {@link McpTransport}.
  */
 public final class McpTransportFactory {
 

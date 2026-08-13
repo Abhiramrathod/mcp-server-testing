@@ -1,9 +1,9 @@
-package mcp.toolkit.testing.framework.transport;
+package mcp.toolkit.testing.framework.transport.jdk;
 
 import mcp.toolkit.testing.framework.core.util.McpValidation;
 import mcp.toolkit.testing.framework.interfaces.McpResponse;
 import mcp.toolkit.testing.framework.interfaces.McpTransportClient;
-import mcp.toolkit.testing.framework.interfaces.StreamChannel;
+import mcp.toolkit.testing.framework.interfaces.channel.StreamChannel;
 
 import java.net.URI;
 import java.util.Map;
@@ -14,11 +14,11 @@ import java.util.function.Supplier;
  * {@link StreamChannel} variant for asynchronous streaming connections, backed
  * by a {@link McpTransportClient}.
  */
-final class JdkStreamChannel implements StreamChannel {
+public final class JdkStreamChannel implements StreamChannel {
 
     private final McpTransportClient client;
 
-    JdkStreamChannel(McpTransportClient client) {
+    public JdkStreamChannel(McpTransportClient client) {
         this.client = McpValidation.requireNonNull(client, "client");
     }
 

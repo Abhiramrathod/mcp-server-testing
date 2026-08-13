@@ -1,4 +1,4 @@
-package mcp.toolkit.testing.framework.core.util;
+package mcp.toolkit.testing.framework.client.util;
 
 import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import com.fasterxml.jackson.databind.ObjectMapper;

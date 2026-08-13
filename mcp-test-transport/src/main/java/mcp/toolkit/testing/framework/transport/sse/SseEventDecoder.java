@@ -1,4 +1,4 @@
-package mcp.toolkit.testing.framework.transport;
+package mcp.toolkit.testing.framework.transport.sse;
 
 import java.util.stream.Stream;
 

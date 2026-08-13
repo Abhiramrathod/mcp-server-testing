@@ -1,4 +1,4 @@
-package mcp.toolkit.testing.framework.interfaces;
+package mcp.toolkit.testing.framework.interfaces.channel;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
