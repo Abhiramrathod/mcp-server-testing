@@ -19,7 +19,6 @@ import Examples from './pages/Examples'
 import Glossary from './pages/Glossary'
 import Faq from './pages/Faq'
 import Changelog from './pages/Changelog'
-import UpcomingRelease from './pages/UpcomingRelease'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -50,7 +49,6 @@ export default function App() {
         <Route path="/glossary" element={<Glossary />} />
         <Route path="/faq" element={<Faq />} />
         <Route path="/changelog" element={<Changelog />} />
-        <Route path="/upcoming-release" element={<UpcomingRelease />} />
         <Route path="*" element={<Home />} />
       </Routes>
       <Footer />

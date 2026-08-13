@@ -120,9 +120,9 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
       {blocks.map((b, i) => {
         switch (b.t) {
           case 'p': return <p key={i} style={{ color: 'var(--text-dim)', fontSize: '12px', lineHeight: 1.8 }}><Inline md={b.md} /></p>
-          case 'h2': return <h2 key={i} id={b.id} className="pt-2 text-sm font-bold" style={{ color: 'var(--text)' }}><Inline md={b.md} /></h2>
-          case 'h3': return <h3 key={i} id={b.id} className="pt-1 text-[13px] font-semibold" style={{ color: 'var(--text)' }}><Inline md={b.md} /></h3>
-          case 'h4': return <h4 key={i} id={b.id} className="text-xs font-semibold" style={{ color: 'var(--text)' }}><Inline md={b.md} /></h4>
+          case 'h2': return <h2 key={i} id={b.id} className="pt-2 text-sm font-bold" style={{ color: 'var(--text)', scrollMarginTop: 64 }}><Inline md={b.md} /></h2>
+          case 'h3': return <h3 key={i} id={b.id} className="pt-1 text-[13px] font-semibold" style={{ color: 'var(--text)', scrollMarginTop: 64 }}><Inline md={b.md} /></h3>
+          case 'h4': return <h4 key={i} id={b.id} className="text-xs font-semibold" style={{ color: 'var(--text)', scrollMarginTop: 64 }}><Inline md={b.md} /></h4>
           case 'quote': return <blockquote key={i} className="px-3 py-2 text-xs" style={{ borderLeft: '2px solid var(--accent-glow)', color: 'var(--text-dim)' }}>{b.md}</blockquote>
           case 'rule': return <hr key={i} style={{ border: 'none', borderTop: '1px solid var(--border)' }} />
           case 'code': return <CodeBlock key={i} code={b.code} lang={b.lang} file={b.file} />
@@ -149,18 +149,22 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
 
 export function Toc({ headings }: { headings: { id: string; label: string }[] }) {
   if (!headings.length) return null
+  const jump = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   return (
     <div className="hidden lg:block w-52 shrink-0">
       <div className="sticky top-16 space-y-1 pl-3" style={{ borderLeft: '1px solid var(--border)' }}>
         <p className="text-[10px] mb-2 font-semibold" style={{ color: 'var(--text-dim2)', letterSpacing: '0.3px' }}>ON THIS PAGE</p>
         {headings.map(h => (
-          <a key={h.id} href={`#${h.id}`} className="block text-[11px] transition-colors no-underline"
-            style={{ color: 'var(--text-dim)', padding: '2px 0' }}
+          <button key={h.id} onClick={() => jump(h.id)}
+            className="block text-left w-full text-[11px] transition-colors"
+            style={{ color: 'var(--text-dim)', padding: '2px 0', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
             onMouseLeave={e => e.currentTarget.style.color = 'var(--text-dim)'}
           >
             {h.label}
-          </a>
+          </button>
         ))}
       </div>
     </div>

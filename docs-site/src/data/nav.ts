@@ -52,7 +52,6 @@ export const navGroups: NavGroup[] = [
     items: [
       { path: '/faq', label: 'FAQ' },
       { path: '/changelog', label: 'Changelog' },
-      { path: '/upcoming-release', label: 'Upcoming Release' },
     ],
   },
 ]

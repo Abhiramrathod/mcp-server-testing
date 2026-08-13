@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 
 const GROUP_ID = 'io.github.abhiramrathod'
 const ARTIFACT_ID = 'mcp-test-api'
-const FALLBACK = '1.0.38'
+const FALLBACK = '1.5.0'
 
 let cached: string | null = null
 

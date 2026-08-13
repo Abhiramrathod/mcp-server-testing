@@ -28,10 +28,10 @@ const blocks: Block[] = [
       { label: 'Maven', lang: 'xml', code: `<dependency>
   <groupId>io.github.abhiramrathod</groupId>
   <artifactId>mcp-test-api</artifactId>
-  <version>1.0.38</version>
+  <version>1.5.0</version>
   <scope>test</scope>
 </dependency>` },
-      { label: 'Gradle', lang: 'gradle', code: `testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.38'` },
+      { label: 'Gradle', lang: 'gradle', code: `testImplementation 'io.github.abhiramrathod:mcp-test-api:1.5.0'` },
     ],
   },
   { t: 'h2', id: 'step-2-start-server', md: 'Step 2 — Start a server' },

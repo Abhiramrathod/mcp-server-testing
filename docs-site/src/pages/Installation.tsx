@@ -19,10 +19,10 @@ const blocks: Block[] = [
       { label: 'Maven', lang: 'xml', code: `<dependency>
   <groupId>io.github.abhiramrathod</groupId>
   <artifactId>mcp-test-api</artifactId>
-  <version>1.0.38</version>
+  <version>1.5.0</version>
   <scope>test</scope>
 </dependency>` },
-      { label: 'Gradle', lang: 'gradle', code: `testImplementation 'io.github.abhiramrathod:mcp-test-api:1.0.38'` },
+      { label: 'Gradle', lang: 'gradle', code: `testImplementation 'io.github.abhiramrathod:mcp-test-api:1.5.0'` },
     ],
   },
   {
@@ -44,12 +44,12 @@ const blocks: Block[] = [
 <dependency>
   <groupId>com.github.Abhiramrathod</groupId>
   <artifactId>mcp-testing</artifactId>
-  <version>1.0.38</version>
+  <version>1.5.0</version>
   <scope>test</scope>
 </dependency>` },
       { label: 'Gradle', lang: 'gradle', code: `repositories { maven { url 'https://jitpack.io' } }
 
-testImplementation 'com.github.Abhiramrathod:mcp-testing:1.0.38'` },
+testImplementation 'com.github.Abhiramrathod:mcp-testing:1.5.0'` },
     ],
   },
   { t: 'h2', id: 'build-from-source', md: 'Build from source' },

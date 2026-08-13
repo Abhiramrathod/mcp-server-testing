@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-const FALLBACK = '1.0.38'
+const FALLBACK = '1.5.0'
 let cached: string | null = null
 
 export function useLatestVersion(): string {

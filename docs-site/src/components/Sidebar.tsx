@@ -1,8 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
 import { navGroups } from '../data/nav'
+import { useLatestVersion } from '../hooks/useLatestVersion'
 
 export default function Sidebar() {
   const { pathname } = useLocation()
+  const version = useLatestVersion()
   return (
     <aside className="hidden md:block w-52 shrink-0 pt-6 pb-10">
       <div className="sticky top-16 max-h-[calc(100vh-5rem)] overflow-y-auto pr-2 space-y-5">
@@ -33,7 +35,7 @@ export default function Sidebar() {
           </div>
         ))}
         <p className="text-[10px] pt-2" style={{ color: 'var(--text-dim2)', borderTop: '1px solid var(--border)' }}>
-          v1.0.38 · Java 17+ · Apache 2.0
+          v{version} · Java 17+ · Apache 2.0
         </p>
       </div>
     </aside>
