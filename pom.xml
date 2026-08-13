@@ -212,6 +212,19 @@
                 </executions>
             </plugin>
 
+            <!-- OWASP Dependency-Check (CVE scan); run explicitly via `mvn dependency-check:check` -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>13.0.0</version>
+                <configuration>
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <format>ALL</format>
+                    <prettyPrint>true</prettyPrint>
+                    <nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
+                </configuration>
+            </plugin>
+
             <!-- Nexus staging plugin to work with Sonatype OSSRH -->
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>

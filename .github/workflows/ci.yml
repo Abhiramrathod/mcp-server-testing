@@ -50,10 +50,7 @@ jobs:
       - name: Run OWASP Dependency-Check
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: mvn -B -ntp org.owasp:dependency-check-maven:13.0.0:check
-          -DfailBuildOnCVSS=7
-          -Dformat=ALL
-          -DprettyPrint=true
+        run: mvn -B -ntp dependency-check:check
 
       - name: Upload dependency-check report
         if: always()

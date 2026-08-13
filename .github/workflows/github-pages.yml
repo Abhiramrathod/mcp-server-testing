@@ -56,19 +56,7 @@ jobs:
         if [ -d target/site/apidocs ]; then
           mkdir -p docs-site/dist/javadoc
           cp -r target/site/apidocs docs-site/dist/javadoc/
-          cat > docs-site/dist/javadoc/index.html <<'EOF'
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=apidocs/index.html">
-  <title>Javadocs</title>
-</head>
-<body>
-  <a href="apidocs/index.html">Open Javadocs</a>
-</body>
-</html>
-EOF
+          printf '%s\n' '<!DOCTYPE html>' '<html>' '<head>' '<meta charset="utf-8">' '<meta http-equiv="refresh" content="0; url=apidocs/index.html">' '<title>Javadocs</title>' '</head>' '<body>' '<a href="apidocs/index.html">Open Javadocs</a>' '</body>' '</html>' > docs-site/dist/javadoc/index.html
         else
           echo "No generated apidocs found in target/site/apidocs" && exit 1
         fi
