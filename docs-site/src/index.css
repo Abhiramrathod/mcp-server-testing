@@ -203,18 +203,39 @@ pre {
   animation: glowPulse 1.5s ease-in-out infinite;
 }
 
+.flow-arrow {
+  position: relative;
+  flex: 1;
+  min-width: 24px;
+  height: 1px;
+  display: flex;
+  align-items: center;
+}
+
 .flow-arrow-line {
   height: 1.5px;
   width: 100%;
+  background: linear-gradient(90deg, var(--text-dim), var(--accent));
   animation: flowSlide 1.4s ease-in-out infinite;
 }
 
 .flow-arrow-head {
   position: absolute;
+  right: 0;
   width: 0;
   height: 0;
   border-top: 4px solid transparent;
   border-bottom: 4px solid transparent;
+  border-left: 5px solid var(--accent);
+}
+
+.flow-arrow.return .flow-arrow-line {
+  background: repeating-linear-gradient(90deg, var(--text-dim) 0 4px, transparent 4px 8px);
+  animation: none;
+}
+
+.flow-arrow.return .flow-arrow-head {
+  border-left-color: var(--text-dim);
 }
 
 .sse-persistent-bar {

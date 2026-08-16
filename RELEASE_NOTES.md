@@ -1,39 +1,34 @@
-# Release Notes — 0.0.1-SNAPSHOT
+# Release Notes — 2026-08-16
 
-> Published: 2026-08-13
+## Contributors
+
+- **Abhiram** — [abhiramrathod2003@gmail.com](mailto:abhiramrathod2003@gmail.com).
+
+## Highlights
+
+- **Optional HTTP proxy support** for both transports, so tests can run behind corporate proxy-enforcing networks.
+- **Cleaner SSE event decoding** for keep-alive comments.
+- **Netty upgraded to `4.1.137.Final`** (OWASP dependency-check clean).
 
 ## New Features
 
-### Support for the latest Model Context Protocol
-The framework now supports the newest Model Context Protocol specification
-(protocol version 2025-03-26 and later) through the new Streamable HTTP
-transport:
+### HTTP proxy support for transport connections
+Both the Netty and JDK transports can now route traffic through an HTTP proxy:
 
-- **Single-endpoint messaging** — each JSON-RPC message is sent as its own
-  POST to one MCP endpoint.
-- **Both response styles handled automatically** — the server may answer with a
-  single JSON object or an SSE stream scoped to the request; both are supported
-  transparently.
-- **Automatic session management** — the session ID assigned by the server
-  during initialization is honored, and the framework transparently
-  re-initializes the session if the server terminates it (e.g. HTTP 404), so
-  long-running tests keep working without manual reconnects.
-- **Server-initiated messages** — requests and notifications from the server
-  (e.g. `roots/list`, `sampling/createMessage`, `notifications/message`,
-  `notifications/progress`) are delivered to listeners registered by your test.
-- **Optional streaming connection** — a stream can be opened to receive
-  server messages in real time.
-- **Legacy protocol still fully supported** — the HTTP+SSE transport for
-  protocol version 2024-11-05 remains available, so servers implementing either
-  version of the protocol can be tested.
+- **Opt-in by design** — set `McpClientConfig.builder().proxy(...)`; omit it (or pass
+  `null`) and both transports connect directly, preserving the existing behavior.
+- **`Proxy.Type.HTTP` only** — `SOCKS` and `NO_PROXY` throw `IllegalArgumentException`.
+- **Netty transport** tunnels through the proxy with `HttpProxyHandler` (CONNECT),
+  wired first in the pipeline before SSL and the HTTP codec.
+- **JDK transport** uses `ProxySelector.of(...)`; `http://` targets use absolute-form
+  requests while `https://` targets use CONNECT. A `null` proxy falls back to the
+  JVM default `ProxySelector` (system-property driven).
 
-### Unified transport layer
-- **One API for every server** — test code interacts with an MCP server through
-  a single gateway interface, and the framework selects the right transport
-  automatically based on the server's protocol.
-- **Complete operation coverage** — connection lifecycle (connect/close),
-  JSON-RPC requests and notifications, server-message listeners, and
-  session-expiry handling are all exposed through one consistent interface.
-- **Functional call style** — operations are exposed as functional interfaces
-  (`apply`, `accept`, `run`), letting you wire up test behavior directly without
-  touching transport internals.
+
+### Heartbeat mechanism for SSE clients
+Improved connection management:
+
+- `SseEventDecoder` no longer carries dead branches for `:` comments, `id:` and
+  `retry:` lines — keep-alive comments now fall through harmlessly.
+- Netty bumped to `4.1.137.Final`, documenting the OWASP fixes it bundles
+  (CVE-2025-46903 through CVE-2026-59901/59902/59903).

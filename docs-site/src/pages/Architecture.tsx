@@ -2,6 +2,7 @@ import { useState } from 'react'
 import DocLayout from '../layouts/DocLayout'
 import { Blocks } from '../components/Blocks'
 import type { Block } from '../lib/markdown'
+import { UmlComponentDiagram, ClassDiagram, SequenceDiagram, ExchangeFlow, GREEN, BLUE, PURPLE, EMERALD } from '../components/Diagrams'
 
 const dim = 'var(--text-dim)'
 const dim2 = 'var(--text-dim2)'
@@ -108,6 +109,14 @@ const blocks: Block[] = [
     ],
   },
   { t: 'h2', id: 'diagram', md: 'High-level diagram' },
+  { t: 'h2', id: 'uml-component', md: 'UML component diagram' },
+  { t: 'p', md: 'The six Maven modules as UML components. Solid arrows are network calls; dashed arrows are dependencies; the dashed triangle marks the SPI realization (`McpTransport`, `McpTransportClient`).' },
+  { t: 'h2', id: 'class-diagram', md: 'Class diagram — key types' },
+  { t: 'p', md: 'The core type relationships: the `McpClient` facade delegates to `McpTestClient`, which talks through the `McpTransport` SPI. `McpSseTransport` and `McpStreamableHttpTransport` realize the SPI over `McpTransportClient`, which the Netty and JDK backends implement.' },
+  { t: 'h2', id: 'flow-diagrams', md: 'Flow diagrams' },
+  { t: 'p', md: 'Sequence diagrams for the three protocol eras. Lifelines run your test → `McpClient` → the transport → the server.' },
+  { t: 'h2', id: 'exchange-pipeline', md: 'Exchange pipeline' },
+  { t: 'p', md: 'How a single `tools()` call travels through the framework and back, with every JSON-RPC exchange recorded along the way.' },
   { t: 'h3', id: 'module-responsibilities', md: 'Module responsibilities' },
   { t: 'h4', id: 'mcp-test-api', md: 'mcp-test-api — the public surface' },
   { t: 'p', md: 'The only artifact your tests import. Provides `McpClient`, its sub-clients for tools/resources/prompts, the typed domain models (`McpTool`, `McpResource`, `McpPrompt`, results), fluent assertions, `McpClientConfig`, and `McpMethod`. See **API Reference**.' },
@@ -134,31 +143,121 @@ const blocks: Block[] = [
   },
 ]
 
-const DIAGRAM_INDEX = 4
+const b = (i: number) => blocks[i]
+
+const sseParticipants = [
+  { id: 'test', label: 'Your test', color: GREEN },
+  { id: 'client', label: 'McpClient', color: BLUE },
+  { id: 'transport', label: 'McpSseTransport', color: PURPLE },
+  { id: 'server', label: 'MCP Server', color: EMERALD },
+]
+
+const streamableParticipants = [
+  { id: 'test', label: 'Your test', color: GREEN },
+  { id: 'client', label: 'McpClient', color: BLUE },
+  { id: 'transport', label: 'McpStreamableHttpTransport', color: PURPLE },
+  { id: 'server', label: 'MCP Server', color: EMERALD },
+]
+
+const statelessParticipants = [
+  { id: 'test', label: 'Your test', color: GREEN },
+  { id: 'client', label: 'McpClient', color: BLUE },
+  { id: 'transport', label: 'McpStreamableHttpTransport', color: PURPLE },
+  { id: 'server', label: 'MCP Server', color: EMERALD },
+]
+
+function Caption({ children }: { children: string }) {
+  return <p className="text-xs" style={{ color: 'var(--text-dim2)' }}>${' '}{children}</p>
+}
 
 export default function ArchitecturePage() {
   return <DocLayout page={{
     meta: {
       path: '/architecture',
       title: 'Architecture',
-      description: 'How the six mcp-test modules fit together, and the design principles behind them.',
+      description: 'How the six mcp-test modules fit together — UML diagrams, sequence flows, and the design principles behind them.',
       section: 'Core Concepts',
-      keywords: ['architecture', 'modules', 'design', 'layers'],
+      keywords: ['architecture', 'modules', 'design', 'layers', 'uml', 'sequence', 'diagram'],
       editPath: 'docs-site/src/pages/Architecture.tsx',
     },
     blocks,
     headings: [
       { id: 'layered-design', label: 'Layered design' },
       { id: 'diagram', label: 'High-level diagram' },
+      { id: 'uml-component', label: 'UML component diagram' },
+      { id: 'class-diagram', label: 'Class diagram' },
+      { id: 'flow-diagrams', label: 'Flow diagrams' },
+      { id: 'exchange-pipeline', label: 'Exchange pipeline' },
       { id: 'module-responsibilities', label: 'Module responsibilities' },
       { id: 'design-principles', label: 'Design principles' },
     ],
     custom: (
       <div className="space-y-4">
-        <Blocks blocks={blocks.slice(0, DIAGRAM_INDEX)} />
-        <p className="text-xs" style={{ color: 'var(--text-dim)' }}>$ hld — high-level design · hover a layer</p>
+        <Blocks blocks={[b(0), b(1), b(2), b(3)]} />
+        <Caption>$ hld — high-level design · hover a layer</Caption>
         <HldDiagram />
-        <Blocks blocks={blocks.slice(DIAGRAM_INDEX)} />
+        <Blocks blocks={[b(4), b(5)]} />
+        <UmlComponentDiagram />
+        <Blocks blocks={[b(6), b(7)]} />
+        <ClassDiagram />
+        <Blocks blocks={[b(8), b(9)]} />
+        <div className="space-y-3">
+          <Caption>$ seq — legacy SSE · connect, initialize, call</Caption>
+          <SequenceDiagram
+            participants={sseParticipants}
+            messages={[
+              { from: 'test', to: 'client', label: 'tools()' },
+              { from: 'client', to: 'transport', label: 'connect()' },
+              { from: 'transport', to: 'server', label: 'GET /sse' },
+              { from: 'server', to: 'transport', label: 'SSE · endpoint event', kind: 'return' },
+              { from: 'transport', to: 'server', label: 'POST /message · initialize' },
+              { from: 'server', to: 'transport', label: 'SSE · initialize result', kind: 'return' },
+              { from: 'transport', to: 'client', label: 'JsonNode', kind: 'return' },
+              { from: 'client', to: 'test', label: 'List<McpTool>', kind: 'return' },
+            ]}
+            note={[
+              'Persistent SSE stream stays open for the session.',
+              'Server-initiated messages (progress / notifications) arrive on it.',
+            ]}
+          />
+          <Caption>$ seq — streamable HTTP · session-based</Caption>
+          <SequenceDiagram
+            participants={streamableParticipants}
+            messages={[
+              { from: 'test', to: 'client', label: 'tools()' },
+              { from: 'client', to: 'transport', label: 'sendRequest(tools/list)' },
+              { from: 'transport', to: 'server', label: 'POST /mcp · initialize' },
+              { from: 'server', to: 'transport', label: '200 · Mcp-Session-Id', kind: 'return' },
+              { from: 'transport', to: 'server', label: 'POST /mcp · tools/list' },
+              { from: 'server', to: 'transport', label: 'JSON result', kind: 'return' },
+              { from: 'transport', to: 'client', label: 'JsonNode', kind: 'return' },
+              { from: 'client', to: 'test', label: 'List<McpTool>', kind: 'return' },
+            ]}
+            note={[
+              'Session id is stored and replayed on every request',
+              'until the server terminates it (HTTP 404).',
+            ]}
+          />
+          <Caption>$ seq — stateless protocol · 2026-07-28+</Caption>
+          <SequenceDiagram
+            participants={statelessParticipants}
+            messages={[
+              { from: 'test', to: 'client', label: 'discover()' },
+              { from: 'client', to: 'transport', label: 'server/discover' },
+              { from: 'transport', to: 'server', label: 'POST /mcp' },
+              { from: 'server', to: 'transport', label: 'protocolVersions · capabilities', kind: 'return' },
+              { from: 'transport', to: 'client', label: 'JsonNode', kind: 'return' },
+              { from: 'client', to: 'test', label: 'result', kind: 'return' },
+            ]}
+            note={[
+              'No initialize handshake — each request is self-contained.',
+              'Results carry resultType / ttlMs / cacheScope metadata.',
+            ]}
+          />
+        </div>
+        <Blocks blocks={[b(10), b(11)]} />
+        <ExchangeFlow />
+        <Blocks blocks={blocks.slice(12)} />
       </div>
     ),
   }} />
