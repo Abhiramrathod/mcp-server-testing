@@ -43,7 +43,7 @@ public class DummyMcpServer {
 
     private final HttpServer server;
     private final ObjectMapper mapper = new ObjectMapper();
-    private final Map<String, OutputStream> sseClients = new ConcurrentHashMap<>();
+    private final Map<String, SseStream> sseClients = new ConcurrentHashMap<>();
     private final Set<String> sessions = ConcurrentHashMap.newKeySet();
     private final AtomicLong sessionCounter = new AtomicLong();
 
@@ -91,36 +91,32 @@ public class DummyMcpServer {
         exchange.getResponseHeaders().set("Connection", "keep-alive");
         exchange.sendResponseHeaders(200, 0);
 
-        OutputStream os = exchange.getResponseBody();
-        String clientId = "client-" + System.currentTimeMillis();
-        sseClients.put(clientId, os);
+        try (OutputStream os = exchange.getResponseBody()) {
+            SseStream stream = new SseStream(os);
+            String clientId = "client-" + System.currentTimeMillis();
+            sseClients.put(clientId, stream);
 
-        sendSseEvent(os, "endpoint", "/message");
+            sendSseEvent(stream, "endpoint", "/message");
 
-        // Heartbeats are scheduled instead of a Thread.sleep loop: a failed
-        // write detects a disconnected client and releases the handler thread.
-        CountDownLatch disconnected = new CountDownLatch(1);
-        ScheduledFuture<?> heartbeat = HEARTBEATS.scheduleWithFixedDelay(() -> {
-            try {
-                synchronized (os) {
-                    os.write(": keep-alive\n\n".getBytes(StandardCharsets.UTF_8));
-                    os.flush();
+            // Heartbeats are scheduled instead of a Thread.sleep loop: a failed
+            // write detects a disconnected client and releases the handler thread.
+            CountDownLatch disconnected = new CountDownLatch(1);
+            ScheduledFuture<?> heartbeat = HEARTBEATS.scheduleWithFixedDelay(() -> {
+                try {
+                    stream.write(": keep-alive\n\n".getBytes(StandardCharsets.UTF_8));
+                } catch (IOException e) {
+                    disconnected.countDown();
                 }
-            } catch (IOException e) {
-                disconnected.countDown();
-            }
-        }, 1, 1, TimeUnit.SECONDS);
+            }, 1, 1, TimeUnit.SECONDS);
 
-        try {
-            disconnected.await();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } finally {
-            heartbeat.cancel(false);
-            sseClients.remove(clientId);
             try {
-                os.close();
-            } catch (IOException ignored) {}
+                disconnected.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                heartbeat.cancel(false);
+                sseClients.remove(clientId);
+            }
         }
     }
 
@@ -139,8 +135,8 @@ public class DummyMcpServer {
 
         JsonNode response = handleRpcMethod(method, params, id);
 
-        for (OutputStream os : sseClients.values()) {
-            sendSseEvent(os, "message", mapper.writeValueAsString(response));
+        for (SseStream stream : sseClients.values()) {
+            sendSseEvent(stream, "message", mapper.writeValueAsString(response));
         }
 
         exchange.sendResponseHeaders(202, -1);
@@ -447,15 +443,33 @@ public class DummyMcpServer {
         return result;
     }
 
-    private void sendSseEvent(OutputStream os, String event, String data) {
+    private void sendSseEvent(SseStream stream, String event, String data) {
         try {
             String message = "event: " + event + "\ndata: " + data + "\n\n";
-            synchronized (os) {
-                os.write(message.getBytes(StandardCharsets.UTF_8));
-                os.flush();
-            }
+            stream.write(message.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             // Client disconnected, ignore
+        }
+    }
+
+    /**
+     * Bundles an SSE connection's {@link OutputStream} with a dedicated lock so
+     * concurrent broadcast writes and heartbeats are serialized per stream.
+     */
+    private static final class SseStream {
+
+        private final OutputStream os;
+        private final Object lock = new Object();
+
+        SseStream(OutputStream os) {
+            this.os = os;
+        }
+
+        void write(byte[] bytes) throws IOException {
+            synchronized (lock) {
+                os.write(bytes);
+                os.flush();
+            }
         }
     }
 
