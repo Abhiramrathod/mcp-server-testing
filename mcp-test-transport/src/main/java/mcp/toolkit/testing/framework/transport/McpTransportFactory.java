@@ -4,7 +4,7 @@ import mcp.toolkit.testing.framework.core.codec.McpJsonCodec;
 import mcp.toolkit.testing.framework.interfaces.McpTransport;
 import mcp.toolkit.testing.framework.interfaces.channel.TransportChannel;
 import mcp.toolkit.testing.framework.transport.channel.TransportChannels;
-import mcp.toolkit.testing.framework.transport.jdk.JdkTransportClient;
+import mcp.toolkit.testing.framework.transport.netty.NettyTransportClient;
 import mcp.toolkit.testing.framework.transport.sse.McpSseTransport;
 import mcp.toolkit.testing.framework.transport.sse.McpStreamableHttpTransport;
 
@@ -17,7 +17,7 @@ import java.util.Map;
  * Creates the framework's MCP transports.
  *
  * <p>The concrete transport implementations and the channel/client stack behind
- * them live in the {@code channel}, {@code jdk} and {@code sse} sub-packages of
+ * them live in the {@code channel}, {@code netty} and {@code sse} sub-packages of
  * this module; this factory is the intended entry point for obtaining a
  * {@link McpTransport}.
  */
@@ -90,6 +90,6 @@ public final class McpTransportFactory {
     }
 
     private static TransportChannel channelFor(Duration timeout) {
-        return TransportChannels.around(new JdkTransportClient(timeout));
+        return TransportChannels.around(new NettyTransportClient(timeout));
     }
 }
