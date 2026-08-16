@@ -1,5 +1,7 @@
 package mcp.toolkit.testing.examples.server;
 
+import mcp.toolkit.testing.framework.core.constants.McpTestClientConstants;
+import mcp.toolkit.testing.framework.core.util.McpProtocolVersions;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -12,21 +14,38 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Dummy MCP server for testing the framework.
+ *
+ * <p>Exposes every transport the framework supports on one base URL:
+ *
+ * <ul>
+ *   <li><b>Legacy SSE</b> ({@code 2024-11-05} – {@code 2025-11-25}): {@code GET /sse}
+ *       opens the event stream, {@code POST /message} receives JSON-RPC.</li>
+ *   <li><b>Streamable HTTP</b> ({@code 2025-03-26}+): a single {@code POST /mcp}
+ *       endpoint answered with {@code application/json} and a server-minted
+ *       {@code Mcp-Session-Id} issued during {@code initialize}.</li>
+ *   <li><b>Stateless</b> ({@code 2026-07-28}+): {@code POST /mcp} without any
+ *       session, answered directly per request; {@code server/discover} negotiates
+ *       protocol versions and results carry {@code _meta.serverInfo}.</li>
+ * </ul>
  */
 public class DummyMcpServer {
 
     private final HttpServer server;
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<String, OutputStream> sseClients = new ConcurrentHashMap<>();
+    private final Set<String> sessions = ConcurrentHashMap.newKeySet();
+    private final AtomicLong sessionCounter = new AtomicLong();
 
     private static final ScheduledExecutorService HEARTBEATS = newHeartbeatExecutor();
 
@@ -42,6 +61,7 @@ public class DummyMcpServer {
         
         server.createContext("/sse", this::handleSse);
         server.createContext("/message", this::handleMessage);
+        server.createContext("/mcp", this::handleMcp);
     }
 
     /** Starts the server so it begins accepting connections. */
@@ -82,8 +102,10 @@ public class DummyMcpServer {
         CountDownLatch disconnected = new CountDownLatch(1);
         ScheduledFuture<?> heartbeat = HEARTBEATS.scheduleWithFixedDelay(() -> {
             try {
-                os.write(": keep-alive\n\n".getBytes(StandardCharsets.UTF_8));
-                os.flush();
+                synchronized (os) {
+                    os.write(": keep-alive\n\n".getBytes(StandardCharsets.UTF_8));
+                    os.flush();
+                }
             } catch (IOException e) {
                 disconnected.countDown();
             }
@@ -124,14 +146,76 @@ public class DummyMcpServer {
         exchange.sendResponseHeaders(202, -1);
     }
 
+    private void handleMcp(HttpExchange exchange) throws IOException {
+        if (!"POST".equals(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(405, -1);
+            return;
+        }
+
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        JsonNode request = mapper.readTree(body);
+        String method = request.path("method").asText();
+        if (!request.has("id")) {
+            // Notification: acknowledge without a JSON-RPC response.
+            exchange.sendResponseHeaders(202, -1);
+            return;
+        }
+        long id = request.path("id").asLong(-1);
+        JsonNode params = request.path("params");
+
+        String sessionId = exchange.getRequestHeaders().getFirst(McpTestClientConstants.Headers.MCP_SESSION_ID);
+        String protocolHeader = exchange.getRequestHeaders().getFirst(McpTestClientConstants.Headers.MCP_PROTOCOL_VERSION);
+        boolean stateless = McpProtocolVersions.isStateless(protocolHeader)
+                || exchange.getRequestHeaders().containsKey(McpTestClientConstants.Headers.MCP_METHOD);
+
+        if ("server/discover".equals(method)) {
+            sendJson(exchange, 200, jsonRpcResponse(id, handleDiscover()));
+            return;
+        }
+        if ("initialize".equals(method)) {
+            String newSessionId = "dummy-session-" + sessionCounter.incrementAndGet();
+            sessions.add(newSessionId);
+            exchange.getResponseHeaders().set(McpTestClientConstants.Headers.MCP_SESSION_ID, newSessionId);
+            sendJson(exchange, 200, jsonRpcResponse(id, handleInitialize(params.path("protocolVersion").asText())));
+            return;
+        }
+        if (!stateless && (sessionId == null || !sessions.contains(sessionId))) {
+            // Unknown or expired session: signal the client to re-initialize.
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+
+        sendJson(exchange, 200, handleRpcMethod(method, params, id, stateless));
+    }
+
+    private void sendJson(HttpExchange exchange, int status, JsonNode body) throws IOException {
+        byte[] bytes = mapper.writeValueAsBytes(body);
+        exchange.getResponseHeaders().set("Content-Type", McpTestClientConstants.Headers.CONTENT_TYPE_JSON);
+        exchange.sendResponseHeaders(status, bytes.length);
+        exchange.getResponseBody().write(bytes);
+        exchange.getResponseBody().close();
+    }
+
+    private JsonNode jsonRpcResponse(long id, JsonNode result) {
+        ObjectNode response = mapper.createObjectNode();
+        response.put("jsonrpc", "2.0");
+        response.put("id", id);
+        response.set("result", result);
+        return response;
+    }
+
     private JsonNode handleRpcMethod(String method, JsonNode params, long id) {
+        return handleRpcMethod(method, params, id, false);
+    }
+
+    private JsonNode handleRpcMethod(String method, JsonNode params, long id, boolean stateless) {
         ObjectNode response = mapper.createObjectNode();
         response.put("jsonrpc", "2.0");
         response.put("id", id);
 
         try {
             JsonNode result = switch (method) {
-                case "initialize" -> handleInitialize();
+                case "initialize" -> handleInitialize(params.path("protocolVersion").asText());
                 case "ping" -> mapper.createObjectNode();
                 case "tools/list" -> handleToolsList();
                 case "tools/call" -> handleToolsCall(params);
@@ -141,6 +225,9 @@ public class DummyMcpServer {
                 case "prompts/get" -> handlePromptsGet(params);
                 default -> throw new IllegalArgumentException("Unknown method: " + method);
             };
+            if (stateless) {
+                addServerInfoMeta(result);
+            }
             response.set("result", result);
         } catch (Exception e) {
             ObjectNode error = mapper.createObjectNode();
@@ -152,9 +239,44 @@ public class DummyMcpServer {
         return response;
     }
 
-    private JsonNode handleInitialize() {
+    private JsonNode handleDiscover() {
         ObjectNode result = mapper.createObjectNode();
-        result.put("protocolVersion", "2024-11-05");
+        ArrayNode versions = result.putArray("protocolVersions");
+        versions.add(McpProtocolVersions.V2024_11_05);
+        versions.add(McpProtocolVersions.V2025_03_26);
+        versions.add(McpProtocolVersions.V2025_06_18);
+        versions.add(McpProtocolVersions.V2025_11_25);
+        versions.add(McpProtocolVersions.V2026_07_28);
+        result.put("protocolVersion", McpProtocolVersions.LATEST);
+
+        ObjectNode serverInfo = result.putObject("serverInfo");
+        serverInfo.put("name", "dummy-mcp-server");
+        serverInfo.put("version", "1.0.0");
+
+        ObjectNode capabilities = result.putObject("capabilities");
+        capabilities.putObject("tools");
+        capabilities.putObject("resources");
+        capabilities.putObject("prompts");
+
+        addServerInfoMeta(result);
+        return result;
+    }
+
+    private void addServerInfoMeta(JsonNode result) {
+        if (!(result instanceof ObjectNode resultNode)) {
+            return;
+        }
+        ObjectNode meta = resultNode.path("_meta").isObject()
+                ? (ObjectNode) resultNode.get("_meta")
+                : resultNode.putObject("_meta");
+        ObjectNode serverInfo = meta.putObject(McpTestClientConstants.Meta.SERVER_INFO);
+        serverInfo.put("name", "dummy-mcp-server");
+        serverInfo.put("version", "1.0.0");
+    }
+
+    private JsonNode handleInitialize(String requestedProtocolVersion) {
+        ObjectNode result = mapper.createObjectNode();
+        result.put("protocolVersion", negotiateProtocolVersion(requestedProtocolVersion));
         
         ObjectNode serverInfo = result.putObject("serverInfo");
         serverInfo.put("name", "dummy-mcp-server");
@@ -166,6 +288,12 @@ public class DummyMcpServer {
         capabilities.putObject("prompts");
         
         return result;
+    }
+
+    private String negotiateProtocolVersion(String requestedProtocolVersion) {
+        return requestedProtocolVersion == null || requestedProtocolVersion.isBlank()
+                ? McpProtocolVersions.V2024_11_05
+                : requestedProtocolVersion;
     }
 
     private JsonNode handleToolsList() {
@@ -322,8 +450,10 @@ public class DummyMcpServer {
     private void sendSseEvent(OutputStream os, String event, String data) {
         try {
             String message = "event: " + event + "\ndata: " + data + "\n\n";
-            os.write(message.getBytes(StandardCharsets.UTF_8));
-            os.flush();
+            synchronized (os) {
+                os.write(message.getBytes(StandardCharsets.UTF_8));
+                os.flush();
+            }
         } catch (IOException e) {
             // Client disconnected, ignore
         }

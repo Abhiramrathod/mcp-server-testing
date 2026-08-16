@@ -19,6 +19,9 @@ import java.time.Duration;
  * test method. Point the system property {@code mcp.test.server.url} at an
  * external server (e.g. {@code -Dmcp.test.server.url=http://localhost:8080}) to
  * run the same tests against that server instead.
+ *
+ * <p>Subclasses override {@link #newClientBuilder()} to select a different
+ * transport (e.g. {@link McpClient.Builder#streamableHttp()}) or protocol era.
  */
 public abstract class RealMcpServerTestBase {
 
@@ -51,15 +54,35 @@ public abstract class RealMcpServerTestBase {
         }
     }
 
-    @BeforeEach
-    void connectClient() {
-        client = McpClient.connectTo(serverBaseUrl)
+    /**
+     * Returns the base URL of the running server, either the ephemeral
+     * {@link DummyMcpServer} or the external server configured via the
+     * {@code mcp.test.server.url} system property.
+     *
+     * @return server base URL
+     */
+    protected static String baseUrl() {
+        return serverBaseUrl;
+    }
+
+    /**
+     * Builds the client used for each test method. Override to select a
+     * transport or protocol era, e.g.
+     * {@code McpClient.connectTo(baseUrl()).streamableHttp().config(...)}.
+     *
+     * @return a client builder (not yet built)
+     */
+    protected McpClient.Builder newClientBuilder() {
+        return McpClient.connectTo(serverBaseUrl)
                 .config(McpClientConfig.builder()
                         .timeout(Duration.ofSeconds(10))
                         .protocolVersion("2024-11-05")
-                        .build())
-                .initializeOnBuild()
-                .build();
+                        .build());
+    }
+
+    @BeforeEach
+    void connectClient() {
+        client = newClientBuilder().initializeOnBuild().build();
     }
 
     @AfterEach
