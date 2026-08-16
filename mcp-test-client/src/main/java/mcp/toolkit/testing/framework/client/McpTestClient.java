@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.net.Proxy;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -95,12 +96,31 @@ public class McpTestClient implements AutoCloseable {
     public McpTestClient(String baseUrl, String endpointPath, boolean useStreamableHttp,
                          ObjectMapper objectMapper, String protocolVersion,
                          Duration timeout, Map<String, String> headers) {
+        this(baseUrl, endpointPath, useStreamableHttp, objectMapper, protocolVersion, timeout, headers, null);
+    }
+
+    /**
+     * Creates a fully configured client with explicit transport, codec,
+     * connection and proxy settings.
+     *
+     * @param baseUrl           base URL of the MCP server
+     * @param endpointPath      endpoint path relative to the server URL
+     * @param useStreamableHttp {@code true} to use Streamable HTTP, {@code false} for SSE
+     * @param objectMapper      JSON mapper used for serialization and parsing
+     * @param protocolVersion   MCP protocol version; may be {@code null} to use the default
+     * @param timeout           connection and request timeout
+     * @param headers           additional HTTP headers for every request
+     * @param proxy             optional HTTP proxy, or {@code null} for a direct connection
+     */
+    public McpTestClient(String baseUrl, String endpointPath, boolean useStreamableHttp,
+                         ObjectMapper objectMapper, String protocolVersion,
+                         Duration timeout, Map<String, String> headers, Proxy proxy) {
         this.objectMapper = McpValidation.requireNonNull(objectMapper, "objectMapper");
         this.protocolVersion = McpTestClientUtils.resolveProtocolVersion(protocolVersion);
         this.initGuard = new McpInitializationGuard(this::ensureInitialized);
         ClientComponents components = buildComponents(
                 this.objectMapper, this.protocolVersion, baseUrl, endpointPath,
-                this.initGuard, useStreamableHttp, timeout, headers);
+                this.initGuard, useStreamableHttp, timeout, headers, proxy);
         this.transportGateway = TransportGateway.of(components.transport());
         this.jsonCodec = components.jsonCodec();
         this.rpcClient = components.rpcClient();

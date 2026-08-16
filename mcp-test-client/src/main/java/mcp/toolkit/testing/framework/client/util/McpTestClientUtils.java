@@ -12,6 +12,7 @@ import mcp.toolkit.testing.framework.transport.McpTransportFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.net.Proxy;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
@@ -150,6 +151,32 @@ public final class McpTestClientUtils {
                                                    boolean useStreamableHttp,
                                                    Duration timeout,
                                                    Map<String, String> headers) {
+        return buildComponents(objectMapper, protocolVersion, baseUrl, endpointPath,
+                initGuard, useStreamableHttp, timeout, headers, null);
+    }
+
+    /**
+     * Builds all components of a client: transport, codec, RPC client and the
+     * tool, resource and prompt directories.
+     *
+     * @param objectMapper       JSON mapper used for serialization and parsing
+     * @param protocolVersion    MCP protocol version
+     * @param baseUrl            base URL of the MCP server
+     * @param endpointPath       endpoint path relative to the server URL
+     * @param initGuard          initialization guard
+     * @param useStreamableHttp  {@code true} to use Streamable HTTP, {@code false} for SSE
+     * @param timeout            connection and request timeout
+     * @param headers            additional HTTP headers for every request
+     * @param proxy              optional HTTP proxy, or {@code null} for a direct connection
+     * @return the assembled client components
+     */
+    public static ClientComponents buildComponents(ObjectMapper objectMapper, String protocolVersion,
+                                                   String baseUrl, String endpointPath,
+                                                   McpInitializationGuard initGuard,
+                                                   boolean useStreamableHttp,
+                                                   Duration timeout,
+                                                   Map<String, String> headers,
+                                                   Proxy proxy) {
         ResolvedEndpoints endpoints = resolveEndpoints(baseUrl, endpointPath);
         McpJsonCodec jsonCodec = new McpJsonCodec(objectMapper);
         AtomicLong idSequence = new AtomicLong(1);
@@ -157,11 +184,11 @@ public final class McpTestClientUtils {
         if (useStreamableHttp) {
             transport = McpTransportFactory.streamable(
                     endpoints.sseEndpointUri(), protocolVersion,
-                    timeout, jsonCodec, headers);
+                    timeout, jsonCodec, headers, proxy);
         } else {
             transport = McpTransportFactory.sse(
                     endpoints.sseEndpointUri(), endpoints.baseUri(),
-                    protocolVersion, timeout, jsonCodec, headers);
+                    protocolVersion, timeout, jsonCodec, headers, proxy);
         }
         McpRpcClient rpcClient = new McpRpcClient(transport, idSequence, jsonCodec, protocolVersion);
         return new ClientComponents(transport, jsonCodec, rpcClient,

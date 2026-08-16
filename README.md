@@ -83,6 +83,7 @@ MCP client configuration is available via `McpClientConfig`. Key options:
 - `timeout` (Duration) — request timeout applied to connections and RPC calls. Default: 10 seconds (`McpClientConfig.DEFAULT_TIMEOUT`).
 - `protocolVersion` (String) — MCP protocol version the client speaks. Default: `2024-11-05` (legacy session era, backward compatible; `McpClientConfig.DEFAULT_PROTOCOL_VERSION`). Use `2026-07-28` for the stateless protocol — no `initialize` handshake, version negotiation via `server/discover`, results carry `resultType`/`ttlMs`/`cacheScope`, and change notifications flow over `subscriptions/listen`.
 - SSE path — the default Server-Sent Events endpoint path is `/sse` (`McpClientConfig.DEFAULT_SSE_PATH`).
+- `proxy` (`java.net.Proxy`) — optional HTTP proxy for transport connections. Omit (or `null`) for a direct connection. Only `Proxy.Type.HTTP` is supported; other types throw `IllegalArgumentException`.
 
 Create a config with the fluent builder:
 
@@ -112,6 +113,27 @@ McpClient client = McpClient.connectTo("http://localhost:8080")
         .streamableHttp("/api/mcp")
         .build();
 ```
+
+### Proxy Support
+
+For environments behind an HTTP proxy (e.g. a corporate network), both transports can route through a proxy via `McpClientConfig.proxy(...)`:
+
+```java
+Proxy httpProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.corp.example", 8080));
+
+McpClientConfig config = McpClientConfig.builder()
+        .proxy(httpProxy)
+        .build();
+
+McpClient client = McpClient.connectTo("http://mcp-server.internal:8080")
+        .config(config)
+        .build();
+```
+
+- Only `Proxy.Type.HTTP` is accepted — `SOCKS` and `NO_PROXY` throw `IllegalArgumentException`.
+- When `proxy` is omitted or `null`, both transports connect directly (the default behavior).
+- The Netty transport tunnels through the proxy via **CONNECT**. The JDK transport uses absolute-form requests for `http://` targets and CONNECT for `https://`.
+- Note: with a `null` proxy the JDK transport falls back to the JVM default `ProxySelector` (honoring `-Dhttp.proxyHost=...` / `-Dhttps.proxyHost=...` system properties), while the Netty transport always connects directly unless a proxy is set.
 
 ## 🧰 Build, tests and Javadocs
 

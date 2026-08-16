@@ -5,6 +5,9 @@ import mcp.toolkit.testing.framework.interfaces.McpResponse;
 import mcp.toolkit.testing.framework.interfaces.McpTransportClient;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
@@ -30,13 +33,36 @@ public final class JdkTransportClient implements McpTransportClient {
 
     /**
      * Creates a client whose underlying {@link HttpClient} uses {@code timeout}
-     * for both the connection timeout and per-request timeouts.
+     * for both the connection timeout and per-request timeouts, connecting
+     * directly to the target host.
      *
      * @param timeout connection and request timeout
      */
     public JdkTransportClient(Duration timeout) {
+        this(timeout, null);
+    }
+
+    /**
+     * Creates a client whose underlying {@link HttpClient} uses {@code timeout}
+     * for both the connection timeout and per-request timeouts, optionally
+     * routing traffic through an HTTP proxy.
+     *
+     * <p>When {@code proxy} is {@code null} the client uses the JVM's default
+     * proxy selector (i.e. the {@code http.proxyHost}/{@code https.proxyHost}
+     * system properties), preserving the standard {@link HttpClient} behaviour.
+     *
+     * @param timeout connection and request timeout
+     * @param proxy   HTTP proxy to route through, or {@code null} for default
+     *                behaviour
+     */
+    public JdkTransportClient(Duration timeout, Proxy proxy) {
         this.timeout = McpValidation.requireNonNull(timeout, "timeout");
-        this.client = HttpClient.newBuilder().connectTimeout(timeout).build();
+        validateProxy(proxy);
+        HttpClient.Builder builder = HttpClient.newBuilder().connectTimeout(timeout);
+        if (proxy != null) {
+            builder.proxy(ProxySelector.of((InetSocketAddress) proxy.address()));
+        }
+        this.client = builder.build();
     }
 
     @Override
@@ -72,6 +98,13 @@ public final class JdkTransportClient implements McpTransportClient {
     @Override
     public void close() {
         // The JDK HttpClient holds no resources that must be released explicitly.
+    }
+
+    private static void validateProxy(Proxy proxy) {
+        if (proxy != null && proxy.type() != Proxy.Type.HTTP) {
+            throw new IllegalArgumentException(
+                    "Only HTTP proxies are supported, got: " + proxy.type());
+        }
     }
 
     private HttpRequest request(URI uri, Map<String, String> headers, String method,

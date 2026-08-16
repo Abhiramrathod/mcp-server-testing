@@ -475,7 +475,8 @@ public final class McpClient implements AutoCloseable {
          */
         public McpClient build() {
             McpTestClient delegate = new McpTestClient(serverUrl, endpointPath, useStreamableHttp,
-                    config.objectMapper(), config.protocolVersion(), config.timeout(), config.headers());
+                    config.objectMapper(), config.protocolVersion(), config.timeout(), config.headers(),
+                    config.proxy());
             McpClient client = new McpClient(delegate);
             if (initializeOnBuild) {
                 client.initialize();

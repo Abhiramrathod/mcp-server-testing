@@ -88,6 +88,27 @@ String[] versions = discovered.path("protocolVersions").asText().split(",");`,
       ['Unknown / mixed', 'Start with SSE (default), switch if handshake fails'],
     ],
   },
+  { t: 'h2', id: 'proxies', md: 'Proxies' },
+  { t: 'p', md: 'Both transports can route through an HTTP proxy — useful behind corporate networks. Configure it on `McpClientConfig.proxy(...)`:' },
+  {
+    t: 'code', lang: 'java',
+    code: `Proxy httpProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.corp.example", 8080));
+
+McpClient client = McpClient.connectTo("http://mcp-server.internal:8080")
+        .config(McpClientConfig.builder()
+                .proxy(httpProxy)
+                .build())
+        .build();`,
+  },
+  {
+    t: 'list',
+    items: [
+      'Only `Proxy.Type.HTTP` is accepted — `SOCKS` and `NO_PROXY` throw `IllegalArgumentException`.',
+      'Omit or pass `null` for a direct connection (the default).',
+      'Netty tunnels via **CONNECT**; the JDK transport uses absolute-form requests for `http://` targets and CONNECT for `https://`.',
+      'With a `null` proxy the JDK transport falls back to the JVM default `ProxySelector` (system-property driven); the Netty transport always connects directly.',
+    ],
+  },
 ]
 
 export default function TransportsPage() {

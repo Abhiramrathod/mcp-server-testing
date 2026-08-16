@@ -18,6 +18,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.proxy.HttpProxyHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import mcp.toolkit.testing.framework.core.util.McpValidation;
@@ -25,6 +26,8 @@ import mcp.toolkit.testing.framework.interfaces.McpResponse;
 import mcp.toolkit.testing.framework.interfaces.McpTransportClient;
 
 import javax.net.ssl.TrustManagerFactory;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
@@ -68,16 +71,31 @@ public final class NettyTransportClient implements McpTransportClient {
     private static final SslContext SSL_CONTEXT = newSslContext();
 
     private final Duration timeout;
+    private final InetSocketAddress proxyAddress;
     private final ConcurrentHashMap<String, LinkedBlockingDeque<Channel>> idleChannels = new ConcurrentHashMap<>();
 
     /**
      * Creates a client that applies {@code timeout} to connection attempts and
-     * to synchronous exchanges.
+     * to synchronous exchanges, connecting directly to the target host.
      *
      * @param timeout connection and request timeout
      */
     public NettyTransportClient(Duration timeout) {
+        this(timeout, null);
+    }
+
+    /**
+     * Creates a client that applies {@code timeout} to connection attempts and
+     * to synchronous exchanges, optionally routing traffic through an HTTP
+     * proxy (CONNECT tunneling).
+     *
+     * @param timeout connection and request timeout
+     * @param proxy   HTTP proxy to tunnel through, or {@code null} for a direct
+     *                connection
+     */
+    public NettyTransportClient(Duration timeout, Proxy proxy) {
         this.timeout = McpValidation.requireNonNull(timeout, "timeout");
+        this.proxyAddress = resolveProxyAddress(proxy);
     }
 
     @Override
@@ -211,6 +229,9 @@ public final class NettyTransportClient implements McpTransportClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) {
+                        if (proxyAddress != null) {
+                            ch.pipeline().addLast("proxy", new HttpProxyHandler(proxyAddress));
+                        }
                         if (secure) {
                             ch.pipeline().addLast("ssl", SSL_CONTEXT.newHandler(ch.alloc(), host, port));
                         }
@@ -324,6 +345,17 @@ public final class NettyTransportClient implements McpTransportClient {
             return thread;
         };
         return new NioEventLoopGroup(0, threadFactory);
+    }
+
+    private static InetSocketAddress resolveProxyAddress(Proxy proxy) {
+        if (proxy == null) {
+            return null;
+        }
+        if (proxy.type() != Proxy.Type.HTTP) {
+            throw new IllegalArgumentException(
+                    "Only HTTP proxies are supported, got: " + proxy.type());
+        }
+        return (InetSocketAddress) proxy.address();
     }
 
     private static SslContext newSslContext() {

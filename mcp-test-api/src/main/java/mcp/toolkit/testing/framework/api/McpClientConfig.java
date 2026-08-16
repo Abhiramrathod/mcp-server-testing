@@ -2,6 +2,7 @@ package mcp.toolkit.testing.framework.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.net.Proxy;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -40,12 +41,14 @@ public final class McpClientConfig {
     private final String protocolVersion;
     private final ObjectMapper objectMapper;
     private final Map<String, String> headers;
+    private final Proxy proxy;
 
     private McpClientConfig(Builder builder) {
         this.timeout = builder.timeout;
         this.protocolVersion = builder.protocolVersion;
         this.objectMapper = builder.objectMapper;
         this.headers = Map.copyOf(builder.headers);
+        this.proxy = builder.proxy;
     }
 
     /** Request timeout applied to connection and individual RPC calls. */
@@ -69,6 +72,13 @@ public final class McpClientConfig {
      */
     public Map<String, String> headers() { return headers; }
 
+    /**
+     * Optional HTTP proxy the client routes through.
+     *
+     * @return the configured proxy, or {@code null} for a direct connection
+     */
+    public Proxy proxy() { return proxy; }
+
     /** Returns a config with all default values. */
     public static McpClientConfig defaults() {
         return builder().build();
@@ -87,7 +97,7 @@ public final class McpClientConfig {
     @Override
     public String toString() {
         return "McpClientConfig{timeout=" + timeout + ", protocolVersion='" + protocolVersion
-                + "', headers=" + headers.keySet() + "}";
+                + "', proxy=" + proxy + ", headers=" + headers.keySet() + "}";
     }
 
     /** Fluent builder for {@link McpClientConfig}. */
@@ -96,6 +106,7 @@ public final class McpClientConfig {
         private Duration timeout = DEFAULT_TIMEOUT;
         private String protocolVersion = DEFAULT_PROTOCOL_VERSION;
         private ObjectMapper objectMapper = new ObjectMapper();
+        private Proxy proxy;
         private final Map<String, String> headers = new LinkedHashMap<>();
 
         private Builder() {}
@@ -171,6 +182,25 @@ public final class McpClientConfig {
             }
             this.headers.clear();
             this.headers.putAll(headers);
+            return this;
+        }
+
+        /**
+         * Sets an optional HTTP proxy the client routes through.
+         *
+         * <p>Only {@link Proxy.Type#HTTP HTTP} proxies are supported (they tunnel
+         * both HTTP and HTTPS via CONNECT). Passing {@code null} clears the
+         * proxy and connects directly.
+         *
+         * @param proxy HTTP proxy, or {@code null} for a direct connection
+         * @return this builder
+         */
+        public Builder proxy(Proxy proxy) {
+            if (proxy != null && proxy.type() != Proxy.Type.HTTP) {
+                throw new IllegalArgumentException(
+                        "Only HTTP proxies are supported, got: " + proxy.type());
+            }
+            this.proxy = proxy;
             return this;
         }
 

@@ -71,6 +71,7 @@ const blocks: Block[] = [
       ['protocolVersion', '2024-11-05', 'MCP protocol version to negotiate.'],
       ['baseUrl', 'required', 'Server base URL.'],
       ['headers', 'empty', 'Extra HTTP headers per request.'],
+      ['proxy', 'null', 'HTTP proxy for transport connections; null = direct connection. Only Proxy.Type.HTTP is accepted.'],
     ],
   },
   { t: 'h2', id: 'methods', md: 'McpMethod constants' },

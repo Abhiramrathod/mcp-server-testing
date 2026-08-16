@@ -21,6 +21,8 @@ const blocks: Block[] = [
   { t: 'p', md: 'Build with `.streamableHttp()` and `protocolVersion("2026-07-28")`. No `initializeOnBuild()` needed — there is no handshake. Use `client.isStateless()` and `client.discover()` to assert on the discovery result.' },
   { t: 'h2', id: 'custom', md: 'Can I use a custom transport?' },
   { t: 'p', md: 'Yes — implement `McpTransport` from `mcp-test-interfaces` and pass it to `.transport(...)`. See **Transports & Protocols**.' },
+  { t: 'h2', id: 'proxy', md: 'My tests must go through a corporate proxy. How?' },
+  { t: 'p', md: 'Set `McpClientConfig.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("proxy.corp.example", 8080)))`. Only HTTP proxies are supported; omit it to connect directly. The JDK transport also honors the standard `-Dhttp.proxyHost` / `-Dhttps.proxyHost` system properties when no proxy is configured.' },
   { t: 'h2', id: 'where-source', md: 'Where is the full source?' },
   { t: 'p', md: 'On GitHub: [Abhiramrathod/mcp-testing](https://github.com/Abhiramrathod/mcp-testing). The example tests live under `mcp-test-examples/src/test/`.' },
 ]
@@ -32,7 +34,7 @@ export default function FaqPage() {
       title: 'FAQ',
       description: 'Answers to the most common questions about mcp-test.',
       section: 'Guides',
-      keywords: ['faq', 'questions', 'junit', 'mocks'],
+      keywords: ['faq', 'questions', 'junit', 'mocks', 'proxy'],
       editPath: 'docs-site/src/pages/Faq.tsx',
     },
     blocks,
