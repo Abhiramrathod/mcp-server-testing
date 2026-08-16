@@ -34,8 +34,6 @@ final class SseEventDecoder {
             }
             if (line.isEmpty()) {
                 dispatch(eventType, data, onEvent);
-            } else if (line.startsWith(":")) {
-                // comment; ignore
             } else if (line.startsWith("event:")) {
                 String value = line.substring(6).trim();
                 eventType[0] = value.isEmpty() ? DEFAULT_EVENT : value;
@@ -44,14 +42,10 @@ final class SseEventDecoder {
                 if (value.startsWith(" ")) {
                     value = value.substring(1);
                 }
-                if (data.length() > 0) {
+                if (!data.isEmpty()) {
                     data.append('\n');
                 }
                 data.append(value);
-            } else if (line.startsWith("id:")) {
-                // ids are not needed by this client (streams are not resumable)
-            } else if (line.startsWith("retry:")) {
-                // retry hints are only relevant to EventSource; ignored
             }
             // any other line is ignored per the standard
         });

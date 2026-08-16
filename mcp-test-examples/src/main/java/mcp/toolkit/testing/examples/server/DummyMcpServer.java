@@ -13,7 +13,11 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Dummy MCP server for testing the framework.
@@ -23,6 +27,8 @@ public class DummyMcpServer {
     private final HttpServer server;
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<String, OutputStream> sseClients = new ConcurrentHashMap<>();
+
+    private static final ScheduledExecutorService HEARTBEATS = newHeartbeatExecutor();
 
     /**
      * Creates a server bound to the given port.
@@ -70,20 +76,25 @@ public class DummyMcpServer {
         sseClients.put(clientId, os);
 
         sendSseEvent(os, "endpoint", "/message");
-        
-        try {
-            while (!Thread.currentThread().isInterrupted()) {
-                Thread.sleep(1000);
-                // Keep-alive comment: also detects a disconnected client so the
-                // handler thread can exit and be reused.
+
+        // Heartbeats are scheduled instead of a Thread.sleep loop: a failed
+        // write detects a disconnected client and releases the handler thread.
+        CountDownLatch disconnected = new CountDownLatch(1);
+        ScheduledFuture<?> heartbeat = HEARTBEATS.scheduleWithFixedDelay(() -> {
+            try {
                 os.write(": keep-alive\n\n".getBytes(StandardCharsets.UTF_8));
                 os.flush();
+            } catch (IOException e) {
+                disconnected.countDown();
             }
+        }, 1, 1, TimeUnit.SECONDS);
+
+        try {
+            disconnected.await();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-        } catch (IOException e) {
-            // Client disconnected
         } finally {
+            heartbeat.cancel(false);
             sseClients.remove(clientId);
             try {
                 os.close();
@@ -316,6 +327,14 @@ public class DummyMcpServer {
         } catch (IOException e) {
             // Client disconnected, ignore
         }
+    }
+
+    private static ScheduledExecutorService newHeartbeatExecutor() {
+        return Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread thread = new Thread(r, "dummy-mcp-server-heartbeat");
+            thread.setDaemon(true);
+            return thread;
+        });
     }
 
     /**
